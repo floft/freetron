@@ -11,5 +11,6 @@
 *.la
 *.a
 
-# Temporary PDFs
+# Temporary
+*~
 images
