@@ -8,5 +8,5 @@ Feel free to try it and improve it. The goal is to scan one PDF of the key
 followed by all of the students' sheets, grade, and email (via a database
 lookup) the students their grade and a copy of their sheet.
 
-**Dependencies**
+**Dependencies**  
 graphicsmagick
