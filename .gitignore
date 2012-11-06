@@ -2,6 +2,7 @@
 *.slo
 *.lo
 *.o
+freetron
 
 # Compiled Dynamic libraries
 *.so
@@ -15,3 +16,4 @@
 *~
 *.png
 images
+
