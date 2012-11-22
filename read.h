@@ -11,8 +11,6 @@
 #include <string>
 #include <Magick++.h>
 
-#include <iostream>
-
 #include "options.h"
 #include "image.h"
 #include "data.h"

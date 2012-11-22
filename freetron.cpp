@@ -1,3 +1,11 @@
+/*
+ * Freetron - an open-source software scantron implementation
+ *
+ * Todo:
+ *   - Fix duplicate top-left points with off-by-one x coordinates
+ *   - Automatically determine BOX_WIDTH, BOX_HEIGHT, DIAGONAL, MIN_BLACK, FIRST_JUMP, ...
+ */
+
 #include <vector>
 #include <iostream>
 #include <stdexcept>
@@ -67,14 +75,12 @@ int main(int argc, char* argv[])
 	// Find ID number
 	unsigned int id = findID(rotated, boxes, width, height, pdf);
 
-	cout << id << endl;
-
 	// Debug information
 	if (DEBUG)
 	{
 		for (unsigned int i = 0; i < boxes.size(); ++i)
 		{
-			//cout << "(" << boxes[i][0].x << "," << boxes[i][0].y << ")" << endl;
+			cout << "(" << boxes[i][0].x << "," << boxes[i][0].y << ")" << endl;
 			pdf.fillColor("green");
 			pdf.draw(DrawableRectangle(boxes[i][0].x-5, boxes[i][0].y-5, boxes[i][0].x+5, boxes[i][0].y+5));
 			pdf.fillColor("orange");
@@ -83,6 +89,9 @@ int main(int argc, char* argv[])
 		
 		pdf.write("output.png");
 	}
+
+	// For now just print it. Later we'll do stuff with it.
+	cout << id << endl;
 	
 	return 0;
 }
