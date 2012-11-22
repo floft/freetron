@@ -7,7 +7,6 @@
 
 #include <cmath>
 #include <vector>
-#include <iostream>	//TODO: remove this
 #include <algorithm>
 #include <Magick++.h>
 
@@ -22,7 +21,6 @@ using namespace Magick;
 // where (x1,y1) is the top-left point and (x2,y2) is the bottom-
 // right point.
 vector< vector<Coord> > findBoxes(Pixels& img,
-	const unsigned int& max_x, const unsigned int& max_y,
-	Image& image);
+	const unsigned int& max_x, const unsigned int& max_y);
 
 #endif

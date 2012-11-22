@@ -1,9 +1,18 @@
 #include "boxes.h"
 
+// See if the point is in the vector
+bool inVector(const vector< vector<Coord> >& boxes, vector<Coord> v)
+{
+	for (unsigned int i = 0; i < boxes.size(); ++i)
+		if (boxes[i][0].x == v[0].x && boxes[i][0].y == v[0].y &&
+		    boxes[i][1].x == v[1].x && boxes[i][1].y == v[1].y)
+		    return true;
+	return false;
+}
+
 // Find all the boxes in the image
 vector< vector<Coord> > findBoxes(Pixels& img,
-	const unsigned int& max_x, const unsigned int& max_y,
-	Image& image)
+	const unsigned int& max_x, const unsigned int& max_y)
 {
 	vector< vector<Coord> > boxes;
 
@@ -28,29 +37,16 @@ vector< vector<Coord> > findBoxes(Pixels& img,
 				double diagonal = distance(left, right);
 
 				// See if the diagonal is about the right length and if a circle in the center
-				// of the possible box is almost entirely black
+				// of the possible box is almost entirely black.
 				if (diagonal <= DIAGONAL+MAX_ERROR && diagonal >= DIAGONAL-MAX_ERROR &&
 					averageColor(img, midpoint.x, midpoint.y, BOX_HEIGHT/2, max_x, max_y) > MIN_BLACK)
 				{
 					vector<Coord> v = { left, right	};
-					boxes.push_back(v);
-				}
 
-				if (x == 19 && y == 642)
-				{
-					cout << (averageColor(img, midpoint.x, midpoint.y, BOX_HEIGHT/2, max_x, max_y)) << endl;
-					/*image.fillColor("blue");
-					image.draw(DrawableRectangle(midpoint.x, midpoint.y, midpoint.x+2, midpoint.y+2));
-					image.fillColor("");
-					image.strokeColor("blue");
-					image.draw(DrawableCircle(midpoint.x, midpoint.y, midpoint.x+BOX_HEIGHT/2, midpoint.y+BOX_HEIGHT/2));
-					image.strokeColor("");*/
+					// Make sure we didn't already have this point
+					if (!inVector(boxes, v))
+						boxes.push_back(v);
 				}
-				
-				image.fillColor("red");
-				image.draw(DrawableRectangle(left.x, left.y, left.x+2, left.y+2));
-				image.fillColor("pink");
-				image.draw(DrawableRectangle(right.x, right.y, right.x+2, right.y+2));
 				
 				// We only care about the left-most black blob, skip if this is a decent-sized blob
 				if (diagonal > DECENT_SIZE)

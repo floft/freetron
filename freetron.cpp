@@ -62,17 +62,27 @@ int main(int argc, char* argv[])
 	Pixels rotated(pdf);
 	width  = pdf.columns();
 	height = pdf.rows();
-	vector< vector<Coord> > boxes = findBoxes(rotated, width, height, pdf);
+	vector< vector<Coord> > boxes = findBoxes(rotated, width, height);
 
-	for (unsigned int i = 0; i < boxes.size(); ++i)
+	// Find ID number
+	unsigned int id = findID(rotated, boxes, width, height, pdf);
+
+	cout << id << endl;
+
+	// Debug information
+	if (DEBUG)
 	{
-		pdf.fillColor("green");
-		pdf.draw(DrawableRectangle(boxes[i][0].x, boxes[i][0].y, boxes[i][0].x+2, boxes[i][0].y+2));
-		pdf.fillColor("orange");
-		pdf.draw(DrawableRectangle(boxes[i][1].x, boxes[i][1].y, boxes[i][1].x+2, boxes[i][1].y+2));
+		for (unsigned int i = 0; i < boxes.size(); ++i)
+		{
+			//cout << "(" << boxes[i][0].x << "," << boxes[i][0].y << ")" << endl;
+			pdf.fillColor("green");
+			pdf.draw(DrawableRectangle(boxes[i][0].x-5, boxes[i][0].y-5, boxes[i][0].x+5, boxes[i][0].y+5));
+			pdf.fillColor("orange");
+			pdf.draw(DrawableRectangle(boxes[i][1].x-5, boxes[i][1].y-5, boxes[i][1].x+5, boxes[i][1].y+5));
+		}
+		
+		pdf.write("output.png");
 	}
-
-	pdf.write("cow.png");
 	
 	return 0;
 }
