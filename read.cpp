@@ -13,7 +13,7 @@ vector<unsigned int> findFilled(Pixels& img,
 	// Search to right until hitting circle, jump box_size and continue till max_x
 	for (unsigned int search_x = x; search_x < stop_x; ++search_x)
 	{
-		if (averageColor(img, search_x, y, box_width, stop_x, max_y) > answer_black)
+		if (averageColor(img, search_x, y, box_width, stop_x, max_y) > MIN_BLACK)
 		{
 			unsigned int rounded = x + round(search_x-x, box_width);
 			position.push_back(rounded);

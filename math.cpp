@@ -30,9 +30,9 @@ double distance(double x1, double y1, double x2, double y2)
 	return sqrt(pow((x2-x1), 2) + pow((y2-y1), 2));
 }
 
-double distance(Coordinate p1, Coordinate p2)
+double distance(Coord p1, Coord p2)
 {
-	return sqrt(pow((p2.x()-p1.x()), 2) + pow((p2.y()-p1.y()), 2));
+	return sqrt(pow((p2.x-p1.x), 2) + pow((p2.y-p1.y), 2));
 }
 
 // Round x to the nearest r

@@ -53,13 +53,13 @@ bool isBlack(Pixels& img, const unsigned int& x, const unsigned int& y)
 }
 
 // Find mid point
-Coordinate midPoint(const Coordinate& p1, const Coordinate&p2)
+Coord midPoint(const Coord& p1, const Coord& p2)
 {
-	return Coordinate((p1.x()+p2.x())/2, (p1.y()+p2.y())/2);
+	return Coord((p1.x+p2.x)/2, (p1.y+p2.y)/2);
 }
 
 // Find leftmost coordinate of box (default top if multiple points)
-Coordinate leftmost(Pixels& img,
+Coord leftmost(Pixels& img,
 	const unsigned int& x, const unsigned int& y,
 	const unsigned int& max_x, const unsigned int& max_y)
 {
@@ -123,11 +123,11 @@ Coordinate leftmost(Pixels& img,
 		}
 	}
 
-	return Coordinate(final_x, final_y);
+	return Coord(final_x, final_y);
 }
 
 // Find rightmost coordinate of box (default bottom if multiple points)
-Coordinate rightmost(Pixels& img,
+Coord rightmost(Pixels& img,
 	const unsigned int& x, const unsigned int& y,
 	const unsigned int& max_x, const unsigned int& max_y)
 {
@@ -189,5 +189,5 @@ Coordinate rightmost(Pixels& img,
 		}
 	}
 
-	return Coordinate(final_x, final_y);
+	return Coord(final_x, final_y);
 }

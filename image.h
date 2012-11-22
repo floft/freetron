@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <Magick++.h>
 
+#include "data.h"
 #include "math.h"
 #include "options.h"
 
@@ -26,15 +27,15 @@ double averageColor(Pixels& img,   const unsigned int& x,
 bool isBlack(Pixels& img, const unsigned int& x, const unsigned int& y);
 
 // Find the midpoint between two points
-Coordinate midPoint(const Coordinate& p1, const Coordinate&p2);
+Coord midPoint(const Coord& p1, const Coord& p2);
 
 // Find the leftmost point defaulting to the top if there are multiple
-Coordinate leftmost(Pixels& img,
+Coord leftmost(Pixels& img,
 	const unsigned int& x, const unsigned int& y,
 	const unsigned int& max_x, const unsigned int& max_y);
 
 // Find the rightmost point defaulting to the bottom if there are multiple
-Coordinate rightmost(Pixels& img,
+Coord rightmost(Pixels& img,
 	const unsigned int& x, const unsigned int& y,
 	const unsigned int& max_x, const unsigned int& max_y);
 
