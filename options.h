@@ -5,21 +5,13 @@
 #ifndef H_OPTIONS
 #define H_OPTIONS
 
-const double min_black = 0.7;		// Minimum value considered black (0 is white, 1 is black)
-const double answer_black = 0.2;	// Minimum value considered black for pencil markings
-const unsigned int max_missed = 5;	// Stop searching for corner of box after # of white pixels
-const unsigned int slope_count = 7;	// Compute slope for # of boxes
-const double max_error = 0.3;		// Max error in distance from top left to top right
-//const double max_deviation = 0.05;	// Max deviation between slope_count slopes
-
-// Run relative_r(x,y) for r and relative_box(x,y) for box_size
-const unsigned int rel_r = 5;		// Determine avg color based on circle of radius r
-const unsigned int rel_box_size = 15;	// Determine avg color of boxes based on circle of radius r
-
-// Set r and box_size to image size
-inline unsigned int relative_r(const unsigned int& max_x, const unsigned int& max_y)
-{ return max_x*rel_r/2500; }
-inline unsigned int relative_box(const unsigned int& max_x, const unsigned int& max_y)
-{ return max_x*rel_box_size/2500; }
+const unsigned int BOX_WIDTH  = 49;	// At 300dpi the box width in pixels
+const unsigned int BOX_HEIGHT = 18;	// At 300dpi the box height in pixels (should be smaller than width)
+const unsigned int MAX_ERROR = 10;	// Max error in pixels (e.g. box_width plus or minus error)
+const unsigned int DIAGONAL = 53;	// ceil(sqrt(box_width^2+box_height^2)) plus or minus error
+const double MIN_BLACK = 0.8;		// Minimum percent (0-1) of pixels black in circle to be considered a box
+const unsigned int MIN_JUMP = 100;	// Increase in distance to top or bottom left needed to give up searching for closer box
+const unsigned int DECENT_SIZE = 5;	// Continue searching for a box if only encountering black specs less than 5 pixels wide
+const double GRAY_SHADE = 0.5;		// Average RGB considered black
 
 #endif

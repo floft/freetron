@@ -203,98 +203,161 @@ vector< vector<unsigned int> > findBoxes(Pixels& img,
 	return closest;
 }*/
 
-// Determine average slope of 2 boxes if they are close enough, otherwise
-// continue till finding closer boxes
-double findRotation(Pixels& img, const vector< vector<unsigned int> >& boxes,
-	unsigned int& ret_x, unsigned int& ret_y,
+// Find top left and bottom right box. Then, determine slope of these two
+// and return the amount to rotate.
+double findRotation(Pixels& img, unsigned int& ret_x, unsigned int& ret_y,
 	const unsigned int& max_x, const unsigned int& max_y, Image& image)
 {
-	//double slope = 0;
-	//unsigned int offset = 0; // Start with the first box
+	Coordinate top;
+	Coordinate bottom;
 
-	/*while (!set && offset < boxes.size())
-	{
-		vector<double> slopes;
-
-		for (unsigned int i = boxes.size()-offset-1; i > boxes.size()-offset-slope_count-1; --i)
-		{
-			unsigned int x1 = boxes[i][0];
-			unsigned int y1 = boxes[i][1];
-			unsigned int x2 = boxes[i][2];
-			unsigned int y2 = boxes[i][3];
-			
-			// Rotate around this point
-			ret_x = x1;
-			ret_y = y1;
-
-			slopes.push_back(1.0*(y2 - y1)/(x2 - x1));
-		}
-
-		double average;
-
-		// If at least 2 are very close, set slope to average of the closest
-		if (stdDev(slopes, average) < max_deviation)
-		{
-			set = true;
-			slope = average;
-		}
-		else
-		{
-			++offset;
-		}
-	}*/
-
-	// Die quickly
-	if (boxes.size() == 0)
-	{
-		ret_x = 0;
-		ret_y = 0;
-		return 0;
-	}
-	
-	unsigned int top = 0;
-	unsigned int bottom = 0;
 	// Set to max large values
-	double top_dist = max_y;
-	double bottom_dist = max_y;
+	double min_top_dist    = max_y;
+	double min_bottom_dist = max_y;
 
-	// Find top and bottom boxes
-	for (unsigned int i = 0; i < boxes.size(); ++i)
+	//
+	// The top-left box
+	//
+
+	// Goto statements are evil
+	bool found = false;
+
+	// Search from top left up a y = x line going down the image
+	// Max y+x for also scanning the bottom of the image if shifted to the right
+	for (unsigned int z = 0; z < max_y + max_x && !found; ++z)
 	{
-		double top_left    = distance(boxes[i][0], boxes[i][1], 0, 0);
-		double bottom_left = distance(boxes[i][0], boxes[i][1], 0, max_y - 1);
+		for (unsigned int x = 0, y = z; x <= z && x < max_x && !found; ++x, --y)
+		{
+			// This is an imaginary point (skip till we get to points on the
+			// bottom of the image)
+			if (y > max_y - 1)
+				continue;
 
-		// Top left
-		if (top_left < top_dist)
-		{
-			top = i;
-			top_dist = top_left;
-		}
-		
-		// Bottom right
-		if (bottom_left < bottom_dist)
-		{
-			bottom = i;
-			bottom_dist = bottom_left;
+			// See if it might be a box
+			if (isBlack(img, x, y))
+			{
+				Coordinate left       = leftmost(img,  x, y, max_x, max_y);
+				Coordinate right      = rightmost(img, x, y, max_x, max_y);
+				Coordinate midpoint   = midPoint(left, right);
+				double apparent_width = distance(left, right);
+
+				// See if the diagonal is about the right length and if a circle in the center
+				// of the possible box is almost entirely black
+				if (apparent_width <= DIAGONAL+MAX_ERROR && apparent_width >= DIAGONAL-MAX_ERROR &&
+					averageColor(img, midpoint.x(), midpoint.y(), BOX_HEIGHT/2, max_x, max_y) > MIN_BLACK)
+				{
+					double current_top_dist = distance(x, y, 0, 0);
+
+					// See if this box is closer to the top left than the previous one
+					if (current_top_dist < min_top_dist)
+					{
+						min_top_dist = current_top_dist;
+						top = Coordinate(x, y);
+					}
+					// We are getting farther away, so we already found the closest box
+					else if (current_top_dist - min_top_dist > MIN_JUMP)
+					{
+						found = true;
+					}
+				}
+				
+				// We only care about the left-most black blob, skip if this is a decent-sized blob
+				if (apparent_width > DECENT_SIZE)
+					break;
+			}
 		}
 	}
-	
+
+	// 
+	// The bottom-left box
+	//
+	found = false;
+
+	// Start searching at the bottom
+	// Stop searching once reaching the y value of the top-left box
+	for (unsigned int z = max_y + max_x; z > top.y() && !found; --z)
+	{
+		for (unsigned int x = 0, y = z; x <= z && x < max_x && !found; ++x, --y)
+		{
+			// This is an imaginary point (below the bottom)
+			if (y > max_y - 1)
+				continue;
+
+			// It's black
+			if (isBlack(img, x, y))
+			{
+				Coordinate left       = leftmost(img,  x, y, max_x, max_y);
+				Coordinate right      = rightmost(img, x, y, max_x, max_y);
+				Coordinate midpoint   = midPoint(left, right);
+				double apparent_width = distance(left, right);
+
+				if (right.x()+2 < max_x && right.y()+2 < max_y)
+				{
+					//image.fillColor("red");
+					//image.draw(DrawableRectangle(x, y, x+2, y+2));
+					image.fillColor("green");
+					image.draw(DrawableRectangle(left.x(), left.y(), left.x()+2, left.y()+2));
+					image.fillColor("orange");
+					image.draw(DrawableRectangle(right.x(), right.y(), right.x()+2, right.y()+2));
+					image.fillColor("red");
+					image.draw(DrawableRectangle(midpoint.x(), midpoint.y(), midpoint.x()+2, midpoint.y()+2));
+				}
+
+				// It's a box
+				if (//apparent_width <= DIAGONAL+MAX_ERROR && apparent_width >= DIAGONAL-MAX_ERROR &&
+					averageColor(img, midpoint.x(), midpoint.y(), BOX_HEIGHT/2, max_x, max_y) > MIN_BLACK)
+				{
+
+					double current_bottom_dist = distance(left.x(), left.y(), 0, max_y - 1);
+
+					// It's closer than the previous box
+					if (current_bottom_dist < min_bottom_dist)
+					{
+						min_bottom_dist = current_bottom_dist;
+						bottom = Coordinate(left.x(), left.y());
+					}
+					// We're starting to get farther away, so we probably found the closest point
+					else if (current_bottom_dist - min_bottom_dist > MIN_JUMP)
+					{
+						found = true;
+					}
+				}
+				
+				// We only care about the left-most black blob, skip if this is a decent-sized blob
+				if (apparent_width > DECENT_SIZE)
+					break;
+			}
+			
+			/*if (x+1 < max_x && y+1 < max_y)
+			{
+				PixelPacket *pixel = img.get(x, y, 1, 1);
+				*pixel = Color("black");
+			}*/
+		}
+	}
+
+	img.sync();
+
 	// Determine angle from slope of line going through those two boxes
-	unsigned int x1 = boxes[top][0];
-	unsigned int y1 = boxes[top][1];
-	unsigned int x2 = boxes[bottom][0];
-	unsigned int y2 = boxes[bottom][1];
+	unsigned int x1 = top.x();
+	unsigned int y1 = top.y();
+	unsigned int x2 = bottom.x();
+	unsigned int y2 = bottom.y();
 
-	//cout << "(" << x1 << "," << y1 << ")" << endl;
-	//cout << "(" << x2 << "," << y2 << ")" << endl;
+	ret_x = top.x();
+	ret_y = top.y();
 
-	ret_x = boxes[top][0];
-	ret_y = boxes[top][1];
-	double angle = atan((1.0*x2 - x1)/(1.0*y2 - y1));
+	double angle;
+	
+	// If denominator is zero, don't rotate
+	if (y1 != y2)
+		angle = atan((1.0*x2 - x1)/(1.0*y2 - y1));
+	else
+		angle = 0;
 
-	//image.fillColor("pink");
-	//image.draw(DrawableRectangle(x1-10, y1-10, x1-2, y1-2));
-	//image.draw(DrawableRectangle(x2-10, y2-10, x2-2, y2-2));
+	image.fillColor("pink");
+	image.draw(DrawableRectangle(x1-10, y1-10, x1-2, y1-2));
+	image.draw(DrawableRectangle(x2-10, y2-10, x2-2, y2-2));
 
 	return angle;
 }

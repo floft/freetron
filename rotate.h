@@ -40,8 +40,10 @@ vector< vector<unsigned int> > findRealBoxes(Pixels& img,
 
 // Determine average slope of 2 boxes if they are close enough, otherwise
 // continue till finding closer boxes
-double findRotation(Pixels& img, const vector< vector<unsigned int> >& boxes,
-	unsigned int& ret_x, unsigned int& ret_y,
+//double findRotation(Pixels& img, const vector< vector<unsigned int> >& boxes,
+//	unsigned int& ret_x, unsigned int& ret_y,
+//	const unsigned int& max_x, const unsigned int& max_y, Image& image);
+double findRotation(Pixels& img, unsigned int& ret_x, unsigned int& ret_y,
 	const unsigned int& max_x, const unsigned int& max_y, Image& image);
 
 #endif
