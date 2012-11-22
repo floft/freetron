@@ -1,5 +1,20 @@
 #include "image.h"
 
+// Is this pixel black?
+bool isBlack(Pixels& img, const unsigned int& x, const unsigned int& y)
+{
+	const PixelPacket *pixel = img.getConst(x, y, 1, 1);
+	const ColorGray c(*pixel);
+
+	return c.shade() < GRAY_SHADE;
+}
+
+// Find mid point
+Coord midPoint(const Coord& p1, const Coord& p2)
+{
+	return Coord((p1.x+p2.x)/2, (p1.y+p2.y)/2);
+}
+
 // Average color of all pixels within radius r of (x,y)
 // 0 = complete white, 1 = complete black
 double averageColor(Pixels& img,   const unsigned int& x,
@@ -15,25 +30,21 @@ double averageColor(Pixels& img,   const unsigned int& x,
 	unsigned int mid_x = (x1+x2)/2;
 	unsigned int mid_y = (y1+y2)/2;
 
-	const PixelPacket *pixels = img.getConst(x1, y1, x2-x1, y2-y1);
 	unsigned int black  = 0;
 	unsigned int total  = 0;
 	unsigned int r2     = r*r; // Maybe this makes it a bit faster
 
-	for (unsigned int a = y1; a < y2; ++a)
+	for (unsigned int search_y = y1; search_y < y2; ++search_y)
 	{
-		for (unsigned int b = x1; b < x2; ++b)
+		for (unsigned int search_x = x1; search_x < x2; ++search_x)
 		{
-			if (pow(abs(b-mid_x),2) + pow(abs(a-mid_y),2) <= r2)
+			if (pow(abs(search_x-mid_x),2) + pow(abs(search_y-mid_y),2) <= r2)
 			{
-				++total;
-				const ColorMono c(*pixels);
-
-				if (c.mono() == false)
+				if (isBlack(img, search_x, search_y))
 					++black;
-			}
 
-			++pixels;
+				++total;
+			}
 		}
 	}
 
@@ -41,21 +52,6 @@ double averageColor(Pixels& img,   const unsigned int& x,
 		return 1.0*black/total;
 	else
 		return 0;
-}
-
-// Is this pixel black?
-bool isBlack(Pixels& img, const unsigned int& x, const unsigned int& y)
-{
-	const PixelPacket *pixel = img.getConst(x, y, 1, 1);
-	const ColorGray c(*pixel);
-
-	return c.shade() < GRAY_SHADE;
-}
-
-// Find mid point
-Coord midPoint(const Coord& p1, const Coord& p2)
-{
-	return Coord((p1.x+p2.x)/2, (p1.y+p2.y)/2);
 }
 
 // Find leftmost coordinate of box (default top if multiple points)

@@ -17,17 +17,17 @@
 using namespace std;
 using namespace Magick;
 
-// Average color of all pixels within radius r of (x,y)
-// 0 = complete white, 1 = complete black
-double averageColor(Pixels& img,   const unsigned int& x,
-	const unsigned int& y,     const unsigned int& r,
-	const unsigned int& max_x, const unsigned int& max_y);
-
 // Return if the pixel at (x,y) is black
 bool isBlack(Pixels& img, const unsigned int& x, const unsigned int& y);
 
 // Find the midpoint between two points
 Coord midPoint(const Coord& p1, const Coord& p2);
+
+// Average color of all pixels within radius r of (x,y)
+// 0 = complete white, 1 = complete black
+double averageColor(Pixels& img,   const unsigned int& x,
+	const unsigned int& y,     const unsigned int& r,
+	const unsigned int& max_x, const unsigned int& max_y);
 
 // Find the leftmost point defaulting to the top if there are multiple
 Coord leftmost(Pixels& img,
