@@ -35,6 +35,21 @@ double distance(Coord p1, Coord p2)
 	return sqrt(pow((1.0*p2.x-p1.x), 2) + pow((1.0*p2.y-p1.y), 2));
 }
 
+// Calculate mean
+double average(vector<double> v)
+{
+	double total = 0;
+	double mean  = 0;
+
+	for (unsigned int i = 0; i < v.size(); ++i)
+		total+=v[i];
+
+	if (v.size() > 0)
+		mean = total/v.size();
+	
+	return mean;
+}
+
 // Round x to the nearest r
 //   see: http://stackoverflow.com/a/3407254
 unsigned int round(const unsigned int& x, const unsigned int& r)

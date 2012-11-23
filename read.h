@@ -12,9 +12,9 @@
 #include <Magick++.h>
 
 #include "options.h"
-#include "image.h"
 #include "data.h"
 #include "math.h"
+#include "box.h"
 
 using namespace std;
 using namespace Magick;
@@ -22,12 +22,12 @@ using namespace Magick;
 // Determine ID number from boxes 2-11
 unsigned int findID(Pixels& img, const vector<Coord>& boxes,
 	const unsigned int& max_x, const unsigned int& max_y,
-	Image& image);
+	const unsigned int& box_height, Image& image);
 
 // Find x value of filled circle aligned with a point (x,y)
 vector<unsigned int> findFilled(Pixels& img,
 	const unsigned int& x,      const unsigned int& y,
         const unsigned int& stop_x, const unsigned int& max_y,
-	Image& image);
+	const unsigned int& box_height, Image& image);
 
 #endif

@@ -6,8 +6,10 @@
 #define H_DATA
 
 #include <iostream>
+#include <Magick++.h>
 
 using namespace std;
+using namespace Magick;
 
 struct Coord
 {
@@ -16,17 +18,18 @@ struct Coord
 
 	Coord() :x(0), y(0) { }
 	Coord(const unsigned int& x, const unsigned int& y) :x(x), y(y) { }
+
+	// Show this on the image, remember to do img.sync()
+	void display(Pixels& img, Color c) const { *(img.get(x, y, 1, 1)) = c; }
 };
 
-struct BoxData
+struct Options
 {
-	double diagonal;
-	bool   is_box;
-
-	BoxData() :diagonal(0), is_box(false) { }
-
-	BoxData(const double& diagonal, const bool& is_box)
-		:diagonal(diagonal), is_box(is_box) { }
+	unsigned int first_jump;	// Jump to first bubble from black box
+	unsigned int bubble_jump;	// Jump from one bubble to the next
+	double black;			// Percent (0-1) of pixels for marking answer
+	double rotation;		// Rotation needed to get boxes vertical
+	Coord rotate_point;		// Rotate around this point
 };
 
 ostream& operator<<(ostream& os, const Coord& c);

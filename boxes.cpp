@@ -8,7 +8,8 @@ bool box_sort(const Coord& v1, const Coord& v2)
 
 // Find all the boxes in the image
 vector<Coord> findBoxes(Pixels& img,
-	const unsigned int& max_x, const unsigned int& max_y)
+	const unsigned int& max_x, const unsigned int& max_y,
+	unsigned int& ret_height)
 {
 	vector<Coord> boxes;
 
@@ -28,27 +29,21 @@ vector<Coord> findBoxes(Pixels& img,
 			if (isBlack(img, x, y))
 			{
 				Coord point(x, y);
-				Coord left      = leftmost(img,   point, max_x, max_y);
-				Coord right     = rightmost(img,  point, max_x, max_y);
-				Coord top       = topmost(img,    point, max_x, max_y);
-				Coord bottom    = bottommost(img, point, max_x, max_y);
-				Coord midpoint((left.x + right.x)/2, (top.y + bottom.y)/2);
+				Box box(img, point, max_x, max_y);
 
-				unsigned int height = bottom.y - top.y;
-				unsigned int width  = right.x  - left.x;
-
-				// See if the diagonal is about the right length, if the width and height are about right,
-				// and if a circle in the center of the possible box is almost entirely black.
-				if (abs(1.0*width - BOX_WIDTH) <= MAX_ERROR && abs(1.0*height - BOX_HEIGHT) <= MAX_ERROR &&
-					averageColor(img, midpoint.x, midpoint.y, BOX_HEIGHT/2, max_x, max_y) > MIN_BLACK)
+				if (box.valid())
 				{
+					// If we don't have a valid height yet, use this box
+					if (boxes.size() == 0)
+						ret_height = box.height();
+
 					// Make sure we didn't already have this point
-					if (find(boxes.begin(), boxes.end(), midpoint) == boxes.end())
-						boxes.push_back(midpoint);
+					if (find(boxes.begin(), boxes.end(), box.midpoint()) == boxes.end())
+						boxes.push_back(box.midpoint());
 				}
 				
 				// We only care about the left-most black blob, skip if this is a decent-sized blob
-				if (width > DECENT_SIZE)
+				if (box.diagonal() > DECENT_SIZE)
 					break;
 			}
 		}

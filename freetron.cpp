@@ -55,26 +55,27 @@ int main(int argc, char* argv[])
 
 	// Rotate the image
 	Pixels original(pdf);
-	Coord rotate_around;
+	Coord rotate_point;
 	unsigned int width  = pdf.columns();
 	unsigned int height = pdf.rows();
-	double rotation = findRotation(original, rotate_around, width, height);
+	double rotation = findRotation(original, rotate_point, width, height);
 
-	if (rotation != 0)
+	/*if (rotation != 0)
 	{
-		pdf.draw(DrawableTranslation(-rotate_around.x, -rotate_around.y));
+		pdf.draw(DrawableTranslation(-rotate_point.x, -rotate_point.y));
 		pdf.rotate(rotation*180.0/pi);
 		pdf.trim();
 	}
 
-	// Find all the boxes on the left
+	// Find all the boxes on the left, and find box_height while we're at it
 	Pixels rotated(pdf);
 	width  = pdf.columns();
 	height = pdf.rows();
-	vector<Coord> boxes = findBoxes(rotated, width, height);
+	unsigned int box_height;
+	vector<Coord> boxes = findBoxes(rotated, width, height, box_height);
 
 	// Find ID number
-	unsigned int id = findID(rotated, boxes, width, height, pdf);
+	unsigned int id = findID(rotated, boxes, width, height, box_height, pdf);
 
 	// Debug information
 	if (DEBUG)
@@ -90,7 +91,9 @@ int main(int argc, char* argv[])
 	}
 
 	// For now just print it. Later we'll do stuff with it.
-	cout << id << endl;
+	cout << id << endl;*/
+
+	pdf.write("debug.png");
 	
 	return 0;
 }

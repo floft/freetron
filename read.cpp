@@ -2,16 +2,24 @@
 
 // Go right from (x,y) till circle of size BOX_HEIGHT
 vector<unsigned int> findFilled(Pixels& img,
-	const unsigned int& x,      const unsigned int& y,
+	const unsigned int& x, const unsigned int& y,
 	const unsigned int& stop_x, const unsigned int& max_y,
-	Image& image)
+	const unsigned int& box_height, const unsigned int& bubble_jump, Image& image)
 {
+	// Find average answer color
+	vector<double> colors;
+
+	for (unsigned int search_x = x; search_x < stop_x; search_x+=bubble_jump)
+		colors.push_back(averageColor(img, search_x, y, box_height, stop_x, max_y));
+	
+	double answer_black = average(colors);
+
+	// Search at each bubble for something greater than average
 	vector<unsigned int> position;
 
-	// Search to right until hitting circle, jump BOX_WIDTH and continue till stop_x
-	for (unsigned int search_x = x; search_x < stop_x; search_x+=BUBBLE_JUMP)
+	for (unsigned int search_x = x; search_x < stop_x; search_x+=bubble_jump)
 	{
-		if (averageColor(img, search_x, y, BOX_HEIGHT, stop_x, max_y) > MIN_ANSWER_BLACK)
+		if (averageColor(img, search_x, y, box_height, stop_x, max_y) > answer_black)
 		{
 			position.push_back(search_x);
 
@@ -34,31 +42,32 @@ vector<unsigned int> findFilled(Pixels& img,
 // Find ID number from card
 unsigned int findID(Pixels& img, const vector<Coord>& boxes,
 	const unsigned int& max_x, const unsigned int& max_y,
-	Image& image)
+	const unsigned int& box_height, Image& image)
 {
 	unsigned int id = 0;
 	map<unsigned int, unsigned int> filled;
+
+	// Calculate relative values
+	unsigned int first_jump  = floor(1.0*FIRST_JUMP/BOX_HEIGHT*box_height);
+	unsigned int bubble_jump = floor(1.0*BUBBLE_JUMP/BOX_HEIGHT*box_height);
 
 	// ID is boxes 2 - 11
 	for (unsigned int i = 1; i < 11 && i < boxes.size(); ++i)
 	{
 		// move over to the first bubble
-		unsigned int x = boxes[i].x + FIRST_JUMP;
+		unsigned int x = boxes[i].x + first_jump;
 		// start from the middle y value of the box
 		unsigned int y = boxes[i].y;
 
 		// first bubble + 10 bubbles
-		unsigned int stop_x = x + 10*BUBBLE_JUMP;
+		unsigned int stop_x = x + 10*bubble_jump;
 
-		vector<unsigned int> position = findFilled(img, x, y, stop_x, max_y, image);
+		vector<unsigned int> position = findFilled(img, x, y, stop_x, max_y,
+			box_height, bubble_jump, image);
 
+		// at x = position, the value is box # - 1 (0 = box 2);
 		for (unsigned int j = 0; j < position.size(); ++j)
-		{
-			unsigned int rounded = position[j]/BOX_WIDTH;
-
-			// at x = position, the value is box # - 1 (0 = box 2);
-			filled.insert(pair<unsigned int, unsigned int>(rounded, i-1));
-		}
+			filled.insert(pair<unsigned int, unsigned int>(position[j], i-1));
 	}
 
 	// Get ID number from map

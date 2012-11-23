@@ -1,25 +1,5 @@
 #include "rotate.h"
 
-// Determine if this pixel is in a box using diagonal from left to right corner and
-// seeing if the center is black and return the diagonal
-BoxData analyzeBox(Pixels& img, const Coord& p,
-	const unsigned int& max_x, const unsigned int& max_y)
-{
-	bool is_box = false;
-	Coord left      = leftmost(img,  p, max_x, max_y);
-	Coord right     = rightmost(img, p, max_x, max_y);
-	Coord midpoint  = midPoint(left, right);
-	double diagonal = distance(left, right);
-
-	// The "diagonal" should be at minimum the box width (if both the same y value) and
-	// at max the diagonal. See if the center of the box is black.
-	if (diagonal <= DIAGONAL+MAX_ERROR && diagonal >= BOX_WIDTH-MAX_ERROR &&
-		averageColor(img, midpoint.x, midpoint.y, BOX_HEIGHT/2, max_x, max_y) > MIN_BLACK)
-		is_box = true;
-	
-	return BoxData(diagonal, is_box);
-}
-
 // Find top left and bottom right box. Then, determine slope of these two
 // and return the amount to rotate.
 double findRotation(Pixels& img, Coord& ret_coord,
@@ -58,9 +38,9 @@ double findRotation(Pixels& img, Coord& ret_coord,
 			if (isBlack(img, x, y))
 			{
 				Coord point(x, y);
-				BoxData data = analyzeBox(img, point, max_x, max_y);
+				Box box(img, point, max_x, max_y);
 
-				if (data.is_box)
+				if (box.valid())
 				{
 					double current_top_dist = distance(point, origin);
 
@@ -78,7 +58,7 @@ double findRotation(Pixels& img, Coord& ret_coord,
 				}
 				
 				// We only care about the left-most black blob, skip if this is a decent-sized blob
-				if (data.diagonal > DECENT_SIZE)
+				if (box.diagonal() > DECENT_SIZE)
 					break;
 			}
 		}
@@ -103,10 +83,11 @@ double findRotation(Pixels& img, Coord& ret_coord,
 			if (isBlack(img, x, y))
 			{
 				Coord point(x, y);
-				BoxData data = analyzeBox(img, point, max_x, max_y);
+				Box box(img, point, max_x, max_y);
 
-				if (data.is_box)
+				if (box.valid())
 				{
+					box.midpoint().display(img, Color("red"));
 					double current_bottom_dist = distance(point, extreme);
 
 					// It's closer than the previous box
@@ -123,7 +104,7 @@ double findRotation(Pixels& img, Coord& ret_coord,
 				}
 				
 				// We only care about the left-most black blob, skip if this is a decent-sized blob
-				if (data.diagonal > DECENT_SIZE)
+				if (box.diagonal() > DECENT_SIZE)
 					break;
 			}
 		}
@@ -132,6 +113,13 @@ double findRotation(Pixels& img, Coord& ret_coord,
 	// Determine angle from slope of line going through those two boxes
 	double angle = 0;
 	ret_coord = top;
+
+	cout << top << endl;
+	cout << bottom << endl;
+
+	top.display(img, Color("pink"));
+	bottom.display(img, Color("pink"));
+	img.sync();
 	
 	// If denominator is zero, don't rotate
 	if (top.y != bottom.y)
