@@ -9,7 +9,7 @@ bool box_sort(const Coord& v1, const Coord& v2)
 // Find all the boxes in the image
 vector<Coord> findBoxes(Pixels& img,
 	const unsigned int& max_x, const unsigned int& max_y,
-	unsigned int& ret_height)
+	unsigned int& ret_width)
 {
 	vector<Coord> boxes;
 
@@ -33,9 +33,10 @@ vector<Coord> findBoxes(Pixels& img,
 
 				if (box.valid())
 				{
-					// If we don't have a valid height yet, use this box
+					// If we don't have a valid width yet, use this box
+					// TODO: verify this is similar on multiple boxes?
 					if (boxes.size() == 0)
-						ret_height = box.height();
+						ret_width = box.width();
 
 					// Make sure we didn't already have this point
 					if (find(boxes.begin(), boxes.end(), box.midpoint()) == boxes.end())
@@ -43,7 +44,7 @@ vector<Coord> findBoxes(Pixels& img,
 				}
 				
 				// We only care about the left-most black blob, skip if this is a decent-sized blob
-				if (box.diagonal() > DECENT_SIZE)
+				if (box.width() > DECENT_SIZE)
 					break;
 			}
 		}

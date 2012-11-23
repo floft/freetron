@@ -50,6 +50,15 @@ double average(vector<double> v)
 	return mean;
 }
 
+// Check for blank vector
+double max_value(vector<double> v)
+{
+	if (v.size() > 0)
+		return *max_element(v.begin(), v.end());
+	
+	return 0;
+}
+
 // Round x to the nearest r
 //   see: http://stackoverflow.com/a/3407254
 unsigned int round(const unsigned int& x, const unsigned int& r)

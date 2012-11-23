@@ -56,41 +56,33 @@ double averageColor(Pixels& img,
 		return 0;
 }
 
+// Initialize these to 0, calculate them when we find a box
+unsigned int Box::diag = 0;
+vector<unsigned int> Box::diags;
+
 // Only useful when copying to this, since otherwise you can't do anything
 // with this object
 Box::Box()
-	:max_x(0), max_y(0), w(0), h(0), ar(0), img(0), mp(0,0), diag(0)
+	:max_x(0), max_y(0), w(0), h(0), ar(0), img(0), mp(0,0)
 {
 }
 
-// TODO: we can't use a value of 0 for diagonal... we're using it before we calculate it
 Box::Box(Pixels& pixels, const Coord& point,
 	const unsigned int& maxX, const unsigned int& maxY)
-	:max_x(maxX), max_y(maxY), w(0), h(0), ar(0), img(&pixels), mp(0,0), diag(0)
+	:max_x(maxX), max_y(maxY), w(0), h(0), ar(0), img(&pixels), mp(0,0)
 {
 	const Coord left   = leftmost(point);
 	const Coord right  = rightmost(point);
 	const Coord top    = topmost(point);
 	const Coord bottom = bottommost(point);
 
-	left.display(*img, Color("blue"));
-	right.display(*img, Color("blue"));
-	top.display(*img, Color("blue"));
-	bottom.display(*img, Color("blue"));
-
 	mp = Coord((left.x + right.x)/2, (top.y + bottom.y)/2);
 	h  = bottom.y - top.y;
 	w  = right.x  - left.x;
 	ar = (h>0)?1.0*w/h:0;
-
-	// Find correct diag for a box this tall
-	const double approx_width = ASPECT*h;
-	diag = ceil(sqrt(pow(approx_width,2)+pow(h,2)));
-
-	cout << mp << " " << approx_width << " " << diag << endl;
 }
 
-bool Box::valid() const
+bool Box::valid()
 {
 	// Verify we actually have a reference to something
 	if (!img)
@@ -98,14 +90,51 @@ bool Box::valid() const
 	
 	// What should the width be approximately given the aspect ratio (width/height)
 	const double approx_width = ASPECT*h;
+	const unsigned int real_diag = ceil(sqrt(pow(w,2)+pow(h,2)));
 
 	// See if the diag is about the right length, if the width and height are about right,
 	// and if a circle in the center of the possible box is almost entirely black.
 	if (w >= approx_width-MAX_ERROR && w <= approx_width+MAX_ERROR &&
+		(
+			(diag == 0 && real_diag >= MIN_DIAG && real_diag <= MAX_DIAG) ||  // Get rid of 1-5 px boxes
+			(real_diag >= diag-MAX_ERROR && real_diag <= diag+MAX_ERROR)      // Use found valid diagonal
+		) &&
 		averageColor(*img, mp.x, mp.y, h/2, max_x, max_y) > MIN_BLACK)
+	{
+		// This is a valid box, so use this diagonal to speed up calculations on next box
+		// But, nothing worse than incorrect values, better to not use this than
+		// stop searching for the corners early. Thus, make sure there's DIAG_COUNT similar
+		// boxes before using the diagonal value.
+		if (diag == 0 && real_diag >= MIN_DIAG && real_diag <= MAX_DIAG)
+		{
+			// Get test diagonals
+			if (diags.size() < DIAG_COUNT)
+			{
+				diags.push_back(real_diag);
+			}
+			// See if they're valid, and use it if they are; otherwise, try again
+			else
+			{
+				if (absurdDiagonal())
+					diags.clear();
+				else
+					diag = real_diag;
+			}
+		}
+
 		return true;
+	}
 
 	return false;	
+}
+
+bool Box::absurdDiagonal() const
+{
+	for (unsigned int i = 1; i < diags.size(); ++i)
+		if (diags[i] > diags[i-1]+MAX_ERROR || diags[i] < diags[i-1]-MAX_ERROR)
+			return true;
+	
+	return false;
 }
 
 // Find mid point
@@ -123,7 +152,7 @@ unsigned int Box::goUp(const Coord& p, const Coord& orig) const
 	// Go until $error white pixels, hit top of image, or diag
 	// is greater than possible for a box.
 	for (unsigned int search_y = p.y; search_y > 0 && white_count <= MAX_ERROR &&
-		distance(p.x, search_y, orig.x, orig.y) <= diag+MAX_ERROR; --search_y)
+		(diag == 0 || distance(p.x, search_y, orig.x, orig.y) <= diag+MAX_ERROR); --search_y)
 	{
 		if (isBlack(*img, p.x, search_y))
 		{
@@ -145,7 +174,7 @@ unsigned int Box::goLeft(const Coord& p, const Coord& orig) const
 	unsigned int white_count = 0;
 
 	for (unsigned int search_x = p.x; search_x > 0 && white_count <= MAX_ERROR &&
-		distance(search_x, p.y, orig.x, orig.y) <= diag+MAX_ERROR; --search_x)
+		(diag == 0 || distance(search_x, p.y, orig.x, orig.y) <= diag+MAX_ERROR); --search_x)
 	{
 		if (isBlack(*img, search_x, p.y))
 		{
@@ -167,7 +196,7 @@ unsigned int Box::goDown(const Coord& p, const Coord& orig) const
 	unsigned int white_count = 0;
 
 	for (unsigned int search_y = p.y; search_y < max_y && white_count <= MAX_ERROR &&
-		distance(p.x, search_y, orig.x, orig.y) <= diag+MAX_ERROR; ++search_y)
+		(diag == 0 || distance(p.x, search_y, orig.x, orig.y) <= diag+MAX_ERROR); ++search_y)
 	{
 		if (isBlack(*img, p.x, search_y))
 		{
@@ -189,7 +218,7 @@ unsigned int Box::goRight(const Coord& p, const Coord& orig) const
 	unsigned int white_count = 0;
 
 	for (unsigned int search_x = p.x; search_x < max_x && white_count <= MAX_ERROR &&
-		distance(search_x, p.y, orig.x, orig.y) <= diag+MAX_ERROR; ++search_x)
+		(diag == 0 || distance(search_x, p.y, orig.x, orig.y) <= diag+MAX_ERROR); ++search_x)
 	{
 		if (isBlack(*img, search_x, p.y))
 		{
@@ -210,7 +239,7 @@ Coord Box::leftmost(const Coord& point) const
 	Coord left = point;
 
 	// Continue till a leftmost point is found or we are beyond what could be a box
-	while (distance(point, left) <= diag+MAX_ERROR)
+	while (diag == 0 || distance(point, left) <= diag+MAX_ERROR)
 	{
 		// Go up and down till white, find midpoint
 		left.y = (goUp(left, point) + goDown(left, point))/2;
@@ -235,7 +264,7 @@ Coord Box::topmost(const Coord& point) const
 	Coord top = point;
 
 	// Go left and right, find midpoint. Go up. If we can't move, we found it.
-	while (distance(point, top) <= diag+MAX_ERROR)
+	while (diag == 0 || distance(point, top) <= diag+MAX_ERROR)
 	{
 		top.x = (goLeft(top, point) + goRight(top, point))/2;
 
@@ -256,7 +285,7 @@ Coord Box::rightmost(const Coord& point) const
 	Coord right = point;
 
 	// Continue till a rightmost point is found or we are beyond what could be a box
-	while (distance(point, right) <= diag+MAX_ERROR)
+	while (diag == 0 || distance(point, right) <= diag+MAX_ERROR)
 	{
 		// Go up and down till white, find midpoint
 		right.y = (goUp(right, point) + goDown(right, point))/2;
@@ -281,7 +310,7 @@ Coord Box::bottommost(const Coord& point) const
 	Coord bottom = point;
 
 	// Go left and right, find midpoint. Go down. If we can't move, we found it.
-	while (distance(point, bottom) <= diag+MAX_ERROR)
+	while (diag == 0 || distance(point, bottom) <= diag+MAX_ERROR)
 	{
 		bottom.x = (goLeft(bottom, point) + goRight(bottom, point))/2;
 

@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 	unsigned int height = pdf.rows();
 	double rotation = findRotation(original, rotate_point, width, height);
 
-	/*if (rotation != 0)
+	if (rotation != 0)
 	{
 		pdf.draw(DrawableTranslation(-rotate_point.x, -rotate_point.y));
 		pdf.rotate(rotation*180.0/pi);
@@ -71,11 +71,11 @@ int main(int argc, char* argv[])
 	Pixels rotated(pdf);
 	width  = pdf.columns();
 	height = pdf.rows();
-	unsigned int box_height;
-	vector<Coord> boxes = findBoxes(rotated, width, height, box_height);
+	unsigned int box_width;
+	vector<Coord> boxes = findBoxes(rotated, width, height, box_width);
 
 	// Find ID number
-	unsigned int id = findID(rotated, boxes, width, height, box_height, pdf);
+	unsigned int id = findID(rotated, boxes, width, height, box_width, pdf);
 
 	// Debug information
 	if (DEBUG)
@@ -91,9 +91,10 @@ int main(int argc, char* argv[])
 	}
 
 	// For now just print it. Later we'll do stuff with it.
-	cout << id << endl;*/
-
-	pdf.write("debug.png");
+	if (id > 0)
+		cout << id << endl;
+	else
+		cout << "Could not determine ID" << endl;
 	
 	return 0;
 }

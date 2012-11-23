@@ -8,7 +8,6 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <iostream> //TODO: remove this
 #include <Magick++.h>
 
 #include "data.h"
@@ -43,22 +42,26 @@ class Box
 	Pixels* img;
 	// The calculated midpoint
 	Coord mp;
-	// Supposed diagonal calculated from height and ASPECT
-	unsigned int diag;
+	// The diagonal based on the first few valid boxes
+	static unsigned int diag;
+	// Used to see if there's several of the same-sized boxes
+	static vector<unsigned int> diags;
 
 public:
-	Box();
+	Box(); // Only used as a placeholder, then copy another box to it
 	Box(Pixels& pixels, const Coord& point,
 		const unsigned int& maxX, const unsigned int& maxY);
 
-	bool valid() const;
+	bool valid();
 	const unsigned int& width() const  { return w; }
 	const unsigned int& height() const { return h; }
-	const unsigned int& diagonal() const { return diag; }
 	const double& aspect() const  { return ar; }
 	const Coord& midpoint() const { return mp; }
 
 private:
+	// See if diags contains any beyond error margins
+	bool absurdDiagonal() const;
+	
 	// Find the midpoint between two points
 	Coord midPoint(const Coord& p1, const Coord& p2) const;
 

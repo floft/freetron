@@ -58,7 +58,7 @@ double findRotation(Pixels& img, Coord& ret_coord,
 				}
 				
 				// We only care about the left-most black blob, skip if this is a decent-sized blob
-				if (box.diagonal() > DECENT_SIZE)
+				if (box.width() > DECENT_SIZE)
 					break;
 			}
 		}
@@ -104,7 +104,7 @@ double findRotation(Pixels& img, Coord& ret_coord,
 				}
 				
 				// We only care about the left-most black blob, skip if this is a decent-sized blob
-				if (box.diagonal() > DECENT_SIZE)
+				if (box.width() > DECENT_SIZE)
 					break;
 			}
 		}
@@ -113,13 +113,6 @@ double findRotation(Pixels& img, Coord& ret_coord,
 	// Determine angle from slope of line going through those two boxes
 	double angle = 0;
 	ret_coord = top;
-
-	cout << top << endl;
-	cout << bottom << endl;
-
-	top.display(img, Color("pink"));
-	bottom.display(img, Color("pink"));
-	img.sync();
 	
 	// If denominator is zero, don't rotate
 	if (top.y != bottom.y)
