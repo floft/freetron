@@ -23,20 +23,40 @@ bool isBlack(Pixels& img, const unsigned int& x, const unsigned int& y);
 // Find the midpoint between two points
 Coord midPoint(const Coord& p1, const Coord& p2);
 
+// Go a direction until MAX_ERROR white pixels, return last black point
+unsigned int goUp(Pixels& img, const Coord& p, const Coord& orig);
+unsigned int goLeft(Pixels& img, const Coord& p, const Coord& orig);
+unsigned int goDown(Pixels& img,
+	const Coord& p, const Coord& orig,
+	const unsigned int& max_y);
+unsigned int goRight(Pixels& img,
+	const Coord& p, const Coord& orig,
+	const unsigned int& max_x);
+
+// Find extreme points in a direction
+Coord leftmost(Pixels& img, const Coord& original,
+	const unsigned int& max_x, const unsigned int& max_y);
+Coord topmost(Pixels& img, const Coord& original,
+	const unsigned int& max_x, const unsigned int& max_y);
+Coord rightmost(Pixels& img, const Coord& original,
+	const unsigned int& max_x, const unsigned int& max_y);
+Coord bottommost(Pixels& img, const Coord& original,
+	const unsigned int& max_x, const unsigned int& max_y);
+
 // Average color of all pixels within radius r of (x,y)
 // 0 = complete white, 1 = complete black
 double averageColor(Pixels& img,   const unsigned int& x,
 	const unsigned int& y,     const unsigned int& r,
 	const unsigned int& max_x, const unsigned int& max_y);
 
-// Find the leftmost point defaulting to the top if there are multiple
-Coord leftmost(Pixels& img,
+// Go from a leftmost point to the top left point
+/*Coord topLeft(Pixels& img,
 	const unsigned int& x, const unsigned int& y,
 	const unsigned int& max_x, const unsigned int& max_y);
 
-// Find the rightmost point defaulting to the bottom if there are multiple
-Coord rightmost(Pixels& img,
+// Go from a rightmost point to the bottom right point
+Coord bottomRight(Pixels& img,
 	const unsigned int& x, const unsigned int& y,
-	const unsigned int& max_x, const unsigned int& max_y);
+	const unsigned int& max_x, const unsigned int& max_y);*/
 
 #endif

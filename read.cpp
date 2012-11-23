@@ -11,7 +11,6 @@ vector<unsigned int> findFilled(Pixels& img,
 	// Search to right until hitting circle, jump BOX_WIDTH and continue till stop_x
 	for (unsigned int search_x = x; search_x < stop_x; search_x+=BUBBLE_JUMP)
 	{
-
 		if (averageColor(img, search_x, y, BOX_HEIGHT, stop_x, max_y) > MIN_ANSWER_BLACK)
 		{
 			position.push_back(search_x);
@@ -29,13 +28,11 @@ vector<unsigned int> findFilled(Pixels& img,
 		}
 	}
 
-	position.erase(unique(position.begin(), position.end()), position.end());
-
 	return position;
 }
 
 // Find ID number from card
-unsigned int findID(Pixels& img, const vector< vector<Coord> >& boxes,
+unsigned int findID(Pixels& img, const vector<Coord>& boxes,
 	const unsigned int& max_x, const unsigned int& max_y,
 	Image& image)
 {
@@ -46,9 +43,9 @@ unsigned int findID(Pixels& img, const vector< vector<Coord> >& boxes,
 	for (unsigned int i = 1; i < 11 && i < boxes.size(); ++i)
 	{
 		// move over to the first bubble
-		unsigned int x = boxes[i][1].x + FIRST_JUMP;
+		unsigned int x = boxes[i].x + FIRST_JUMP;
 		// start from the middle y value of the box
-		unsigned int y = (boxes[i][0].y+boxes[i][1].y)/2;
+		unsigned int y = boxes[i].y;
 
 		// first bubble + 10 bubbles
 		unsigned int stop_x = x + 10*BUBBLE_JUMP;

@@ -17,8 +17,12 @@
 using namespace std;
 using namespace Magick;
 
+// See if this pixel is in a box
+BoxData analyzeBox(Pixels& img, const Coord& p,
+	const unsigned int& max_x, const unsigned int& max_y);
+
 // Find top-left and bottom-left boxes and give rotation to make them vertical
-double findRotation(Pixels& img, unsigned int& ret_x, unsigned int& ret_y,
+double findRotation(Pixels& img, Coord& ret_coord,
 	const unsigned int& max_x, const unsigned int& max_y);
 
 #endif

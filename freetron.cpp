@@ -2,8 +2,8 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Fix duplicate top-left points with off-by-one x coordinates
  *   - Automatically determine BOX_WIDTH, BOX_HEIGHT, DIAGONAL, MIN_BLACK, FIRST_JUMP, ...
+ *   - Support multi-page PDFs
  */
 
 #include <vector>
@@ -50,18 +50,19 @@ int main(int argc, char* argv[])
 	}
 	
 	// Need this to be an image
+	// TODO: Use tiff for multi-page PDFs?
 	pdf.magick("png");
 
 	// Rotate the image
 	Pixels original(pdf);
-	unsigned int x, y;
+	Coord rotate_around;
 	unsigned int width  = pdf.columns();
 	unsigned int height = pdf.rows();
-	double rotation = findRotation(original, x, y, width, height);
+	double rotation = findRotation(original, rotate_around, width, height);
 
 	if (rotation != 0)
 	{
-		pdf.draw(DrawableTranslation(-x, -y));
+		pdf.draw(DrawableTranslation(-rotate_around.x, -rotate_around.y));
 		pdf.rotate(rotation*180.0/pi);
 		pdf.trim();
 	}
@@ -70,7 +71,7 @@ int main(int argc, char* argv[])
 	Pixels rotated(pdf);
 	width  = pdf.columns();
 	height = pdf.rows();
-	vector< vector<Coord> > boxes = findBoxes(rotated, width, height);
+	vector<Coord> boxes = findBoxes(rotated, width, height);
 
 	// Find ID number
 	unsigned int id = findID(rotated, boxes, width, height, pdf);
@@ -80,14 +81,12 @@ int main(int argc, char* argv[])
 	{
 		for (unsigned int i = 0; i < boxes.size(); ++i)
 		{
-			cout << "(" << boxes[i][0].x << "," << boxes[i][0].y << ")" << endl;
-			pdf.fillColor("green");
-			pdf.draw(DrawableRectangle(boxes[i][0].x-5, boxes[i][0].y-5, boxes[i][0].x+5, boxes[i][0].y+5));
 			pdf.fillColor("orange");
-			pdf.draw(DrawableRectangle(boxes[i][1].x-5, boxes[i][1].y-5, boxes[i][1].x+5, boxes[i][1].y+5));
+			pdf.draw(DrawableRectangle(boxes[i].x-5, boxes[i].y-5,
+				boxes[i].x+5, boxes[i].y+5));
 		}
 		
-		pdf.write("output.png");
+		pdf.write("debug.png");
 	}
 
 	// For now just print it. Later we'll do stuff with it.

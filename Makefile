@@ -26,7 +26,6 @@ uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/freetron
 
 clean:
-	#${MAKE} -C test clean
 	${RM} ${OUT} ${OBJ}
 
 .PHONY: all tests install uninstall clean

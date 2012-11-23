@@ -19,11 +19,8 @@
 using namespace std;
 using namespace Magick;
 
-// See if v is in boxes
-bool inVector(const vector< vector<Coord> >& boxes, vector<Coord> v);
-
 // Determine ID number from boxes 2-11
-unsigned int findID(Pixels& img, const vector< vector<Coord> >& boxes,
+unsigned int findID(Pixels& img, const vector<Coord>& boxes,
 	const unsigned int& max_x, const unsigned int& max_y,
 	Image& image);
 
