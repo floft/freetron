@@ -49,14 +49,4 @@ double averageColor(Pixels& img,   const unsigned int& x,
 	const unsigned int& y,     const unsigned int& r,
 	const unsigned int& max_x, const unsigned int& max_y);
 
-// Go from a leftmost point to the top left point
-/*Coord topLeft(Pixels& img,
-	const unsigned int& x, const unsigned int& y,
-	const unsigned int& max_x, const unsigned int& max_y);
-
-// Go from a rightmost point to the bottom right point
-Coord bottomRight(Pixels& img,
-	const unsigned int& x, const unsigned int& y,
-	const unsigned int& max_x, const unsigned int& max_y);*/
-
 #endif

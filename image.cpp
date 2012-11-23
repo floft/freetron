@@ -133,9 +133,6 @@ Coord leftmost(Pixels& img, const Coord& original,
 		left.x = left_x;
 	}
 
-	// Default up
-	//left.y = goUp(img, left, original);
-
 	return left;
 }
 
@@ -157,9 +154,6 @@ Coord topmost(Pixels& img, const Coord& original,
 
 		top.y = top_y;
 	}
-
-	// Default left
-	//top.y = goLeft(img, top, original);
 
 	return top;
 }
@@ -187,9 +181,6 @@ Coord rightmost(Pixels& img, const Coord& original,
 		right.x = right_x;
 	}
 
-	// Default down
-	//right.y = goDown(img, right, original, max_y);
-
 	return right;
 }
 
@@ -211,9 +202,6 @@ Coord bottommost(Pixels& img, const Coord& original,
 
 		bottom.y = bottom_y;
 	}
-
-	// Default right
-	//bottom.y = goRight(img, bottom, original, max_x);
 
 	return bottom;
 }
@@ -260,109 +248,4 @@ double averageColor(Pixels& img,   const unsigned int& x,
 		return 1.0*black/total;
 	else
 		return 0;
-}
-
-// Go from a leftmost point to the top left point
-Coord topLeft(Pixels& img,
-	const unsigned int& x, const unsigned int& y,
-	const unsigned int& max_x, const unsigned int& max_y)
-{
-	const Coord original(x,y);
-	Coord left = leftmost(img, original, max_x, max_y);
-	Coord top  = topmost(img,  original, max_x, max_y);
-	double dist = distance(left, top);
-
-	// Find top and left, if top is within error of height, then it's the top-left point,
-	// otherwise it's probably the top-right point, so go with the leftmost point
-	if (dist <= BOX_HEIGHT+MAX_ERROR && dist >= BOX_HEIGHT-MAX_ERROR)
-		return top;
-	else
-		return left;
-	
-	// Go up and right till can't go up anymore
-	/*while (distance(original, top) <= DIAGONAL+MAX_ERROR)
-	{
-		top.y = goUp(img, top, original);
-
-		// Go right till black pixel, end of image, or $error white pixels (wouldn't continue
-		// looping if there was a black pixel)
-		unsigned int top_x = top.x;
-
-		// Start by moving over one, we already know the current one is black
-		for (unsigned int search_x = top.x+1, count = 0; search_x < max_x && count <= MAX_ERROR; ++search_x, ++count)
-		{
-			if (isBlack(img, search_x, top.y))
-			{
-				top_x = search_x;
-				break;
-			}
-		}
-
-		if (x == 912 && y == 1895)
-		*(img.get(top.x, top.y, 1, 1)) = Color("pink");
-
-		// If we haven't moved, we found the point
-		if (top_x == top.x)
-			break;
-		// Do it again
-		else
-			top.x = top_x;
-	}
-
-	// Finish off by going as far left as possible
-	top.x = goLeft(img, top, original);
-
-	return top;*/
-}
-
-// Go from a rightmost point to the bottom right point
-Coord bottomRight(Pixels& img,
-	const unsigned int& x, const unsigned int& y,
-	const unsigned int& max_x, const unsigned int& max_y)
-{
-	// Start out with the "top" point being on the left
-	const Coord original(x,y);
-	Coord right  = rightmost(img,  original, max_x, max_y);
-	Coord bottom = bottommost(img, original, max_x, max_y);
-	double dist = distance(right, bottom);
-
-	// Find right and bottom, if bottom is within error of height, then it's the
-	// bottom-left point, otherwise it's probably the top-right point, so go with
-	// the rightmost point
-	if (dist <= BOX_HEIGHT+MAX_ERROR && dist >= BOX_HEIGHT-MAX_ERROR)
-		return bottom;
-	else
-		return right;
-	
-	// Go up and right till can't go up anymore
-	/*while (distance(original, bottom) <= DIAGONAL+MAX_ERROR)
-	{
-		bottom.y = goDown(img, bottom, original, max_y);
-
-		// Go left till black pixel, end of image, or $error white pixels (wouldn't continue
-		// looping if there was a black pixel)
-		unsigned int bottom_x = bottom.x;
-
-		// Start by moving over one, we already know the current one is black
-		for (unsigned int search_x = bottom.x-1, count = 0; search_x > 0 && count <= MAX_ERROR; --search_x, ++count)
-		{
-			if (isBlack(img, search_x, bottom.y))
-			{
-				bottom_x = search_x;
-				break;
-			}
-		}
-
-		// If we haven't moved, we found the point
-		if (bottom_x == bottom.x)
-			break;
-		// Do it again
-		else
-			bottom.x = bottom_x;
-	}
-
-	// Finish off by going as far right as possible
-	bottom.x = goRight(img, bottom, original, max_x);
-
-	return bottom;*/
 }

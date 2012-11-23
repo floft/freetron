@@ -132,12 +132,6 @@ double findRotation(Pixels& img, Coord& ret_coord,
 	// Determine angle from slope of line going through those two boxes
 	double angle = 0;
 	ret_coord = top;
-
-	/*image.fillColor("pink");
-	image.draw(DrawableRectangle(top.x-5, top.y-5,
-		top.x+5, top.y+5));
-	image.draw(DrawableRectangle(bottom.x-5, bottom.y-5,
-		bottom.x+5, bottom.y+5));*/
 	
 	// If denominator is zero, don't rotate
 	if (top.y != bottom.y)

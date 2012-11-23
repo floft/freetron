@@ -43,6 +43,6 @@ unsigned int round(const unsigned int& x, const unsigned int& r)
 
 	if (remainder == 0)
 		return x;
-	
+
 	return x + r - remainder;
 }
