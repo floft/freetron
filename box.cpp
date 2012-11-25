@@ -1,13 +1,9 @@
 #include "box.h"
 
 // Is this pixel black?
-// Note: If changing this, also change if statement in averageColor
 bool isBlack(Pixels& img, const unsigned int& x, const unsigned int& y)
 {
-	const PixelPacket *pixel = img.getConst(x, y, 1, 1);
-	const ColorGray c(*pixel);
-
-	return c.shade() < GRAY_SHADE;
+	return (img.pixel(Coord(x,y)) < GRAY_SHADE);
 }
 
 // Average color of all pixels within radius r of (x,y)
@@ -26,8 +22,8 @@ double averageColor(Pixels& img,
 	const unsigned int mid_x = (x1+x2)/2;
 	const unsigned int mid_y = (y1+y2)/2;
 
-	const PixelPacket *pixels = img.getConst(x1, y1, x2-x1, y2-y1);
-	const unsigned int r2 = r*r; // Maybe this makes it a bit faster
+	// Maybe this makes it a bit faster
+	const unsigned int r2 = r*r;
 
 	unsigned int black  = 0;
 	unsigned int total  = 0;
@@ -38,15 +34,11 @@ double averageColor(Pixels& img,
 		{
 			if (pow(abs(search_x-mid_x),2) + pow(abs(search_y-mid_y),2) <= r2)
 			{
-				const ColorGray c(*pixels);
-
-				if (c.shade() < GRAY_SHADE)
+				if (isBlack(img, x, y))
 					++black;
 
 				++total;
 			}
-
-			++pixels;
 		}
 	}
 

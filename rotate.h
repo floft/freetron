@@ -8,14 +8,13 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <Magick++.h>
 
 #include "options.h"
+#include "pixels.h"
 #include "math.h"
 #include "box.h"
 
 using namespace std;
-using namespace Magick;
 
 // Find top-left and bottom-left boxes and give rotation to make them vertical
 double findRotation(Pixels& img, Coord& ret_coord,

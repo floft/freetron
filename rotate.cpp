@@ -87,7 +87,7 @@ double findRotation(Pixels& img, Coord& ret_coord,
 
 				if (box.valid())
 				{
-					box.midpoint().display(img, Color("red"));
+					//box.midpoint().display(img, Color("red"));
 					double current_bottom_dist = distance(point, extreme);
 
 					// It's closer than the previous box

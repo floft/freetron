@@ -4,11 +4,7 @@ OBJ		= ${SRC:.cpp=.o}
 
 CC		= g++
 CFLAGS		:= -g -funroll-loops -O3 -std=c++11 -Wall ${CFLAGS}
-
-CFLAGS		+= $(shell GraphicsMagick++-config --cppflags --cxxflags)
-LDFLAGS		+= $(shell GraphicsMagick++-config --ldflags --libs)
-
-LDFLAGS		+= -lpodofo
+LDFLAGS		:= -lpodofo -lIL
 
 PREFIX		?= /usr/local
 MANPREFIX	?= ${PREFIX}/share/man

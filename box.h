@@ -8,14 +8,13 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <Magick++.h>
 
 #include "data.h"
 #include "math.h"
 #include "options.h"
+#include "pixels.h"
 
 using namespace std;
-using namespace Magick;
 
 // Return if the pixel at (x,y) is black
 bool isBlack(Pixels& img, const unsigned int& x, const unsigned int& y);

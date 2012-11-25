@@ -6,10 +6,8 @@
 #define H_DATA
 
 #include <iostream>
-#include <Magick++.h>
 
 using namespace std;
-using namespace Magick;
 
 struct Coord
 {
@@ -20,7 +18,7 @@ struct Coord
 	Coord(const unsigned int& x, const unsigned int& y) :x(x), y(y) { }
 
 	// Show this on the image, remember to do img.sync()
-	void display(Pixels& img, Color c) const { *(img.get(x, y, 1, 1)) = c; }
+	//void display(Pixels& img, Color c) const { *(img.get(x, y, 1, 1)) = c; }
 };
 
 struct Options

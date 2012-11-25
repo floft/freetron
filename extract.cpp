@@ -1,8 +1,8 @@
 #include "extract.h"
 
-vector<Image> extract(const char* filename)
+vector<Pixels> extract(const char* filename)
 {
-	vector<Image> images;
+	vector<Pixels> images;
 	PdfObject* pObj = NULL;
 	PdfMemDocument document(filename);
 	TCIVecObjects it = document.GetObjects().begin();
@@ -40,19 +40,14 @@ vector<Image> extract(const char* filename)
 	return images;
 }
 
-Image readPDFImage(PdfObject* object, bool isJpeg)
+Pixels readPDFImage(PdfObject* object, bool isJpeg)
 {
-	Blob b;
-	Image i;
-	i.density(Geometry(300,300));
-	i.magick("RGB");
+	Pixels pixels;
 
 	if (isJpeg)
 	{
 		PdfMemStream* stream = dynamic_cast<PdfMemStream*>(object->GetStream());
-		cout << stream->GetLength() << endl;
-		b = Blob(stream->Get(), stream->GetLength());
-		i.magick("jpeg");
+		pixels = Pixels(IL_JPG, stream->Get(), stream->GetLength());
 	}
 	else
 	{
@@ -73,15 +68,10 @@ Image readPDFImage(PdfObject* object, bool isJpeg)
 		memcpy(stream, header, s.size());
 		memcpy(stream+s.size(), buffer, len);
 
-		b = Blob(stream, len+s.size());
+		pixels = Pixels(IL_PNM, stream, len+s.size());
 		free(buffer);
 		delete[] stream;
-
-		i.magick("ppm");
 	}
 
-	i.read(b);
-	i.magick("png");
-
-	return i;
+	return pixels;
 }

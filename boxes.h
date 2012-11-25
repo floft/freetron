@@ -8,15 +8,14 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <Magick++.h>
 
 #include "options.h"
+#include "pixels.h"
 #include "data.h"
 #include "math.h"
 #include "box.h"
 
 using namespace std;
-using namespace Magick;
 
 // Functions needed due to using nested vectors
 bool box_sort(const Coord& v1, const Coord& v2);

@@ -9,7 +9,7 @@ const bool DEBUG = true;		// Output test image
 
 const double       ASPECT      = 2.722;	// Aspect ratio of black boxes Width/Height (calculated with 49/18)
 const double       MIN_BLACK   = 0.9;	// Minimum percent (0-1) of pixels black in circle to be considered a box
-const double       GRAY_SHADE  = 0.5;	// Average RGB considered black
+const float        GRAY_SHADE  = 0.5;	// Average RGB considered black
 const unsigned int MAX_ERROR   = 5;	// Max error in pixels (e.g. box_width plus or minus error)
 const unsigned int MIN_JUMP    = 500;	// Increase in distance to top or bottom left needed to give up searching for closer box (better too high than too low)
 const unsigned int DECENT_SIZE = 15;	// Continue searching for a box if only encountering black specs less than 5 pixels wide

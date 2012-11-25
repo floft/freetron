@@ -41,7 +41,7 @@ vector<unsigned int> findFilled(Pixels& img,
 	const unsigned int& x, const unsigned int& y,
 	const unsigned int& stop_x, const unsigned int& max_y,
 	const unsigned int& box_width, const unsigned int& bubble_jump,
-	const double& answer_black, Image& image)
+	const double& answer_black)
 {
 	vector<unsigned int> position;
 	const unsigned int box_height = box_width/ASPECT;
@@ -52,17 +52,17 @@ vector<unsigned int> findFilled(Pixels& img,
 		{
 			position.push_back(search_x);
 
-			if (DEBUG)
+			/*if (DEBUG)
 			{
 				image.fillColor("green");
 				image.draw(DrawableRectangle(search_x-5,y-5,search_x+5,y+5));
-			}
+			}*/
 		}
-		else if (DEBUG)
+		/*else if (DEBUG)
 		{
 			image.fillColor("red");
 			image.draw(DrawableRectangle(search_x-5,y-5,search_x+5,y+5));
-		}
+		}*/
 	}
 
 	return position;
@@ -71,7 +71,7 @@ vector<unsigned int> findFilled(Pixels& img,
 // Find ID number from card
 unsigned int findID(Pixels& img, const vector<Coord>& boxes,
 	const unsigned int& max_x, const unsigned int& max_y,
-	const unsigned int& box_width, Image& image)
+	const unsigned int& box_width)
 {
 	unsigned int id = 0;
 	map<unsigned int, unsigned int> filled;
@@ -105,7 +105,7 @@ unsigned int findID(Pixels& img, const vector<Coord>& boxes,
 	for (unsigned int i = start_box-1; i < end_box && i < boxes.size(); ++i)
 	{
 		vector<unsigned int> position = findFilled(img, start_x, boxes[i].y, stop_x, max_y,
-			box_width, bubble_jump, answer_black, image);
+			box_width, bubble_jump, answer_black);
 
 		// at x = position, the value is box # - 1 (0 = box 2);
 		for (unsigned int j = 0; j < position.size(); ++j)

@@ -9,15 +9,14 @@
 #include <cmath>
 #include <vector>
 #include <string>
-#include <Magick++.h>
 
 #include "options.h"
+#include "pixels.h"
 #include "data.h"
 #include "math.h"
 #include "box.h"
 
 using namespace std;
-using namespace Magick;
 
 // See if the boxes are vertical
 bool vertical(const vector<Coord>& boxes,
@@ -26,7 +25,7 @@ bool vertical(const vector<Coord>& boxes,
 // Determine ID number from boxes 2-11
 unsigned int findID(Pixels& img, const vector<Coord>& boxes,
 	const unsigned int& max_x, const unsigned int& max_y,
-	const unsigned int& box_width, Image& image);
+	const unsigned int& box_width);
 
 // Determine answer black from max colors
 double answerBlack(Pixels& img, const vector<Coord>& boxes,
@@ -40,6 +39,6 @@ vector<unsigned int> findFilled(Pixels& img,
 	const unsigned int& x, const unsigned int& y,
         const unsigned int& stop_x, const unsigned int& max_y,
 	const unsigned int& box_width, const unsigned int& bubble_jump,
-	const double& answer_black, Image& image);
+	const double& answer_black);
 
 #endif

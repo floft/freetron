@@ -6,19 +6,18 @@
 #ifndef H_EXTRACT
 #define H_EXTRACT
 
-#include <iostream> //TODO: REMOVE THIS
 #include <cstdio>
 #include <vector>
 #include <string>
 #include <sstream>
 #include <podofo/podofo.h>
-#include <Magick++.h>
+
+#include "pixels.h"
 
 using namespace std;
 using namespace PoDoFo;
-using namespace Magick;
 
-vector<Image> extract(const char* filename);
-Image readPDFImage(PdfObject* object, bool isJpeg);
+vector<Pixels> extract(const char* filename);
+Pixels readPDFImage(PdfObject* object, bool isJpeg);
 
 #endif
