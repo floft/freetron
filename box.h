@@ -16,9 +16,6 @@
 
 using namespace std;
 
-// Return if the pixel at (x,y) is black
-bool isBlack(Pixels& img, const unsigned int& x, const unsigned int& y);
-
 // Average color of all pixels within radius r of (x,y)
 // 0 = complete white, 1 = complete black
 double averageColor(Pixels& img,

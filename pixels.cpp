@@ -31,13 +31,13 @@ Pixels::Pixels(ILenum type, const char* lump, unsigned int size)
 		// Move data into a nicer format
 		unsigned int x = 0;
 		unsigned int y = 0;
-		p = vector< vector<float> >(height, vector<float>(width));
+		p = vector< vector<bool> >(height, vector<bool>(width));
 
 		// Start at third
 		for (unsigned int i = 2; i < total; i+=3)
 		{
-			// Average for grayscale
-			p[y][x] = (1.0*data[i-2]+data[i-1]+data[i])/3;
+			// Average for grayscale, just save if it's black or not
+			p[y][x] = (1.0*data[i-2]+data[i-1]+data[i])/3 < GRAY_SHADE;
 			
 			// Increase y every time we get to end of row
 			if (x+1 == width)
@@ -62,7 +62,7 @@ Pixels::Pixels(ILenum type, const char* lump, unsigned int size)
 	ilDeleteImages(1, &name);
 }
 
-float Pixels::pixel(Coord c, float default_value) const
+bool Pixels::black(Coord c, bool default_value) const
 {
 	if (c.x > w || c.y > h)
 		return default_value;

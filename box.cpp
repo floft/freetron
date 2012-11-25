@@ -1,11 +1,5 @@
 #include "box.h"
 
-// Is this pixel black?
-bool isBlack(Pixels& img, const unsigned int& x, const unsigned int& y)
-{
-	return (img.pixel(Coord(x,y)) < GRAY_SHADE);
-}
-
 // Average color of all pixels within radius r of (x,y)
 // 0 = complete white, 1 = complete black
 double averageColor(Pixels& img,
@@ -34,7 +28,7 @@ double averageColor(Pixels& img,
 		{
 			if (pow(abs(search_x-mid_x),2) + pow(abs(search_y-mid_y),2) <= r2)
 			{
-				if (isBlack(img, x, y))
+				if (img.black(Coord(x, y)))
 					++black;
 
 				++total;
@@ -146,7 +140,7 @@ unsigned int Box::goUp(const Coord& p, const Coord& orig) const
 	for (unsigned int search_y = p.y; search_y > 0 && white_count <= MAX_ERROR &&
 		(diag == 0 || distance(p.x, search_y, orig.x, orig.y) <= diag+MAX_ERROR); --search_y)
 	{
-		if (isBlack(*img, p.x, search_y))
+		if (img->black(Coord(p.x, search_y)))
 		{
 			new_y = search_y;
 			white_count = 0;
@@ -168,7 +162,7 @@ unsigned int Box::goLeft(const Coord& p, const Coord& orig) const
 	for (unsigned int search_x = p.x; search_x > 0 && white_count <= MAX_ERROR &&
 		(diag == 0 || distance(search_x, p.y, orig.x, orig.y) <= diag+MAX_ERROR); --search_x)
 	{
-		if (isBlack(*img, search_x, p.y))
+		if (img->black(Coord(search_x, p.y)))
 		{
 			new_x = search_x;
 			white_count = 0;
@@ -190,7 +184,7 @@ unsigned int Box::goDown(const Coord& p, const Coord& orig) const
 	for (unsigned int search_y = p.y; search_y < max_y && white_count <= MAX_ERROR &&
 		(diag == 0 || distance(p.x, search_y, orig.x, orig.y) <= diag+MAX_ERROR); ++search_y)
 	{
-		if (isBlack(*img, p.x, search_y))
+		if (img->black(Coord(p.x, search_y)))
 		{
 			new_y = search_y;
 			white_count = 0;
@@ -212,7 +206,7 @@ unsigned int Box::goRight(const Coord& p, const Coord& orig) const
 	for (unsigned int search_x = p.x; search_x < max_x && white_count <= MAX_ERROR &&
 		(diag == 0 || distance(search_x, p.y, orig.x, orig.y) <= diag+MAX_ERROR); ++search_x)
 	{
-		if (isBlack(*img, search_x, p.y))
+		if (img->black(Coord(search_x, p.y)))
 		{
 			new_x = search_x;
 			white_count = 0;

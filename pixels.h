@@ -12,10 +12,11 @@
 #include <stdexcept>
 
 #include "data.h"
+#include "options.h"
 
 class Pixels
 {
-	vector< vector<float> > p;
+	vector< vector<bool> > p;
 	unsigned int w;
 	unsigned int h;
 	bool loaded;
@@ -31,7 +32,7 @@ public:
 	void rotate(double rad, Coord point = Coord(0,0));
 	// Default is used if coord doesn't exist (which should never happen)
 	// Default to white to assume that this isn't a useful pixel
-	float pixel(Coord c, float default_value = 1) const;
+	bool black(Coord c, bool default_value = false) const;
 	// Used for debugging
 	void square(Coord point, unsigned int size);
 };

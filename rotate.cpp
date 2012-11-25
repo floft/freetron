@@ -35,7 +35,7 @@ double findRotation(Pixels& img, Coord& ret_coord,
 				continue;
 
 			// See if it might be a box
-			if (isBlack(img, x, y))
+			if (img.black(Coord(x, y)))
 			{
 				Coord point(x, y);
 				Box box(img, point, max_x, max_y);
@@ -80,7 +80,7 @@ double findRotation(Pixels& img, Coord& ret_coord,
 				continue;
 
 			// It's black
-			if (isBlack(img, x, y))
+			if (img.black(Coord(x, y)))
 			{
 				Coord point(x, y);
 				Box box(img, point, max_x, max_y);
