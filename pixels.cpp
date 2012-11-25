@@ -53,12 +53,13 @@ Pixels::Pixels(ILenum type, const char* lump, unsigned int size)
 
 		loaded = true;
 		delete[] data;
-		ilDeleteImages(1, &name);
 	}
 	else
 	{
 		throw runtime_error("could not read image");
 	}
+	
+	ilDeleteImages(1, &name);
 }
 
 float Pixels::pixel(Coord c, float default_value) const
