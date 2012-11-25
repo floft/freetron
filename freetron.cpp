@@ -3,12 +3,14 @@
  *
  * Todo:
  *   - Use Threading class for each image
+ *   - Use a PDF library that can extract all of the images
  */
 
 #include <vector>
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
+#include <IL/il.h>
 #include <podofo/podofo.h>
 
 #include "extract.h"
@@ -42,6 +44,11 @@ int main(int argc, char* argv[])
 	try
 	{
 		images = extract(argv[1]);
+	}
+	catch (const runtime_error& error)
+	{
+		cerr << "Error: " << error.what() << endl;
+		return 1;
 	}
 	catch (const PdfError& error)
 	{
