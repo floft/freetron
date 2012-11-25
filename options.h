@@ -5,7 +5,7 @@
 #ifndef H_OPTIONS
 #define H_OPTIONS
 
-const bool DEBUG = false;		// Output test image
+const bool DEBUG = true;		// Output test image
 
 const double       ASPECT      = 2.722;	// Aspect ratio of black boxes Width/Height (calculated with 49/18)
 const double       MIN_BLACK   = 0.9;	// Minimum percent (0-1) of pixels black in circle to be considered a box

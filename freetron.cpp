@@ -2,15 +2,19 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Automatically determine BOX_WIDTH, BOX_HEIGHT, DIAGONAL, MIN_BLACK, FIRST_JUMP, ...
- *   - Support multi-page PDFs
+ *   - Use some library other than graphicsmagick for pixel access
+ *     and rotation
+ *   - Use Threading class for each image
  */
 
 #include <vector>
+#include <sstream>
 #include <iostream>
 #include <stdexcept>
 #include <Magick++.h>
+#include <podofo/podofo.h>
 
+#include "extract.h"
 #include "options.h"
 #include "rotate.h"
 #include "data.h"
@@ -19,6 +23,7 @@
 
 using namespace std;
 using namespace Magick;
+using namespace PoDoFo;
 
 void help()
 {
@@ -28,9 +33,7 @@ void help()
 int main(int argc, char* argv[])
 {
 	InitializeMagick(argv[0]);
-	Image pdf;
-	pdf.density(Geometry(300,300));
-	pdf.backgroundColor(Color("white"));
+	vector<Image> images;
 
 	if (argc != 2)
 	{
@@ -38,63 +41,72 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	// Attempt to get the PDF
+	// Attempt to get the images from the PDF
 	try
 	{
-		pdf.read(argv[1]);
+		images = extract(argv[1]);
 	}
 	catch (Exception &error)
 	{
 		cerr << error.what() << endl;
 		return 1;
 	}
+	catch (const PdfError& error)
+	{
+		error.PrintErrorMsg();
+		return error.GetError();
+	}
 	
-	// Need this to be an image
-	// TODO: Use tiff for multi-page PDFs?
-	pdf.magick("png");
-
-	// Rotate the image
-	Pixels original(pdf);
-	Coord rotate_point;
-	unsigned int width  = pdf.columns();
-	unsigned int height = pdf.rows();
-	double rotation = findRotation(original, rotate_point, width, height);
-
-	if (rotation != 0)
+	// Support multi-page PDFs
+	for (unsigned int i = 0; i < images.size(); ++i)
 	{
-		pdf.draw(DrawableTranslation(-rotate_point.x, -rotate_point.y));
-		pdf.rotate(rotation*180.0/pi);
-		pdf.trim();
-	}
+		Image& image = images[i];
 
-	// Find all the boxes on the left, and find box_height while we're at it
-	Pixels rotated(pdf);
-	width  = pdf.columns();
-	height = pdf.rows();
-	unsigned int box_width;
-	vector<Coord> boxes = findBoxes(rotated, width, height, box_width);
+		// Rotate the image
+		Pixels original(image);
+		Coord rotate_point;
+		unsigned int width  = image.columns();
+		unsigned int height = image.rows();
+		double rotation = findRotation(original, rotate_point, width, height);
 
-	// Find ID number
-	unsigned int id = findID(rotated, boxes, width, height, box_width, pdf);
-
-	// Debug information
-	if (DEBUG)
-	{
-		for (unsigned int i = 0; i < boxes.size(); ++i)
+		if (rotation != 0)
 		{
-			pdf.fillColor("orange");
-			pdf.draw(DrawableRectangle(boxes[i].x-5, boxes[i].y-5,
-				boxes[i].x+5, boxes[i].y+5));
+			image.draw(DrawableTranslation(-rotate_point.x, -rotate_point.y));
+			image.rotate(rotation*180.0/pi);
+			image.trim();
 		}
-		
-		pdf.write("debug.png");
-	}
 
-	// For now just print it. Later we'll do stuff with it.
-	if (id > 0)
-		cout << id << endl;
-	else
-		cout << "Could not determine ID" << endl;
+		// Find all the boxes on the left, and find box_height while we're at it
+		Pixels rotated(image);
+		width  = image.columns();
+		height = image.rows();
+		unsigned int box_width;
+		vector<Coord> boxes = findBoxes(rotated, width, height, box_width);
+
+		// Find ID number
+		unsigned int id = findID(rotated, boxes, width, height, box_width, image);
+
+		// Debug information
+		if (DEBUG)
+		{
+			for (unsigned int j = 0; j < boxes.size(); ++j)
+			{
+				image.fillColor("orange");
+				image.draw(DrawableRectangle(boxes[j].x-5, boxes[j].y-5,
+					boxes[j].x+5, boxes[j].y+5));
+			}
+			
+			stringstream s;
+			s << "debug" << i << ".png";
+			image.write(s.str());
+		}
+
+		// For now just print it. Later we'll do stuff with it.
+		if (id > 0)
+			cout << id << endl;
+		else
+			cout << "Could not determine ID" << endl;
+	}
 	
 	return 0;
 }
