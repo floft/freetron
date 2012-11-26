@@ -4,7 +4,7 @@ OBJ		= ${SRC:.cpp=.o}
 
 CC		= g++
 CFLAGS		:= -g -funroll-loops -O3 -std=c++11 -Wall ${CFLAGS}
-LDFLAGS		:= -lpodofo -lIL
+LDFLAGS		:= -lpodofo -lIL -ltiff -ltiffxx
 
 PREFIX		?= /usr/local
 MANPREFIX	?= ${PREFIX}/share/man

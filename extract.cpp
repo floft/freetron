@@ -3,7 +3,7 @@
 vector<Pixels> extract(const char* filename)
 {
 	vector<Pixels> images;
-	PdfObject* pObj = NULL;
+	PdfObject* obj = NULL;
 	PdfMemDocument document(filename);
 	TCIVecObjects it = document.GetObjects().begin();
 
@@ -11,23 +11,25 @@ vector<Pixels> extract(const char* filename)
 	{
 		if ((*it)->IsDictionary())
 		{
-			PdfObject* pObjType = (*it)->GetDictionary().GetKey(PdfName::KeyType);
-			PdfObject* pObjSubType = (*it)->GetDictionary().GetKey(PdfName::KeySubtype);
+			PdfObject* objType = (*it)->GetDictionary().GetKey(PdfName::KeyType);
+			PdfObject* objSubType = (*it)->GetDictionary().GetKey(PdfName::KeySubtype);
 
-			if ((pObjType    && pObjType->IsName()    && pObjType->GetName().GetName() == "XObject") ||
-			    (pObjSubType && pObjSubType->IsName() && pObjSubType->GetName().GetName() == "Image" ))
+			if ((objType    && objType->IsName()    && objType->GetName().GetName() == "XObject") ||
+			    (objSubType && objSubType->IsName() && objSubType->GetName().GetName() == "Image" ))
 			{
-				pObj = (*it)->GetDictionary().GetKey(PdfName::KeyFilter);
+				obj = (*it)->GetDictionary().GetKey(PdfName::KeyFilter);
 
-				if (pObj && pObj->IsArray() && pObj->GetArray().GetSize() == 1 &&
-				    pObj->GetArray()[0].IsName() && pObj->GetArray()[0].GetName().GetName() == "DCTDecode")
-					pObj = &pObj->GetArray()[0];
+				if (obj && obj->IsArray() && obj->GetArray().GetSize() == 1 &&
+				    obj->GetArray()[0].IsName() && obj->GetArray()[0].GetName().GetName() == "DCTDecode")
+					obj = &obj->GetArray()[0];
 				
 				// See if it's JPEG
-				if(pObj && pObj->IsName() && pObj->GetName().GetName() == "DCTDecode")
-					images.push_back(readPDFImage(*it, true));
+				if(obj && obj->IsName() && obj->GetName().GetName() == "DCTDecode")
+					images.push_back(readPDFImage(*it, IL_JPG));
+				else if (obj && obj->IsName() && obj->GetName().GetName() == "CCITTFaxDecode")
+					images.push_back(readPDFImage(*it, IL_TIF));
 				else
-					images.push_back(readPDFImage(*it, false));
+					images.push_back(readPDFImage(*it, IL_PNM));
 
 				document.FreeObjectMemory(*it);
 			}
@@ -40,21 +42,60 @@ vector<Pixels> extract(const char* filename)
 	return images;
 }
 
-Pixels readPDFImage(PdfObject* object, bool isJpeg)
+Pixels readPDFImage(PdfObject* object, unsigned int type)
 {
 	Pixels pixels;
 
-	if (isJpeg)
+	if (type == IL_JPG)
 	{
+		cout << "jpeg" << endl;
 		PdfMemStream* stream = dynamic_cast<PdfMemStream*>(object->GetStream());
-		pixels = Pixels(IL_JPG, stream->Get(), stream->GetLength());
+		pixels = Pixels(type, stream->Get(), stream->GetLength());
+	}
+	else if (type == IL_TIF)
+	{
+		cout << "tif" << endl;
+		//ostringstream os;
+		ofstream os("cow.tif", ofstream::out);
+
+		const unsigned int bits = 1;
+		const unsigned int samples = 1;
+		const unsigned int width  = object->GetDictionary().GetKey(PdfName("Width"))->GetNumber();
+		const unsigned int height = object->GetDictionary().GetKey(PdfName("Height"))->GetNumber();
+		
+		TIFF* tif = TIFFStreamOpen("MemTIFF", &os);
+		TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width);
+		TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height);
+		TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, width*samples));
+		TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bits);
+		TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, samples);
+		//TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, object->GetDictionary().GetKey(PdfName("Width"))->GetNumber());
+		TIFFSetField(tif, TIFFTAG_T4OPTIONS, GROUP3OPT_FILLBITS);
+		TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+		TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+		TIFFSetField(tif, TIFFTAG_COMPRESSION, COMPRESSION_CCITTRLE);
+		TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISWHITE);
+		TIFFSetField(tif, TIFFTAG_FAXMODE, FAXMODE_BYTEALIGN|FAXMODE_CLASSF);
+		
+		//PdfMemStream* stream = dynamic_cast<PdfMemStream*>(object->GetStream());
+
+		//TIFFWriteRawStrip(tif, 0, stream, stream->GetLength());
+		unsigned char* stream = new unsigned char[78808];
+		FILE* raw = fopen("images/out.raw", "r");
+		fread(stream, 1, 78808, raw);
+		fclose(raw);
+		TIFFWriteRawStrip(tif, 0, stream, 78808);
+		TIFFClose(tif);
+
+		//pixels = Pixels(type, os.str().c_str(), os.tellp());
 	}
 	else
 	{
+		cout << "ppm" << endl;
 		ostringstream os;
-		os << "P6\n# Image extracted by PoDoFo\n"
-		   << object->GetDictionary().GetKey( PdfName("Width" ) )->GetNumber() << " "
-		   << object->GetDictionary().GetKey( PdfName("Height" ) )->GetNumber() << "\n"
+		os << "P6\n"
+		   << object->GetDictionary().GetKey(PdfName("Width"))->GetNumber() << " "
+		   << object->GetDictionary().GetKey(PdfName("Height"))->GetNumber() << "\n"
 		   << "255\n";
 		string s = os.str();
 
@@ -68,7 +109,7 @@ Pixels readPDFImage(PdfObject* object, bool isJpeg)
 		memcpy(stream, header, s.size());
 		memcpy(stream+s.size(), buffer, len);
 
-		pixels = Pixels(IL_PNM, stream, len+s.size());
+		pixels = Pixels(type, stream, len+s.size());
 		free(buffer);
 		delete[] stream;
 	}

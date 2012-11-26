@@ -4,6 +4,14 @@
  * Todo:
  *   - Use Threading class for each image
  *   - Use a PDF library that can extract all of the images
+ *   - Use size_t, iterators, etc. instead of converting all to uint and whatnot
+ *   - Use bitmap for storing bools in Pixels
+ *   - Write [multithreaded?] rotation code
+ *   - Use Threading class for each image
+ *   - Make image extraction multi-threaded for computing isBlack bool or maybe
+ *      start processing other pages after key has been processed while reading
+ *      other images
+ *   - Use neural network?
  */
 
 #include <vector>
