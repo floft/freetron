@@ -65,10 +65,8 @@ int main(int argc, char* argv[])
 	}
 	
 	// Support multi-page PDFs
-	for (unsigned int i = 0; i < images.size(); ++i)
+	for (Pixels& image : images)
 	{
-		Pixels& image = images[i];
-
 		// Rotate the image
 		Coord rotate_point;
 		double rotation = findRotation(image, rotate_point, image.width(), image.height());
@@ -87,8 +85,8 @@ int main(int argc, char* argv[])
 		// Debug information
 		/*if (DEBUG)
 		{
-			for (unsigned int j = 0; j < boxes.size(); ++j)
-				img.square(boxes[j], 5);
+			for (const Coord& box : boxes)
+				img.square(box, 5);
 			
 			stringstream s;
 			s << "debug" << i << ".png";

@@ -16,14 +16,14 @@
 
 class Pixels
 {
-	vector< vector<bool> > p;
+	vector<vector<bool>> p;
 	unsigned int w;
 	unsigned int h;
 	bool loaded;
 
 public:
 	Pixels(); // Useful for placeholder
-	Pixels(ILenum type, const char* lump, unsigned int size);
+	Pixels(ILenum type, const char* lump, const unsigned int size);
 
 	bool valid() const { return loaded; }
 	unsigned int width() const { return w; }
@@ -32,9 +32,9 @@ public:
 	void rotate(double rad, Coord point = Coord(0,0));
 	// Default is used if coord doesn't exist (which should never happen)
 	// Default to white to assume that this isn't a useful pixel
-	bool black(Coord c, bool default_value = false) const;
+	bool black(Coord c, const bool default_value = false) const;
 	// Used for debugging
-	void square(Coord point, unsigned int size);
+	void square(Coord point, const unsigned int size);
 };
 
 #endif

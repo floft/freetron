@@ -3,9 +3,9 @@
 // Average color of all pixels within radius r of (x,y)
 // 0 = complete white, 1 = complete black
 double averageColor(Pixels& img,
-	const unsigned int& x, const unsigned int& y,
-	const unsigned int& r,
-	const unsigned int& max_x, const unsigned int& max_y)
+	const unsigned int x, const unsigned int y,
+	const unsigned int r,
+	const unsigned int max_x, const unsigned int max_y)
 {
 	// Find square around circle of radius r centered at (x,y)
 	const unsigned int x1 = min((x<r)?0:x-r, max_x);
@@ -46,16 +46,9 @@ double averageColor(Pixels& img,
 unsigned int Box::diag = 0;
 vector<unsigned int> Box::diags;
 
-// Only useful when copying to this, since otherwise you can't do anything
-// with this object
-Box::Box()
-	:max_x(0), max_y(0), w(0), h(0), ar(0), img(0), mp(0,0)
-{
-}
-
 Box::Box(Pixels& pixels, const Coord& point,
-	const unsigned int& maxX, const unsigned int& maxY)
-	:max_x(maxX), max_y(maxY), w(0), h(0), ar(0), img(&pixels), mp(0,0)
+	const unsigned int maxX, const unsigned int maxY)
+	:max_x(maxX), max_y(maxY), img(&pixels)
 {
 	const Coord left   = leftmost(point);
 	const Coord right  = rightmost(point);
@@ -116,6 +109,10 @@ bool Box::valid()
 
 bool Box::absurdDiagonal() const
 {
+	// Need at least two to have something beyond error of the previous one
+	if (diags.size() < 2)
+		return true;
+
 	for (unsigned int i = 1; i < diags.size(); ++i)
 		if (diags[i] > diags[i-1]+MAX_ERROR || diags[i] < diags[i-1]-MAX_ERROR)
 			return true;

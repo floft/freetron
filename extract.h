@@ -26,6 +26,6 @@ using namespace std;
 using namespace PoDoFo;
 
 vector<Pixels> extract(const char* filename);
-Pixels readPDFImage(PdfObject* object, unsigned int type);
+Pixels readPDFImage(PdfObject* object, const unsigned int type);
 
 #endif

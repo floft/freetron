@@ -3,7 +3,7 @@
 // Find top left and bottom right box. Then, determine slope of these two
 // and return the amount to rotate.
 double findRotation(Pixels& img, Coord& ret_coord,
-	const unsigned int& max_x, const unsigned int& max_y)
+	const unsigned int max_x, const unsigned int max_y)
 {
 	Coord top;
 	Coord bottom;

@@ -2,7 +2,7 @@
 
 // See if the boxes are skewed
 bool vertical(const vector<Coord>& boxes,
-	const unsigned int& start_box, const unsigned int& end_box)
+	const unsigned int start_box, const unsigned int end_box)
 {
 	// (start_box-1)+1 = start_box
 	for (unsigned int i = start_box; i < boxes.size() && i < end_box; ++i)
@@ -13,10 +13,10 @@ bool vertical(const vector<Coord>& boxes,
 }
 
 double answerBlack(Pixels& img, const vector<Coord>& boxes,
-	const unsigned int& start_box, const unsigned int& end_box,
-	const unsigned int& start_x, const unsigned int& stop_x,
-	const unsigned int& max_y,
-	const unsigned int& box_width, const unsigned int& bubble_jump)
+	const unsigned int start_box, const unsigned int end_box,
+	const unsigned int start_x, const unsigned int stop_x,
+	const unsigned int max_y,
+	const unsigned int box_width, const unsigned int bubble_jump)
 {
 	vector<double> colors;
 	const unsigned int box_height = box_width/ASPECT;
@@ -38,10 +38,10 @@ double answerBlack(Pixels& img, const vector<Coord>& boxes,
 
 // Go right from (x,y) looking for circle of color greater than answer_black
 vector<unsigned int> findFilled(Pixels& img,
-	const unsigned int& x, const unsigned int& y,
-	const unsigned int& stop_x, const unsigned int& max_y,
-	const unsigned int& box_width, const unsigned int& bubble_jump,
-	const double& answer_black)
+	const unsigned int x, const unsigned int y,
+	const unsigned int stop_x, const unsigned int max_y,
+	const unsigned int box_width, const unsigned int bubble_jump,
+	const double answer_black)
 {
 	vector<unsigned int> position;
 	const unsigned int box_height = box_width/ASPECT;
@@ -70,8 +70,8 @@ vector<unsigned int> findFilled(Pixels& img,
 
 // Find ID number from card
 unsigned int findID(Pixels& img, const vector<Coord>& boxes,
-	const unsigned int& max_x, const unsigned int& max_y,
-	const unsigned int& box_width)
+	const unsigned int max_x, const unsigned int max_y,
+	const unsigned int box_width)
 {
 	unsigned int id = 0;
 	map<unsigned int, unsigned int> filled;
@@ -108,13 +108,13 @@ unsigned int findID(Pixels& img, const vector<Coord>& boxes,
 			box_width, bubble_jump, answer_black);
 
 		// at x = position, the value is box # - 1 (0 = box 2);
-		for (unsigned int j = 0; j < position.size(); ++j)
-			filled.insert(pair<unsigned int, unsigned int>(position[j], i-1));
+		for (const unsigned int pos : position)
+			filled[pos] = i-1;
 	}
 
 	// Get ID number from map
 	int i;
-	map<unsigned int, unsigned int>::iterator iter;
+	map<unsigned int, unsigned int>::const_iterator iter;
 
 	for (i = filled.size()-1, iter = filled.begin(); iter != filled.end(); ++iter, --i)
 	{

@@ -3,7 +3,7 @@
 vector<Pixels> extract(const char* filename)
 {
 	vector<Pixels> images;
-	PdfObject* obj = NULL;
+	PdfObject* obj = nullptr;
 	PdfMemDocument document(filename);
 	TCIVecObjects it = document.GetObjects().begin();
 
@@ -42,7 +42,7 @@ vector<Pixels> extract(const char* filename)
 	return images;
 }
 
-Pixels readPDFImage(PdfObject* object, unsigned int type)
+Pixels readPDFImage(PdfObject* object, const unsigned int type)
 {
 	Pixels pixels;
 

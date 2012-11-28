@@ -15,11 +15,11 @@ using namespace std;
 
 const double pi = 3.14159265358979323846264338327950;
 
-double stdDev(vector<double> v, double& average);
-double distance(double x1, double y1, double x2, double y2);
-double distance(Coord p1, Coord p2);
-double average(vector<double> v);
-double max_value(vector<double> v);
-unsigned int round(const unsigned int& x, const unsigned int& r);
+double stdDev(const vector<double>& v, double& average);
+double distance(const double x1, const double y1, const double x2, const double y2);
+double distance(const Coord& p1, const Coord& p2);
+double average(const vector<double>& v);
+double max_value(const vector<double>& v);
+unsigned int round(const unsigned int x, const unsigned int r);
 
 #endif

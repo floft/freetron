@@ -6,7 +6,7 @@ Pixels::Pixels()
 }
 
 // type is either IL_JPG or IL_PNM in this case
-Pixels::Pixels(ILenum type, const char* lump, unsigned int size)
+Pixels::Pixels(ILenum type, const char* lump, const unsigned int size)
 	:w(0), h(0), loaded(false)
 {
 	ILuint name;
@@ -31,7 +31,7 @@ Pixels::Pixels(ILenum type, const char* lump, unsigned int size)
 		// Move data into a nicer format
 		unsigned int x = 0;
 		unsigned int y = 0;
-		p = vector< vector<bool> >(height, vector<bool>(width));
+		p = vector<vector<bool>>(height, vector<bool>(width));
 
 		// Start at third
 		for (unsigned int i = 2; i < total; i+=3)
@@ -62,7 +62,7 @@ Pixels::Pixels(ILenum type, const char* lump, unsigned int size)
 	ilDeleteImages(1, &name);
 }
 
-bool Pixels::black(Coord c, bool default_value) const
+bool Pixels::black(Coord c, const bool default_value) const
 {
 	if (c.x > w || c.y > h)
 		return default_value;
