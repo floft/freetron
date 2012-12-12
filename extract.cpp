@@ -23,7 +23,6 @@ vector<Pixels> extract(const char* filename)
 				    obj->GetArray()[0].IsName() && obj->GetArray()[0].GetName().GetName() == "DCTDecode")
 					obj = &obj->GetArray()[0];
 				
-				// See if it's JPEG
 				if(obj && obj->IsName() && obj->GetName().GetName() == "DCTDecode")
 					images.push_back(readPDFImage(*it, IL_JPG));
 				else if (obj && obj->IsName() && obj->GetName().GetName() == "CCITTFaxDecode")
@@ -55,6 +54,26 @@ Pixels readPDFImage(PdfObject* object, const unsigned int type)
 	else if (type == IL_TIF)
 	{
 		cout << "tif" << endl;
+		//PdfMemStream* stream = dynamic_cast<PdfMemStream*>(object->GetStream());
+		//PdfFilteredDecodeStream decode(stream, ePdfFilter_CCITTFaxDecode, true);
+		//decode.Write();
+
+		char* buffer;
+		pdf_long len;
+
+		object->GetStream()->GetFilteredCopy(&buffer, &len);
+		cout << len << endl;
+
+		//char* stream = new char[len+s.size()];
+		//memcpy(stream, header, s.size());
+		//memcpy(stream+s.size(), buffer, len);
+
+		pixels = Pixels(type, buffer, len);
+		free(buffer);
+		//delete[] stream;
+
+		//pixels = Pixels(type, stream->Get(), stream->GetLength());
+		/*
 		//ostringstream os;
 		ofstream os("cow.tif", ofstream::out);
 
@@ -77,7 +96,12 @@ Pixels readPDFImage(PdfObject* object, const unsigned int type)
 		TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISWHITE);
 		TIFFSetField(tif, TIFFTAG_FAXMODE, FAXMODE_BYTEALIGN|FAXMODE_CLASSF);
 		
-		//PdfMemStream* stream = dynamic_cast<PdfMemStream*>(object->GetStream());
+		PdfMemStream* stream2 = dynamic_cast<PdfMemStream*>(object->GetStream());
+
+		if (stream2 == NULL)
+			cout << "stream is null" << endl;
+		else
+			cout << "stream is not null" << endl;
 
 		//TIFFWriteRawStrip(tif, 0, stream, stream->GetLength());
 		unsigned char* stream = new unsigned char[78808];
@@ -85,7 +109,7 @@ Pixels readPDFImage(PdfObject* object, const unsigned int type)
 		fread(stream, 1, 78808, raw);
 		fclose(raw);
 		TIFFWriteRawStrip(tif, 0, stream, 78808);
-		TIFFClose(tif);
+		TIFFClose(tif);*/
 
 		//pixels = Pixels(type, os.str().c_str(), os.tellp());
 	}
