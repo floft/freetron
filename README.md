@@ -11,5 +11,5 @@ statistics about the exam.
 
 **Dependencies**  
 PoDoFo (LGPL)  
-OpenIL/DevIL (LGPL) 
+OpenIL/DevIL (LGPL)  
 libtiff (custom: http://www.libtiff.org/misc.html)
