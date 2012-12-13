@@ -69,3 +69,75 @@ bool Pixels::black(Coord c, const bool default_value) const
 	
 	return p[c.y][c.x];
 }
+
+void Pixels::mark(const Mark& m)
+{
+	marks.push_back(m);
+}
+
+void Pixels::save(const string& filename) const
+{
+	vector<vector<bool>> copy = p;
+
+	// Draw the marks on a copy of the image
+	for (const Mark& m : marks)
+	{
+		const Coord& p = m.point;
+		const unsigned int s = m.size;
+
+		// Left
+		for (unsigned int i = p.x; i > p.x-s && i > 0; --i)
+			copy[p.y][i] = true;
+		// Right
+		for (unsigned int i = p.x; i < p.x+s && i < w; ++i)
+			copy[p.y][i] = true;
+		// Up
+		for (unsigned int i = p.y; i > p.y-s && i > 0; --i)
+			copy[i][p.x] = true;
+		// Down
+		for (unsigned int i = p.y; i < p.y+s && i < h; ++i)
+			copy[i][p.x] = true;
+	}
+
+	// Convert this back to a real black and white image
+	ILuint name;
+	ilGenImages(1, &name);
+	ilBindImage(name);
+	ilEnable(IL_FILE_OVERWRITE);
+	
+	// 3 because IL_RGB
+	const unsigned int total = w*h*3;
+	unsigned char* data = new unsigned char[total];
+
+	// Position in data
+	unsigned int pos = 0;
+
+	// For some reason the image is flipped when loading it with ilTexImage, so
+	// start at the bottom and go up.
+	for (unsigned int y = h-1; y > 0; --y)
+	{
+		for (unsigned int x = 0; x < w; ++x)
+		{
+			// Black or white for RGB
+			const unsigned char val = (copy[y][x])?0:255;
+			data[pos]   = val;
+			data[pos+1] = val;
+			data[pos+2] = val;
+
+			// For R, G, and B that we just set
+			pos+=3;
+		}
+	}
+	
+	ilTexImage(w, h, 1, 3, IL_RGB, IL_UNSIGNED_BYTE, data);
+	
+	if (!ilSaveImage(filename.c_str()) || ilGetError() == IL_INVALID_PARAM)
+		throw runtime_error("could not save image");
+	
+	ilDeleteImages(1, &name);
+}
+
+void Pixels::rotate(double rad, Coord point)
+{
+	
+}

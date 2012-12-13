@@ -6,6 +6,7 @@
 #define H_OPTIONS
 
 const bool DEBUG = true;		// Output test image
+const unsigned int MARK_SIZE = 30;	// Size of lines output in debug image
 
 const double       ASPECT      = 2.722; // Aspect ratio of black boxes Width/Height (calculated with 49/18)
 const double       MIN_BLACK   = 0.9;	// Minimum percent (0-1) of pixels black in circle to be considered a box

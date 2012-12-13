@@ -26,4 +26,4 @@ uninstall:
 clean:
 	${RM} ${OUT} ${OBJ}
 
-.PHONY: all tests install uninstall clean
+.PHONY: all install uninstall clean

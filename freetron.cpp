@@ -65,6 +65,8 @@ int main(int argc, char* argv[])
 	}
 	
 	// Support multi-page PDFs
+	unsigned int count = 0;
+
 	for (Pixels& image : images)
 	{
 		// Rotate the image
@@ -83,15 +85,17 @@ int main(int argc, char* argv[])
 		unsigned int id = findID(image, boxes, image.width(), image.height(), box_width);
 
 		// Debug information
-		/*if (DEBUG)
+		if (DEBUG)
 		{
 			for (const Coord& box : boxes)
-				img.square(box, 5);
+				image.mark(Mark(box));
 			
-			stringstream s;
-			s << "debug" << i << ".png";
-			image.write(s.str());
-		}*/
+			ostringstream s;
+			s << "debug" << count << ".png";
+			image.save(s.str());
+
+			++count;
+		}
 
 		// For now just print it. Later we'll do stuff with it.
 		if (id > 0)
