@@ -70,9 +70,9 @@ bool Pixels::black(Coord c, const bool default_value) const
 	return p[c.y][c.x];
 }
 
-void Pixels::mark(const Mark& m)
+void Pixels::mark(const Coord& c)
 {
-	marks.push_back(m);
+	marks.push_back(c);
 }
 
 void Pixels::save(const string& filename) const
@@ -80,23 +80,20 @@ void Pixels::save(const string& filename) const
 	vector<vector<bool>> copy = p;
 
 	// Draw the marks on a copy of the image
-	for (const Mark& m : marks)
+	for (const Coord& c : marks)
 	{
-		const Coord& p = m.point;
-		const unsigned int s = m.size;
-
 		// Left
-		for (unsigned int i = p.x; i > p.x-s && i > 0; --i)
-			copy[p.y][i] = true;
+		for (unsigned int i = c.x; i > c.x-MARK_SIZE && i > 0; --i)
+			copy[c.y][i] = true;
 		// Right
-		for (unsigned int i = p.x; i < p.x+s && i < w; ++i)
-			copy[p.y][i] = true;
+		for (unsigned int i = c.x; i < c.x+MARK_SIZE && i < w; ++i)
+			copy[c.y][i] = true;
 		// Up
-		for (unsigned int i = p.y; i > p.y-s && i > 0; --i)
-			copy[i][p.x] = true;
+		for (unsigned int i = c.y; i > c.y-MARK_SIZE && i > 0; --i)
+			copy[i][c.x] = true;
 		// Down
-		for (unsigned int i = p.y; i < p.y+s && i < h; ++i)
-			copy[i][p.x] = true;
+		for (unsigned int i = c.y; i < c.y+MARK_SIZE && i < h; ++i)
+			copy[i][c.x] = true;
 	}
 
 	// Convert this back to a real black and white image
@@ -139,5 +136,26 @@ void Pixels::save(const string& filename) const
 
 void Pixels::rotate(double rad, Coord point)
 {
-	
+	vector<vector<bool>> copy(h, vector<bool>(w));
+
+	const double sin_rad = sin(rad);
+	const double cos_rad = cos(rad);
+
+	for (unsigned int y = 0; y < h; ++y)
+	{
+		for (unsigned int x = 0; x < w; ++x)
+		{
+			// "Translate" it, and then add back in the point's x and y
+			const int trans_x = x - point.x;
+			const int trans_y = y - point.y;
+			const unsigned int new_x = trans_x*cos_rad + trans_y*sin_rad + point.x;
+			const unsigned int new_y = trans_y*cos_rad - trans_x*sin_rad + point.y;
+
+			// Get rid of invalid points
+			if (new_y < h && new_x < w)
+				copy[new_y][new_x] = p[y][x];
+		}
+	}
+
+	p = copy;
 }

@@ -52,17 +52,9 @@ vector<unsigned int> findFilled(Pixels& img,
 		{
 			position.push_back(search_x);
 
-			/*if (DEBUG)
-			{
-				image.fillColor("green");
-				image.draw(DrawableRectangle(search_x-5,y-5,search_x+5,y+5));
-			}*/
+			if (DEBUG)
+				img.mark(Coord(x,y));
 		}
-		/*else if (DEBUG)
-		{
-			image.fillColor("red");
-			image.draw(DrawableRectangle(search_x-5,y-5,search_x+5,y+5));
-		}*/
 	}
 
 	return position;

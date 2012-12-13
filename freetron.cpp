@@ -2,10 +2,10 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
+ *   - Redo max error, average color, etc. to work with Pixels only storing bool
  *   - Use Threading class for each image
- *   - Use a PDF library that can extract all of the images
  *   - Use size_t, iterators, etc. instead of converting all to uint and whatnot
- *   - Use bitmap for storing bools in Pixels
+ *   - Use dynamic_bitset for storing bools in Pixels
  *   - Write [multithreaded?] rotation code
  *   - Use Threading class for each image
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe
@@ -74,8 +74,9 @@ int main(int argc, char* argv[])
 		double rotation = findRotation(image, rotate_point, image.width(), image.height());
 		cout << rotation*180/pi << endl;
 
-		//if (rotation != 0)
-		//	image.rotate(rotation, rotate_point);
+		// Negative since the origin is the top-left point
+		if (rotation != 0)
+			image.rotate(-rotation, rotate_point);
 
 		// Find all the boxes on the left, and find box_height while we're at it
 		unsigned int box_width;
@@ -88,7 +89,7 @@ int main(int argc, char* argv[])
 		if (DEBUG)
 		{
 			for (const Coord& box : boxes)
-				image.mark(Mark(box));
+				image.mark(box);
 			
 			ostringstream s;
 			s << "debug" << count << ".png";

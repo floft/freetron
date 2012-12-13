@@ -7,6 +7,7 @@
 #ifndef H_PIXELS
 #define H_PIXELS
 
+#include <cmath>
 #include <vector>
 #include <string>
 #include <stdexcept>
@@ -15,19 +16,9 @@
 #include "data.h"
 #include "options.h"
 
-struct Mark
-{
-	Coord point;
-	unsigned int size;
-
-	Mark() :size(MARK_SIZE) { }
-	Mark (Coord c) :point(c), size(MARK_SIZE) { }
-	Mark (Coord c, const unsigned int s) :point(c), size(s) { }
-};
-
 class Pixels
 {
-	vector<Mark> marks;
+	vector<Coord> marks;
 	vector<vector<bool>> p;
 	unsigned int w;
 	unsigned int h;
@@ -49,7 +40,7 @@ public:
 	bool black(Coord c, const bool default_value = false) const;
 
 	// Used for debugging, marks are written to a copy of this when saved
-	void mark(const Mark& m);
+	void mark(const Coord& m);
 	void save(const string& filename) const;
 };
 
