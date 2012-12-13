@@ -44,82 +44,58 @@ vector<Pixels> extract(const char* filename)
 Pixels readPDFImage(PdfObject* object, const unsigned int type)
 {
 	Pixels pixels;
+	const unsigned int width  = object->GetDictionary().GetKey(PdfName("Width"))->GetNumber();
+	const unsigned int height = object->GetDictionary().GetKey(PdfName("Height"))->GetNumber();
 
 	if (type == IL_JPG)
 	{
-		cout << "jpeg" << endl;
 		PdfMemStream* stream = dynamic_cast<PdfMemStream*>(object->GetStream());
 		pixels = Pixels(type, stream->Get(), stream->GetLength());
 	}
 	else if (type == IL_TIF)
 	{
-		cout << "tif" << endl;
-		//PdfMemStream* stream = dynamic_cast<PdfMemStream*>(object->GetStream());
-		//PdfFilteredDecodeStream decode(stream, ePdfFilter_CCITTFaxDecode, true);
-		//decode.Write();
-
-		char* buffer;
-		pdf_long len;
-
-		object->GetStream()->GetFilteredCopy(&buffer, &len);
-		cout << len << endl;
-
-		//char* stream = new char[len+s.size()];
-		//memcpy(stream, header, s.size());
-		//memcpy(stream+s.size(), buffer, len);
-
-		pixels = Pixels(type, buffer, len);
-		free(buffer);
-		//delete[] stream;
-
-		//pixels = Pixels(type, stream->Get(), stream->GetLength());
-		/*
-		//ostringstream os;
-		ofstream os("cow.tif", ofstream::out);
-
+		// Monochrome, otherwise wouldn't have used CCITT
 		const unsigned int bits = 1;
 		const unsigned int samples = 1;
-		const unsigned int width  = object->GetDictionary().GetKey(PdfName("Width"))->GetNumber();
-		const unsigned int height = object->GetDictionary().GetKey(PdfName("Height"))->GetNumber();
 		
-		TIFF* tif = TIFFStreamOpen("MemTIFF", &os);
-		TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width);
-		TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height);
-		TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, width*samples));
-		TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bits);
-		TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, samples);
-		//TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, object->GetDictionary().GetKey(PdfName("Width"))->GetNumber());
-		TIFFSetField(tif, TIFFTAG_T4OPTIONS, GROUP3OPT_FILLBITS);
-		TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
-		TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
-		TIFFSetField(tif, TIFFTAG_COMPRESSION, COMPRESSION_CCITTRLE);
-		TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISWHITE);
-		TIFFSetField(tif, TIFFTAG_FAXMODE, FAXMODE_BYTEALIGN|FAXMODE_CLASSF);
+		ostringstream os;
+		TIFF* tif = TIFFStreamOpen("Input", &os);
+		TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,		width);
+		TIFFSetField(tif, TIFFTAG_IMAGELENGTH,		height);
+		TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,	bits);
+		TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL,	samples);
+		TIFFSetField(tif, TIFFTAG_FILLORDER,		FILLORDER_MSB2LSB);
+		TIFFSetField(tif, TIFFTAG_PLANARCONFIG,		PLANARCONFIG_CONTIG);
+		TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,		PHOTOMETRIC_MINISWHITE);
+		TIFFSetField(tif, TIFFTAG_XRESOLUTION,		204.0); // From fax2tiff
+		TIFFSetField(tif, TIFFTAG_YRESOLUTION,		196.0); // ditto
+		TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT,	RESUNIT_INCH);
+		TIFFSetField(tif, TIFFTAG_COMPRESSION, 		COMPRESSION_CCITTFAX4);
+		TIFFSetField(tif, TIFFTAG_ORIENTATION,		ORIENTATION_TOPLEFT);
+		TIFFSetField(tif, TIFFTAG_FAXMODE,		FAXMODE_CLASSF);
+		TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP,		(uint32)-1L);
 		
-		PdfMemStream* stream2 = dynamic_cast<PdfMemStream*>(object->GetStream());
+		// stream->Get returns read-only, so copy it
+		PdfMemStream* stream = dynamic_cast<PdfMemStream*>(object->GetStream());
+		const char* readonly = stream->Get();
+		pdf_long len = stream->GetLength();
+		char* buffer = new char[len];
+		memcpy(buffer, readonly, len);
 
-		if (stream2 == NULL)
-			cout << "stream is null" << endl;
-		else
-			cout << "stream is not null" << endl;
+		TIFFWriteRawStrip(tif, 0, buffer, len);
+		TIFFWriteDirectory(tif);
+		TIFFClose(tif);
 
-		//TIFFWriteRawStrip(tif, 0, stream, stream->GetLength());
-		unsigned char* stream = new unsigned char[78808];
-		FILE* raw = fopen("images/out.raw", "r");
-		fread(stream, 1, 78808, raw);
-		fclose(raw);
-		TIFFWriteRawStrip(tif, 0, stream, 78808);
-		TIFFClose(tif);*/
+		delete[] buffer;
 
-		//pixels = Pixels(type, os.str().c_str(), os.tellp());
+		pixels = Pixels(type, os.str().c_str(), os.tellp());
 	}
 	else
 	{
-		cout << "ppm" << endl;
 		ostringstream os;
 		os << "P6\n"
-		   << object->GetDictionary().GetKey(PdfName("Width"))->GetNumber() << " "
-		   << object->GetDictionary().GetKey(PdfName("Height"))->GetNumber() << "\n"
+		   << width  << " "
+		   << height << "\n"
 		   << "255\n";
 		string s = os.str();
 
