@@ -19,7 +19,7 @@
 class Pixels
 {
 	vector<Coord> marks;
-	vector<vector<bool>> p;
+	vector<vector<unsigned char>> p;
 	unsigned int w;
 	unsigned int h;
 	bool loaded;
@@ -32,7 +32,9 @@ public:
 	unsigned int width() const { return w; }
 	unsigned int height() const { return h; }
 
-	// rad is angle of rotation in radians
+	// This doesn't extend the image at all. If rotation and points
+	// are determined correctly, it won't rotate out of the image.
+	// Note: rad is angle of rotation in radians
 	void rotate(double rad, Coord point = Coord(0,0));
 
 	// Default is used if coord doesn't exist (which should never happen)

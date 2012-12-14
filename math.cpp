@@ -36,12 +36,9 @@ double distance(const Coord& p1, const Coord& p2)
 double average(const vector<double>& v)
 {
 	if (v.size() > 0)
-		return 0;
-
-	double total = 0;
-	accumulate(v.begin(), v.end(), total);
+		return accumulate(v.begin(), v.end(), 0.0)/v.size();
 	
-	return total/v.size();
+	return 0;
 }
 
 // Check for blank vector
@@ -49,6 +46,15 @@ double max_value(const vector<double>& v)
 {
 	if (v.size() > 0)
 		return *max_element(v.begin(), v.end());
+	
+	return 0;
+}
+
+// Check for blank vector
+double min_value(const vector<double>& v)
+{
+	if (v.size() > 0)
+		return *min_element(v.begin(), v.end());
 	
 	return 0;
 }

@@ -28,14 +28,14 @@ double averageColor(Pixels& img,
 		{
 			if (pow(abs(search_x-mid_x),2) + pow(abs(search_y-mid_y),2) <= r2)
 			{
-				if (img.black(Coord(x, y)))
+				if (img.black(Coord(search_x, search_y)))
 					++black;
 
 				++total;
 			}
 		}
 	}
-
+	
 	if (total > 0)
 		return 1.0*black/total;
 	else

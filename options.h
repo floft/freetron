@@ -5,11 +5,12 @@
 #ifndef H_OPTIONS
 #define H_OPTIONS
 
-const bool DEBUG = true;		// Output test image
-const unsigned int MARK_SIZE = 30;	// Size of lines output in debug image
+const bool DEBUG = false;		// Output test image
+const unsigned int  MARK_SIZE = 30;	// Size of lines output in debug image
+const unsigned char MARK_COLOR = 127;	// Grey color
 
 const double       ASPECT      = 2.722; // Aspect ratio of black boxes Width/Height (calculated with 49/18)
-const double       MIN_BLACK   = 0.9;	// Minimum percent (0-1) of pixels black in circle to be considered a box
+const double       MIN_BLACK   = 0.75;	// Minimum percent (0-1) of pixels black in circle to be considered a box
 const double       GRAY_SHADE  = 0.5;	// Average RGB considered black
 const unsigned int MAX_ERROR   = 5;	// Max error in pixels (e.g. box_width plus or minus error)
 const unsigned int MIN_JUMP    = 500;	// Increase in distance to top or bottom left needed to give up searching for closer box (better too high than too low)

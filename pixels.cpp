@@ -31,13 +31,13 @@ Pixels::Pixels(ILenum type, const char* lump, const unsigned int size)
 		// Move data into a nicer format
 		unsigned int x = 0;
 		unsigned int y = 0;
-		p = vector<vector<bool>>(height, vector<bool>(width));
+		p = vector<vector<unsigned char>>(height, vector<unsigned char>(width));
 
 		// Start at third
 		for (unsigned int i = 2; i < total; i+=3)
 		{
-			// Average for grayscale, just save if it's black or not
-			p[y][x] = (1.0*data[i-2]+data[i-1]+data[i])/3 < GRAY_SHADE;
+			// Average for grayscale
+			p[y][x] = floor((1.0*data[i-2]+data[i-1]+data[i])/3);
 			
 			// Increase y every time we get to end of row
 			if (x+1 == width)
@@ -67,7 +67,7 @@ bool Pixels::black(Coord c, const bool default_value) const
 	if (c.x > w || c.y > h)
 		return default_value;
 	
-	return p[c.y][c.x];
+	return p[c.y][c.x] < GRAY_SHADE;
 }
 
 void Pixels::mark(const Coord& c)
@@ -77,23 +77,23 @@ void Pixels::mark(const Coord& c)
 
 void Pixels::save(const string& filename) const
 {
-	vector<vector<bool>> copy = p;
+	vector<vector<unsigned char>> copy = p;
 
 	// Draw the marks on a copy of the image
 	for (const Coord& c : marks)
 	{
 		// Left
 		for (unsigned int i = c.x; i > c.x-MARK_SIZE && i > 0; --i)
-			copy[c.y][i] = true;
+			copy[c.y][i] = MARK_COLOR;
 		// Right
 		for (unsigned int i = c.x; i < c.x+MARK_SIZE && i < w; ++i)
-			copy[c.y][i] = true;
+			copy[c.y][i] = MARK_COLOR;
 		// Up
 		for (unsigned int i = c.y; i > c.y-MARK_SIZE && i > 0; --i)
-			copy[i][c.x] = true;
+			copy[i][c.x] = MARK_COLOR;
 		// Down
 		for (unsigned int i = c.y; i < c.y+MARK_SIZE && i < h; ++i)
-			copy[i][c.x] = true;
+			copy[i][c.x] = MARK_COLOR;
 	}
 
 	// Convert this back to a real black and white image
@@ -109,14 +109,14 @@ void Pixels::save(const string& filename) const
 	// Position in data
 	unsigned int pos = 0;
 
-	// For some reason the image is flipped when loading it with ilTexImage, so
-	// start at the bottom and go up.
-	for (unsigned int y = h-1; y > 0; --y)
+	// For some reason the image is flipped vertically when loading it with
+	// ilTexImage, so start at the bottom and go up.
+	for (unsigned int y = h-1; y >= 0; --y)
 	{
 		for (unsigned int x = 0; x < w; ++x)
 		{
 			// Black or white for RGB
-			const unsigned char val = (copy[y][x])?0:255;
+			const unsigned char val = copy[y][x];
 			data[pos]   = val;
 			data[pos+1] = val;
 			data[pos+2] = val;
@@ -124,6 +124,11 @@ void Pixels::save(const string& filename) const
 			// For R, G, and B that we just set
 			pos+=3;
 		}
+
+		// Since this is unsigned, we'd loop (and seg fault)
+		// Hmm. This seems like a hack.
+		if (y == 0)
+			break;
 	}
 	
 	ilTexImage(w, h, 1, 3, IL_RGB, IL_UNSIGNED_BYTE, data);
@@ -136,7 +141,8 @@ void Pixels::save(const string& filename) const
 
 void Pixels::rotate(double rad, Coord point)
 {
-	vector<vector<bool>> copy(h, vector<bool>(w));
+	// Right size, default to white (255 or 1111 1111)
+	vector<vector<unsigned char>> copy(h, vector<unsigned char>(w, 0xff));
 
 	const double sin_rad = sin(rad);
 	const double cos_rad = cos(rad);
@@ -148,6 +154,8 @@ void Pixels::rotate(double rad, Coord point)
 			// "Translate" it, and then add back in the point's x and y
 			const int trans_x = x - point.x;
 			const int trans_y = y - point.y;
+			// Yes, this rounding will result in holes in the image, but the default
+			// (see above) is white
 			const unsigned int new_x = trans_x*cos_rad + trans_y*sin_rad + point.x;
 			const unsigned int new_y = trans_y*cos_rad - trans_x*sin_rad + point.y;
 

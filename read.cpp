@@ -21,19 +21,32 @@ double answerBlack(Pixels& img, const vector<Coord>& boxes,
 	vector<double> colors;
 	const unsigned int box_height = box_width/ASPECT;
 
-	// Add color of each row for each box
+	// For each row, find max value
 	for (unsigned int i = start_box-1; i < end_box && i < boxes.size(); ++i)
-		for (unsigned int search_x = start_x; search_x <= stop_x; search_x+=bubble_jump)
-			colors.push_back(averageColor(img, search_x, boxes[i].y, box_height, stop_x, max_y));
-	
-	const double max = max_value(colors);
-	const double avg = average(colors);
+	{
+		vector<double> row;
 
-	// If nothing is filled in, don't try to find the values
-	if (max < GRAY_SHADE)
+		for (unsigned int search_x = start_x; search_x <= stop_x; search_x+=bubble_jump)
+			// box_height is approximately the radius of the bubble if it was a circle
+			row.push_back(averageColor(img, search_x, boxes[i].y, box_height, stop_x, max_y));
+
+		const double row_max = max_value(row);
+		
+		colors.push_back(row_max);
+	}
+
+	const double max = max_value(colors);
+	const double min = min_value(colors);
+	const double avg = average(colors);
+	
+	// TODO: this works, but is completely luck. It works because there are blank
+	// rows. If somebody has the ID 0123456789, then this will error.
+	
+	// See if this is at least a certain multiple of the whitest circle
+	if (max/min < 1.5)
 		return GRAY_SHADE;
 	else
-		return (max+avg)/2;
+		return avg;
 }
 
 // Go right from (x,y) looking for circle of color greater than answer_black
@@ -52,8 +65,10 @@ vector<unsigned int> findFilled(Pixels& img,
 		{
 			position.push_back(search_x);
 
+			//cout << averageColor(img, search_x, y, box_height, stop_x, max_y) << " > " << answer_black << endl;
+
 			if (DEBUG)
-				img.mark(Coord(x,y));
+				img.mark(Coord(search_x, y));
 		}
 	}
 
@@ -89,7 +104,7 @@ unsigned int findID(Pixels& img, const vector<Coord>& boxes,
 	const unsigned int start_x = boxes[start_box-1].x + first_jump;
 	const unsigned int stop_x  = start_x + bubble_jump*(end_box-start_box);
 
-	// Need 75% of max black to be an answer
+	// Calculate value needed to be considered black from values
 	const double answer_black = answerBlack(img, boxes, start_box, end_box, start_x, stop_x,
 		max_y, box_width, bubble_jump);
 

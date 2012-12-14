@@ -2,7 +2,7 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Redo max error, average color, etc. to work with Pixels only storing bool
+ *   - Develop better algorithm for finding if bubble is filled in
  *   - Use Threading class for each image
  *   - Use size_t, iterators, etc. instead of converting all to uint and whatnot
  *   - Use dynamic_bitset for storing bools in Pixels
@@ -72,7 +72,6 @@ int main(int argc, char* argv[])
 		// Rotate the image
 		Coord rotate_point;
 		double rotation = findRotation(image, rotate_point, image.width(), image.height());
-		cout << rotation*180/pi << endl;
 
 		// Negative since the origin is the top-left point
 		if (rotation != 0)
