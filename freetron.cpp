@@ -2,12 +2,12 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
+ *   - Add << and >> for Pixels for easy testing
  *   - Develop better algorithm for finding if bubble is filled in
  *   - Use Threading class for each image
  *   - Use size_t, iterators, etc. instead of converting all to uint and whatnot
  *   - Use dynamic_bitset for storing bools in Pixels
  *   - Write [multithreaded?] rotation code
- *   - Use Threading class for each image
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe
  *      start processing other pages after key has been processed while reading
  *      other images
@@ -28,6 +28,7 @@
 #include "data.h"
 #include "read.h"
 #include "boxes.h"
+#include "threading.h"
 
 using namespace std;
 using namespace PoDoFo;
@@ -35,6 +36,49 @@ using namespace PoDoFo;
 void help()
 {
 	cout << "Usage: freetron in.pdf" << endl;
+}
+
+// Return type for threads
+struct Info
+{
+	unsigned int thread_id = 0;
+	unsigned int id = 0;
+
+	Info() { }
+	Info(unsigned int t, unsigned int i)
+		:thread_id(t), id(i) { }
+};
+
+// Called in a new thread for each image
+Info parseImage(Pixels& image, unsigned int thread_id)
+{
+	// Rotate the image
+	Coord rotate_point;
+	double rotation = findRotation(image, rotate_point, image.width(), image.height());
+
+	// Negative since the origin is the top-left point
+	if (rotation != 0)
+		image.rotate(-rotation, rotate_point);
+
+	// Find all the boxes on the left, and find box_height while we're at it
+	unsigned int box_width;
+	vector<Coord> boxes = findBoxes(image, image.width(), image.height(), box_width);
+
+	// Find ID number
+	unsigned int id = findID(image, boxes, image.width(), image.height(), box_width);
+
+	// Debug information
+	if (DEBUG)
+	{
+		for (const Coord& box : boxes)
+			image.mark(box);
+		
+		ostringstream s;
+		s << "debug" << thread_id << ".png";
+		image.save(s.str());
+	}
+
+	return Info(thread_id, id);
 }
 
 int main(int argc, char* argv[])
@@ -64,45 +108,17 @@ int main(int argc, char* argv[])
 		return error.GetError();
 	}
 	
-	// Support multi-page PDFs
-	unsigned int count = 0;
+	// Find ID of each page in separate thread
+	Threading<Info> t(images, parseImage);
+	t.run();
+	vector<Info> ids = t.results();
 
-	for (Pixels& image : images)
-	{
-		// Rotate the image
-		Coord rotate_point;
-		double rotation = findRotation(image, rotate_point, image.width(), image.height());
+	for (const Info& i : ids)
+		cout << i.thread_id << ": " << ((i.id>0)?i.id:"error") << endl;
 
-		// Negative since the origin is the top-left point
-		if (rotation != 0)
-			image.rotate(-rotation, rotate_point);
 
-		// Find all the boxes on the left, and find box_height while we're at it
-		unsigned int box_width;
-		vector<Coord> boxes = findBoxes(image, image.width(), image.height(), box_width);
-
-		// Find ID number
-		unsigned int id = findID(image, boxes, image.width(), image.height(), box_width);
-
-		// Debug information
-		if (DEBUG)
-		{
-			for (const Coord& box : boxes)
-				image.mark(box);
-			
-			ostringstream s;
-			s << "debug" << count << ".png";
-			image.save(s.str());
-
-			++count;
-		}
-
-		// For now just print it. Later we'll do stuff with it.
-		if (id > 0)
-			cout << id << endl;
-		else
-			cout << "Could not determine ID" << endl;
-	}
+	//for (Pixels& image : images)
+	//	parseImage(image, count);
 	
 	return 0;
 }

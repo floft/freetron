@@ -156,8 +156,8 @@ void Pixels::rotate(double rad, Coord point)
 			const int trans_y = y - point.y;
 			// Yes, this rounding will result in holes in the image, but the default
 			// (see above) is white
-			const unsigned int new_x = trans_x*cos_rad + trans_y*sin_rad + point.x;
-			const unsigned int new_y = trans_y*cos_rad - trans_x*sin_rad + point.y;
+			const unsigned int new_x = round(trans_x*cos_rad + trans_y*sin_rad + point.x);
+			const unsigned int new_y = round(trans_y*cos_rad - trans_x*sin_rad + point.y);
 
 			// Get rid of invalid points
 			if (new_y < h && new_x < w)
