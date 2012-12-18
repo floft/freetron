@@ -16,6 +16,15 @@
 
 using namespace std;
 
+// Store data for each image separately (for multithreading)
+struct BoxData
+{
+	// The diagonal based on the first few valid boxes
+	unsigned int diag = 0;
+	// Used to see if there's several of the same-sized boxes
+	vector<unsigned int> diags;
+};
+
 // Average color of all pixels within radius r of (x,y)
 // 0 = complete white, 1 = complete black
 double averageColor(Pixels& img,
@@ -38,15 +47,13 @@ class Box
 	Pixels* img = nullptr;
 	// The calculated midpoint
 	Coord mp;
-	// The diagonal based on the first few valid boxes
-	static unsigned int diag;
-	// Used to see if there's several of the same-sized boxes
-	static vector<unsigned int> diags;
+	// Store diagonal information
+	BoxData* data;
 
 public:
 	Box() { } // Only used as a placeholder, then copy another box to it
 	Box(Pixels& pixels, const Coord& point,
-		const unsigned int maxX, const unsigned int maxY);
+		const unsigned int maxX, const unsigned int maxY, BoxData* data);
 
 	bool valid();
 	unsigned int width() const  { return w; }

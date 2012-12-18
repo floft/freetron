@@ -1,130 +1,106 @@
+/*
+ * This is a class that provides a very useful function threadForEach().
+ * This will run a function for each object in a vector on as many CPU cores
+ * as a computer has. It will return a vector of the return values of the
+ * function.
+ * 
+ * Usage:
+ *    R function(T item, unsigned int thread_id) { }
+ *    vector<R> results = threadForEach(vector<T> items, function);
+ */
+
+#ifndef H_THREADING
+#define H_THREADING
+
 #include <thread>
+#include <chrono>
 #include <vector>
 #include <future>
+// TODO: remove this
+#include <iostream>
+
+#include "options.h"
 
 using namespace std;
 
-const unsigned int THREAD_WAIT = 50; // Check if we can create new thread every 50 milliseconds
-
-// One of the only system-dependent bits that we need
-// TODO: this is not tested on anything except Linux
-long core_count()
-{
-#ifdef _SC_NPROCESSORS_ONLN 
-	return sysconf(_SC_NPROCESSORS_ONLN);
-#else
-#  ifndef __unix__
-	return Sys.getenv('NUMBER_OF_PROCESSORS');
-#  else 
-	return 2;
-#  endif
-#endif 
+// This mess is to determine CPU cores
+#if defined(linux) || defined(__linux) || defined(__linux__) || \
+    defined(sun) || defined(__sun) || \
+    defined(__APPLE__)
+#include <unistd.h>
+inline unsigned int core_count() { return sysconf(_SC_NPROCESSORS_ONLN); }
+#elif defined(__WIN32) || defined(__WIN32__)
+#include <windows.h>
+unsigned int core_count() {
+	SYSTEM_INFO sysinfo;
+	GetSystemInfo(&sysinfo);
+	return sysinfo.dwNumberOfProcessors;
 }
+//#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+// TODO: figure out how to get # of cores on BSD
+#else
+// Default to using two threads
+inline unsigned int core_count() { return 2; }
+#endif
 
-// There is no pool class in the standard libraries, so this is a simple
-// implementation of one that meets the needs of this program
-template <class T> class Pool
-{
-	vector<T> items;
-	vector<bool> used;
-
-public:
-	Pool() :items(0), used(0, false) { }
-	Pool(vector<T>::size_type size)
-		:items(size), used(size, false) { }
-	
-	// Is there an available spot?
-	bool available()
-	{
-		for (vector<T>::size_type i = 0; i < used.size(); ++i)
-			if (!in_use)
-				return true;
-
-		return false;
-	}
-	
-	// Get an item from the pool.
-	// Note that release() reinitializes the spot in memory.
-	T& get()
-	{
-		T* ptr = nullptr;
-		
-		for (vector<T>::size_type i = 0; i < used.size(); ++i)
-		{
-			if (!in_use)
-			{
-				used[i] = true;
-				ptr     = &items[i];
-				break;
-			}
-		}
-
-		if (!ptr)
-			throw runtime_error("no available spot in pool; always check Pool.avaliable()");
-
-		return *ptr;
-	}
-
-	// Allow use of this location in the pool again
-	void release(T& ref)
-	{
-		T* ptr = &ref;
-		bool found = false;
-
-		for (vector<T>::size_type i = 0; i < used.size(); ++i)
-		{
-			if (ptr == &items[i])
-			{
-				if (used[i] == true)
-					throw runtime_error("item in pool already released");
-
-				found   = true;
-				used[i] = false;
-				items[i] = T();
-				break;
-			}
-		}
-
-		if (!found)
-			throw runtime_error("can't find item in pool to release");
-	}
-};
-
-// Allow easily starting a function in a thread and returning the result
+// Manage starting a thread and getting the result
 template <class R, class T> class Thread
 {
+	// Used to start and get results from thread
+	thread thr;
 	future<R> fut;
 	R return_value;
-	bool started  = false;
 	bool returned = false;
-	packaged_task<R(T&, unsigned int)> task;
+	bool already_started = false;
+	packaged_task<R(T*, unsigned int)> task;
+
+	// Passed into function
+	T& item;
+	unsigned int id;
+	
+	// Save result when put()
+	R& return_val;
 
 public:
-	Thread()
+	Thread(R (*function)(T*, unsigned int), T& item, unsigned int id, R& return_val)
+		:task(function), item(item), id(id), return_val(return_val) { }
+
+	void start()
 	{
+		already_started = true;
+		fut = task.get_future();
+		thr = thread(move(task), &item, id);
 	}
 
-	// Initialize everything here so Pool.get().run(...) without the need to
-	// reinitialize a custom Thread for each get()
-	void run(void (*func)(T&, unsigned int), T& item, unsigned int thread_id)
+	bool started() const
 	{
-		started = true;
-		task = packaged_task<R(T&, unsigned int)>(func);
-		fut  = task.get_future();
-		task(item, thread_id);
+		return already_started;
 	}
 
-	// If you really want to...
+	bool done() const
+	{
+		if (already_started)
+			return (fut.wait_for(chrono::seconds(0)) == future_status::ready);
+		else
+			return false;
+	}
+
 	void wait()
 	{
-		if (started)
-			fut.wait();
+		if (already_started)
+			thr.join();
+	}
+
+	void put()
+	{
+		if (already_started)
+			return_val = result();
 	}
 
 	// Get returned result, and allow getting the result multiple times
 	R result()
 	{
-		if (!started)
+		if (!already_started)
 			return R();
 
 		if (returned)
@@ -137,55 +113,72 @@ public:
 	}
 };
 
-class ThreadPool
+// Note that nothing is ever ran unless you call run()
+template <class R, class T> class ThreadPool
 {
-	Pool<Thread> pool;
+	bool ran = false;
+	unsigned int thread_count = 1;
+	vector<Thread<R,T>> tasks;
+
+	unsigned int running() const
+	{
+		unsigned int count = 0;
+
+		for (const Thread<R,T>& t : tasks)
+			if (t.started() && !t.done())
+				++count;
+
+		return count;
+	}
 
 public:
-	Thread()
-		:pool(size)
-	{
-	}
-
-	Thread* get()
-	{
-
-		return pool.get();
-	}
-};
-
-template <class R, class T, class U> class Threading
-{
-	T& items;
-	ThreadPool pool;
-	vector<R> results;
-	void (*function)(U&, unsigned int);
-
-public:
-	Threading(T& items, void (*func)(U&, unsigned int))
-		:items(items), results(items.size()), function(func)
-	{
-		pool = ThreadPool(core_count());
-	}
+	ThreadPool(unsigned int size) :thread_count(size) { }
 	
+	void schedule(R (*function)(T*, unsigned int), T& item, unsigned int id, R& return_val)
+	{
+		tasks.push_back(Thread<R,T>(function, item, id, return_val));
+	}
+
 	void run()
 	{
-		for (U& item : items)
+		typedef typename vector<Thread<R,T>>::size_type size_type;
+
+		ran = true;
+
+		// Run all threads
+		for (size_type i = 0; i < tasks.size(); ++i)
 		{
-			while (!pool.available())
+			while (running() > thread_count)
 				this_thread::sleep_for(chrono::milliseconds(THREAD_WAIT));
 
-			Thread t = pool.get();
-			results.push_back(t.result());
-			t = Thread();
-			t.run(function, item, count);
+			tasks[i].start();
 		}
-		
-		pool.wait();
-	}
 
-	const vector<R>& results() const
-	{
-		return results;
+		// Wait till they're all done
+		for (size_type i = 0; i < tasks.size(); ++i)
+			tasks[i].wait();
+
+		// Set all the results
+		for (size_type i = 0; i < tasks.size(); ++i)
+			tasks[i].put();
 	}
 };
+
+// For each CPU core, run function with an item from the vector items
+template <class R, class T>
+vector<R> threadForEach(vector<T>& items, R (*function)(T*, unsigned int))
+{
+	typedef typename vector<T>::size_type size_type;
+
+	ThreadPool<R,T> pool(core_count());
+	vector<R> results(items.size());
+
+	for (size_type i = 0; i < items.size(); ++i) 
+		pool.schedule(function, items[i], i, results[i]);
+	
+	pool.run();
+	
+	return results;
+}
+
+#endif

@@ -23,6 +23,6 @@ bool box_sort(const Coord& v1, const Coord& v2);
 // Find boxes in the image returns { { midpoint_x, midpoint_y }, ... }
 vector<Coord> findBoxes(Pixels& img,
 	const unsigned int max_x, const unsigned int max_y,
-	unsigned int& ret_height);
+	unsigned int& ret_height, BoxData* box_data);
 
 #endif

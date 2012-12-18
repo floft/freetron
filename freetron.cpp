@@ -28,6 +28,7 @@
 #include "data.h"
 #include "read.h"
 #include "boxes.h"
+#include "box.h"
 #include "threading.h"
 
 using namespace std;
@@ -50,32 +51,35 @@ struct Info
 };
 
 // Called in a new thread for each image
-Info parseImage(Pixels& image, unsigned int thread_id)
+Info parseImage(Pixels* image, unsigned int thread_id)
 {
+	// Keep the diagonal information local to a thread
+	BoxData box_data;
+
 	// Rotate the image
 	Coord rotate_point;
-	double rotation = findRotation(image, rotate_point, image.width(), image.height());
+	double rotation = findRotation(*image, rotate_point, image->width(), image->height(), &box_data);
 
 	// Negative since the origin is the top-left point
 	if (rotation != 0)
-		image.rotate(-rotation, rotate_point);
+		image->rotate(-rotation, rotate_point);
 
 	// Find all the boxes on the left, and find box_height while we're at it
 	unsigned int box_width;
-	vector<Coord> boxes = findBoxes(image, image.width(), image.height(), box_width);
+	vector<Coord> boxes = findBoxes(*image, image->width(), image->height(), box_width, &box_data);
 
 	// Find ID number
-	unsigned int id = findID(image, boxes, image.width(), image.height(), box_width);
+	unsigned int id = findID(*image, boxes, image->width(), image->height(), box_width);
 
 	// Debug information
 	if (DEBUG)
 	{
 		for (const Coord& box : boxes)
-			image.mark(box);
+			image->mark(box);
 		
 		ostringstream s;
 		s << "debug" << thread_id << ".png";
-		image.save(s.str());
+		image->save(s.str());
 	}
 
 	return Info(thread_id, id);
@@ -109,16 +113,13 @@ int main(int argc, char* argv[])
 	}
 	
 	// Find ID of each page in separate thread
-	Threading<Info> t(images, parseImage);
-	t.run();
-	vector<Info> ids = t.results();
+	vector<Info> results = threadForEach<Info>(images, parseImage);
 
-	for (const Info& i : ids)
-		cout << i.thread_id << ": " << ((i.id>0)?i.id:"error") << endl;
-
-
-	//for (Pixels& image : images)
-	//	parseImage(image, count);
+	for (const Info& i : results)
+		if (i.id > 0)
+			cout << i.thread_id << ": " << i.id << endl;
+		else
+			cout << i.thread_id << ": error" << endl;
 	
 	return 0;
 }

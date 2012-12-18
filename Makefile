@@ -1,6 +1,7 @@
 OUT		= freetron
 SRC		= ${wildcard *.cpp}
 OBJ		= ${SRC:.cpp=.o}
+DEPENDS		= .depends
 
 CC		= g++
 CFLAGS		:= -g -funroll-loops -O3 -std=c++11 -Wall ${CFLAGS}
@@ -17,6 +18,12 @@ ${OUT}: ${OBJ}
 .cpp.o:
 	${CC} -c -o $@ $< ${CFLAGS}
 
+${DEPENDS}: ${SRC}
+	rm -f ./${DEPENDS}
+	${CC} ${CFLAGS} -MM $^ >> ./${DEPENDS}
+
+depends: ${DEPENDS}
+
 install:
 	install -Dm755 ${OUT} ${DESTDIR}${PREFIX}/bin/freetron
 	
@@ -26,4 +33,5 @@ uninstall:
 clean:
 	${RM} ${OUT} ${OBJ}
 
-.PHONY: all install uninstall clean
+include ${DEPENDS}
+.PHONY: all depends install uninstall clean

@@ -5,7 +5,7 @@
 #ifndef H_OPTIONS
 #define H_OPTIONS
 
-const bool DEBUG = false;		// Output test image
+const bool DEBUG = true;		// Output test image
 const unsigned int  MARK_SIZE = 30;	// Size of lines output in debug image
 const unsigned char MARK_COLOR = 127;	// Grey color
 
@@ -27,5 +27,8 @@ const unsigned int BUBBLE_JUMP = 75;	// Number of pixels to jump from bubble to 
 // Box numbers for ID section
 const unsigned int ID_START = 2;
 const unsigned int ID_END   = 11;
+
+// Threading
+const unsigned int THREAD_WAIT = 50;	// Check if we can create new thread every 50 milliseconds
 
 #endif

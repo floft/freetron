@@ -7,6 +7,7 @@
 #ifndef H_PIXELS
 #define H_PIXELS
 
+#include <mutex> // Lock needed for Pixels.save()
 #include <cmath>
 #include <vector>
 #include <string>
@@ -23,6 +24,9 @@ class Pixels
 	unsigned int w;
 	unsigned int h;
 	bool loaded;
+
+	// Lock this so that only one thread can save() at the same time
+	static mutex write_lock;
 
 public:
 	Pixels(); // Useful for placeholder

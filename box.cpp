@@ -42,13 +42,9 @@ double averageColor(Pixels& img,
 		return 0;
 }
 
-// Initialize these to 0, calculate them when we find a box
-unsigned int Box::diag = 0;
-vector<unsigned int> Box::diags;
-
 Box::Box(Pixels& pixels, const Coord& point,
-	const unsigned int maxX, const unsigned int maxY)
-	:max_x(maxX), max_y(maxY), img(&pixels)
+	const unsigned int maxX, const unsigned int maxY, BoxData* data)
+	:max_x(maxX), max_y(maxY), img(&pixels), data(data)
 {
 	const Coord left   = leftmost(point);
 	const Coord right  = rightmost(point);
@@ -75,8 +71,8 @@ bool Box::valid()
 	// and if a circle in the center of the possible box is almost entirely black.
 	if (w >= approx_width-MAX_ERROR && w <= approx_width+MAX_ERROR &&
 		(
-			(diag == 0 && real_diag >= MIN_DIAG && real_diag <= MAX_DIAG) ||  // Get rid of 1-5 px boxes
-			(real_diag >= diag-MAX_ERROR && real_diag <= diag+MAX_ERROR)      // Use found valid diagonal
+			(data->diag == 0 && real_diag >= MIN_DIAG && real_diag <= MAX_DIAG) ||  // Get rid of 1-5 px boxes
+			(real_diag >= data->diag-MAX_ERROR && real_diag <= data->diag+MAX_ERROR)      // Use found valid diagonal
 		) &&
 		averageColor(*img, mp.x, mp.y, h/2, max_x, max_y) > MIN_BLACK)
 	{
@@ -84,20 +80,20 @@ bool Box::valid()
 		// But, nothing worse than incorrect values, better to not use this than
 		// stop searching for the corners early. Thus, make sure there's DIAG_COUNT similar
 		// boxes before using the diagonal value.
-		if (diag == 0 && real_diag >= MIN_DIAG && real_diag <= MAX_DIAG)
+		if (data->diag == 0 && real_diag >= MIN_DIAG && real_diag <= MAX_DIAG)
 		{
 			// Get test diagonals
-			if (diags.size() < DIAG_COUNT)
+			if (data->diags.size() < DIAG_COUNT)
 			{
-				diags.push_back(real_diag);
+				data->diags.push_back(real_diag);
 			}
 			// See if they're valid, and use it if they are; otherwise, try again
 			else
 			{
 				if (absurdDiagonal())
-					diags.clear();
+					data->diags.clear();
 				else
-					diag = real_diag;
+					data->diag = real_diag;
 			}
 		}
 
@@ -110,11 +106,11 @@ bool Box::valid()
 bool Box::absurdDiagonal() const
 {
 	// Need at least two to have something beyond error of the previous one
-	if (diags.size() < 2)
+	if (data->diags.size() < 2)
 		return true;
 
-	for (unsigned int i = 1; i < diags.size(); ++i)
-		if (diags[i] > diags[i-1]+MAX_ERROR || diags[i] < diags[i-1]-MAX_ERROR)
+	for (unsigned int i = 1; i < data->diags.size(); ++i)
+		if (data->diags[i] > data->diags[i-1]+MAX_ERROR || data->diags[i] < data->diags[i-1]-MAX_ERROR)
 			return true;
 	
 	return false;
@@ -135,7 +131,7 @@ unsigned int Box::goUp(const Coord& p, const Coord& orig) const
 	// Go until $error white pixels, hit top of image, or diag
 	// is greater than possible for a box.
 	for (unsigned int search_y = p.y; search_y > 0 && white_count <= MAX_ERROR &&
-		(diag == 0 || distance(p.x, search_y, orig.x, orig.y) <= diag+MAX_ERROR); --search_y)
+		(data->diag == 0 || distance(p.x, search_y, orig.x, orig.y) <= data->diag+MAX_ERROR); --search_y)
 	{
 		if (img->black(Coord(p.x, search_y)))
 		{
@@ -157,7 +153,7 @@ unsigned int Box::goLeft(const Coord& p, const Coord& orig) const
 	unsigned int white_count = 0;
 
 	for (unsigned int search_x = p.x; search_x > 0 && white_count <= MAX_ERROR &&
-		(diag == 0 || distance(search_x, p.y, orig.x, orig.y) <= diag+MAX_ERROR); --search_x)
+		(data->diag == 0 || distance(search_x, p.y, orig.x, orig.y) <= data->diag+MAX_ERROR); --search_x)
 	{
 		if (img->black(Coord(search_x, p.y)))
 		{
@@ -179,7 +175,7 @@ unsigned int Box::goDown(const Coord& p, const Coord& orig) const
 	unsigned int white_count = 0;
 
 	for (unsigned int search_y = p.y; search_y < max_y && white_count <= MAX_ERROR &&
-		(diag == 0 || distance(p.x, search_y, orig.x, orig.y) <= diag+MAX_ERROR); ++search_y)
+		(data->diag == 0 || distance(p.x, search_y, orig.x, orig.y) <= data->diag+MAX_ERROR); ++search_y)
 	{
 		if (img->black(Coord(p.x, search_y)))
 		{
@@ -201,7 +197,7 @@ unsigned int Box::goRight(const Coord& p, const Coord& orig) const
 	unsigned int white_count = 0;
 
 	for (unsigned int search_x = p.x; search_x < max_x && white_count <= MAX_ERROR &&
-		(diag == 0 || distance(search_x, p.y, orig.x, orig.y) <= diag+MAX_ERROR); ++search_x)
+		(data->diag == 0 || distance(search_x, p.y, orig.x, orig.y) <= data->diag+MAX_ERROR); ++search_x)
 	{
 		if (img->black(Coord(search_x, p.y)))
 		{
@@ -222,7 +218,7 @@ Coord Box::leftmost(const Coord& point) const
 	Coord left = point;
 
 	// Continue till a leftmost point is found or we are beyond what could be a box
-	while (diag == 0 || distance(point, left) <= diag+MAX_ERROR)
+	while (data->diag == 0 || distance(point, left) <= data->diag+MAX_ERROR)
 	{
 		// Go up and down till white, find midpoint
 		left.y = (goUp(left, point) + goDown(left, point))/2;
@@ -247,7 +243,7 @@ Coord Box::topmost(const Coord& point) const
 	Coord top = point;
 
 	// Go left and right, find midpoint. Go up. If we can't move, we found it.
-	while (diag == 0 || distance(point, top) <= diag+MAX_ERROR)
+	while (data->diag == 0 || distance(point, top) <= data->diag+MAX_ERROR)
 	{
 		top.x = (goLeft(top, point) + goRight(top, point))/2;
 
@@ -268,7 +264,7 @@ Coord Box::rightmost(const Coord& point) const
 	Coord right = point;
 
 	// Continue till a rightmost point is found or we are beyond what could be a box
-	while (diag == 0 || distance(point, right) <= diag+MAX_ERROR)
+	while (data->diag == 0 || distance(point, right) <= data->diag+MAX_ERROR)
 	{
 		// Go up and down till white, find midpoint
 		right.y = (goUp(right, point) + goDown(right, point))/2;
@@ -293,7 +289,7 @@ Coord Box::bottommost(const Coord& point) const
 	Coord bottom = point;
 
 	// Go left and right, find midpoint. Go down. If we can't move, we found it.
-	while (diag == 0 || distance(point, bottom) <= diag+MAX_ERROR)
+	while (data->diag == 0 || distance(point, bottom) <= data->diag+MAX_ERROR)
 	{
 		bottom.x = (goLeft(bottom, point) + goRight(bottom, point))/2;
 

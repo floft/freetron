@@ -9,7 +9,7 @@ bool box_sort(const Coord& v1, const Coord& v2)
 // Find all the boxes in the image
 vector<Coord> findBoxes(Pixels& img,
 	const unsigned int max_x, const unsigned int max_y,
-	unsigned int& ret_width)
+	unsigned int& ret_width, BoxData* box_data)
 {
 	vector<Coord> boxes;
 
@@ -29,7 +29,7 @@ vector<Coord> findBoxes(Pixels& img,
 			if (img.black(Coord(x, y)))
 			{
 				Coord point(x, y);
-				Box box(img, point, max_x, max_y);
+				Box box(img, point, max_x, max_y, box_data);
 
 				if (box.valid())
 				{

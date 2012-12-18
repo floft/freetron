@@ -3,7 +3,7 @@
 // Find top left and bottom right box. Then, determine slope of these two
 // and return the amount to rotate.
 double findRotation(Pixels& img, Coord& ret_coord,
-	const unsigned int max_x, const unsigned int max_y)
+	const unsigned int max_x, const unsigned int max_y, BoxData* box_data)
 {
 	Coord top;
 	Coord bottom;
@@ -38,7 +38,7 @@ double findRotation(Pixels& img, Coord& ret_coord,
 			if (img.black(Coord(x, y)))
 			{
 				Coord point(x, y);
-				Box box(img, point, max_x, max_y);
+				Box box(img, point, max_x, max_y, box_data);
 
 				if (box.valid())
 				{
@@ -83,7 +83,7 @@ double findRotation(Pixels& img, Coord& ret_coord,
 			if (img.black(Coord(x, y)))
 			{
 				Coord point(x, y);
-				Box box(img, point, max_x, max_y);
+				Box box(img, point, max_x, max_y, box_data);
 
 				if (box.valid())
 				{

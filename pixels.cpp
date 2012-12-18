@@ -1,5 +1,8 @@
 #include "pixels.h"
 
+// DevIL/OpenIL isn't multithreaded
+mutex Pixels::write_lock;
+
 Pixels::Pixels()
 	:w(0), h(0), loaded(false)
 {
@@ -95,6 +98,9 @@ void Pixels::save(const string& filename) const
 		for (unsigned int i = c.y; i < c.y+MARK_SIZE && i < h; ++i)
 			copy[i][c.x] = MARK_COLOR;
 	}
+
+	// Only execute in one thread since DevIL/OpenIL doesn't support multithreading
+	unique_lock<mutex> lock(write_lock);
 
 	// Convert this back to a real black and white image
 	ILuint name;
