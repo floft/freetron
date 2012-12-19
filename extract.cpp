@@ -1,23 +1,23 @@
 #include "extract.h"
 
-vector<Pixels> extract(const char* filename)
+std::vector<Pixels> extract(const char* filename)
 {
-	vector<Pixels> images;
-	PdfObject* obj = nullptr;
-	PdfMemDocument document(filename);
-	TCIVecObjects it = document.GetObjects().begin();
+	std::vector<Pixels> images;
+	PoDoFo::PdfObject* obj = nullptr;
+	PoDoFo::PdfMemDocument document(filename);
+	PoDoFo::TCIVecObjects it = document.GetObjects().begin();
 
 	while (it != document.GetObjects().end())
 	{
 		if ((*it)->IsDictionary())
 		{
-			PdfObject* objType = (*it)->GetDictionary().GetKey(PdfName::KeyType);
-			PdfObject* objSubType = (*it)->GetDictionary().GetKey(PdfName::KeySubtype);
+			PoDoFo::PdfObject* objType = (*it)->GetDictionary().GetKey(PoDoFo::PdfName::KeyType);
+			PoDoFo::PdfObject* objSubType = (*it)->GetDictionary().GetKey(PoDoFo::PdfName::KeySubtype);
 
 			if ((objType    && objType->IsName()    && objType->GetName().GetName() == "XObject") ||
 			    (objSubType && objSubType->IsName() && objSubType->GetName().GetName() == "Image" ))
 			{
-				obj = (*it)->GetDictionary().GetKey(PdfName::KeyFilter);
+				obj = (*it)->GetDictionary().GetKey(PoDoFo::PdfName::KeyFilter);
 
 				if (obj && obj->IsArray() && obj->GetArray().GetSize() == 1 &&
 				    obj->GetArray()[0].IsName() && obj->GetArray()[0].GetName().GetName() == "DCTDecode")
@@ -41,15 +41,15 @@ vector<Pixels> extract(const char* filename)
 	return images;
 }
 
-Pixels readPDFImage(PdfObject* object, const unsigned int type)
+Pixels readPDFImage(PoDoFo::PdfObject* object, const unsigned int type)
 {
 	Pixels pixels;
-	const unsigned int width  = object->GetDictionary().GetKey(PdfName("Width"))->GetNumber();
-	const unsigned int height = object->GetDictionary().GetKey(PdfName("Height"))->GetNumber();
+	const unsigned int width  = object->GetDictionary().GetKey(PoDoFo::PdfName("Width"))->GetNumber();
+	const unsigned int height = object->GetDictionary().GetKey(PoDoFo::PdfName("Height"))->GetNumber();
 
 	if (type == IL_JPG)
 	{
-		PdfMemStream* stream = dynamic_cast<PdfMemStream*>(object->GetStream());
+		PoDoFo::PdfMemStream* stream = dynamic_cast<PoDoFo::PdfMemStream*>(object->GetStream());
 		pixels = Pixels(type, stream->Get(), stream->GetLength());
 	}
 	else if (type == IL_TIF)
@@ -58,7 +58,7 @@ Pixels readPDFImage(PdfObject* object, const unsigned int type)
 		const unsigned int bits = 1;
 		const unsigned int samples = 1;
 		
-		ostringstream os;
+		std::ostringstream os;
 		TIFF* tif = TIFFStreamOpen("Input", &os);
 		TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,		width);
 		TIFFSetField(tif, TIFFTAG_IMAGELENGTH,		height);
@@ -76,11 +76,11 @@ Pixels readPDFImage(PdfObject* object, const unsigned int type)
 		TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP,		(uint32)-1L);
 		
 		// stream->Get returns read-only, so copy it
-		PdfMemStream* stream = dynamic_cast<PdfMemStream*>(object->GetStream());
+		PoDoFo::PdfMemStream* stream = dynamic_cast<PoDoFo::PdfMemStream*>(object->GetStream());
 		const char* readonly = stream->Get();
-		pdf_long len = stream->GetLength();
+		PoDoFo::pdf_long len = stream->GetLength();
 		char* buffer = new char[len];
-		memcpy(buffer, readonly, len);
+		std::memcpy(buffer, readonly, len);
 
 		TIFFWriteRawStrip(tif, 0, buffer, len);
 		TIFFWriteDirectory(tif);
@@ -92,25 +92,25 @@ Pixels readPDFImage(PdfObject* object, const unsigned int type)
 	}
 	else
 	{
-		ostringstream os;
+		std::ostringstream os;
 		os << "P6\n"
 		   << width  << " "
 		   << height << "\n"
 		   << "255\n";
-		string s = os.str();
+		std::string s = os.str();
 
 		const char* header = s.c_str();
 		char* buffer;
-		pdf_long len;
+		PoDoFo::pdf_long len;
 
 		object->GetStream()->GetFilteredCopy(&buffer, &len);
 
 		char* stream = new char[len+s.size()];
-		memcpy(stream, header, s.size());
-		memcpy(stream+s.size(), buffer, len);
+		std::memcpy(stream, header, s.size());
+		std::memcpy(stream+s.size(), buffer, len);
 
 		pixels = Pixels(type, stream, len+s.size());
-		free(buffer);
+		std::free(buffer);
 		delete[] stream;
 	}
 

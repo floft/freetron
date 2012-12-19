@@ -5,7 +5,7 @@
  * function.
  * 
  * Usage:
- *    R function(T item, unsigned int thread_id) { }
+ *    R function(T* item) { }
  *    vector<R> results = threadForEach(vector<T> items, function);
  */
 
@@ -16,12 +16,10 @@
 #include <chrono>
 #include <vector>
 #include <future>
-// TODO: remove this
-#include <iostream>
+#include <algorithm>
+#include <functional>
 
 #include "options.h"
-
-using namespace std;
 
 // This mess is to determine CPU cores
 #if defined(linux) || defined(__linux) || defined(__linux__) || \
@@ -44,64 +42,51 @@ inline unsigned int core_count() { return 2; }
 #endif
 
 // Manage starting a thread and getting the result
-template <class R, class T> class Thread
+template <class Result, class Type> class Thread
 {
-	// Used to start and get results from thread
-	thread thr;
-	future<R> fut;
-	R return_value;
+	std::thread thr;
+	std::future<Result> fut;
+	Result return_value;
+	Type* item = nullptr;
+	bool started  = false;
 	bool returned = false;
-	bool already_started = false;
-	packaged_task<R(T*, unsigned int)> task;
-
-	// Passed into function
-	T& item;
-	unsigned int id;
-	
-	// Save result when put()
-	R& return_val;
+	std::packaged_task<Result(Type*)> task;
 
 public:
-	Thread(R (*function)(T*, unsigned int), T& item, unsigned int id, R& return_val)
-		:task(function), item(item), id(id), return_val(return_val) { }
+	Thread() { }
+	Thread(Result (*function)(Type*), Type* item)
+		:task(function) { }
 
 	void start()
 	{
-		already_started = true;
+		if (!item)
+			return;
+
+		started = true;
 		fut = task.get_future();
-		thr = thread(move(task), &item, id);
+		thr = std::thread(std::move(task), item);
 	}
 
-	bool started() const
+	bool running() const
 	{
-		return already_started;
-	}
-
-	bool done() const
-	{
-		if (already_started)
-			return (fut.wait_for(chrono::seconds(0)) == future_status::ready);
+		// If it's not ready, we'll assume it's still running
+		if (started)
+			return !(fut.wait_for(std::chrono::seconds(0)) == std::future_status::ready);
 		else
 			return false;
 	}
 
-	void wait()
+	void join()
 	{
-		if (already_started)
+		if (started)
 			thr.join();
 	}
 
-	void put()
-	{
-		if (already_started)
-			return_val = result();
-	}
-
 	// Get returned result, and allow getting the result multiple times
-	R result()
+	Result result()
 	{
-		if (!already_started)
-			return R();
+		if (!started)
+			return Result();
 
 		if (returned)
 			return return_value;
@@ -113,70 +98,164 @@ public:
 	}
 };
 
-// Note that nothing is ever ran unless you call run()
-template <class R, class T> class ThreadPool
+// Create a generic pool that we will use in our scheduler
+template <class Type> class Pool 
 {
-	bool ran = false;
-	unsigned int thread_count = 1;
-	vector<Thread<R,T>> tasks;
+	typedef typename std::vector<Type>::size_type size_type;
 
-	unsigned int running() const
-	{
-		unsigned int count = 0;
-
-		for (const Thread<R,T>& t : tasks)
-			if (t.started() && !t.done())
-				++count;
-
-		return count;
-	}
+	size_type size;
+	std::vector<Type> items;
+	std::vector<bool> used;
 
 public:
-	ThreadPool(unsigned int size) :thread_count(size) { }
+	Pool(size_type size)
+		:size(size), items(size), used(size, false) { }
 	
-	void schedule(R (*function)(T*, unsigned int), T& item, unsigned int id, R& return_val)
+	// Execute on each used item in the pool
+	// Usage: Pool.for_each(&Thread::join);
+	void for_each(void (Type::*function)())
 	{
-		tasks.push_back(Thread<R,T>(function, item, id, return_val));
+		std::for_each(items.begin(), items.end(), std::mem_fun_ref(function));
+	}
+
+	// Is there an available spot?
+	bool available()
+	{
+		for (size_type i = 0; i < size; ++i)
+			if (!used[i])
+				return true;
+
+		return false;
+	}
+
+	// Get an item from the pool.
+	// Note that free() reinitializes the spot in memory.
+	Type& get()
+	{
+		Type* ptr = nullptr;
+
+		for (size_type i = 0; i < size; ++i)
+		{
+			if (!used[i])
+			{
+				used[i] = true;
+				ptr     = &items[i];
+				break;
+			}
+		}
+
+		if (!ptr)
+			throw std::runtime_error("no available spot in pool; always check Pool.avaliable()");
+
+		return *ptr;
+	}
+
+	// Allow use of this location in the pool again
+	void free(Type& ref)
+	{
+		bool found = false;
+
+		for (size_type i = 0; i < size; ++i)
+		{
+			if (&ref == &items[i])
+			{
+				if (used[i])
+					throw std::runtime_error("item in pool already released");
+
+				found    = true;
+				used[i]  = false;
+				items[i] = Type();
+				break;
+			}
+		}
+
+		if (!found)
+			throw std::runtime_error("can't find item in pool to release");
+	}
+};
+
+// Note that nothing is ever ran unless you call run()
+template <class Result, class Type> class ThreadScheduler
+{
+	typedef typename std::vector<Thread<Result,Type>>::size_type size_type;
+
+	Pool<Thread<Result,Type>> pool;
+	std::vector<Thread<Result,Type>> tasks;
+
+public:
+	ThreadScheduler(unsigned int size)
+		:pool(size) { }
+	
+	void schedule(Result (*function)(Type*), Type* item)
+	{
+		tasks.push_back(Thread<Result,Type>(function, item));
 	}
 
 	void run()
 	{
-		typedef typename vector<Thread<R,T>>::size_type size_type;
-
-		ran = true;
-
 		// Run all threads
 		for (size_type i = 0; i < tasks.size(); ++i)
 		{
-			while (running() > thread_count)
-				this_thread::sleep_for(chrono::milliseconds(THREAD_WAIT));
+			while (!pool.available())
+				std::this_thread::sleep_for(std::chrono::milliseconds(THREAD_WAIT));
+			
+			Thread<Result,Type>* t = pool.get();
+			t = tasks[i];
+			t.start();
 
-			tasks[i].start();
+			// TODO: this'll die after #CPU threads
 		}
 
 		// Wait till they're all done
-		for (size_type i = 0; i < tasks.size(); ++i)
-			tasks[i].wait();
+		pool.for_each(&Thread<Result,Type>::join);
+	}
+};
 
-		// Set all the results
-		for (size_type i = 0; i < tasks.size(); ++i)
-			tasks[i].put();
+// Function object that writes the return value to argument
+template<class Result, class Type> class ReturnFunction
+{
+	Result* ptr;
+	Result return_value;
+	Result (*function)(Type*);
+
+public:
+	ReturnFunction(Result (*function)(Type*), Result* ptr = nullptr)
+		:ptr(ptr), function(function) { }
+
+	Result operator()(Type* item)
+	{
+		return_value = function(item);
+
+		if (ptr)
+			*ptr = return_value;
+
+		return return_value;
+	}
+
+	Result result() const
+	{
+		return return_value;
 	}
 };
 
 // For each CPU core, run function with an item from the vector items
-template <class R, class T>
-vector<R> threadForEach(vector<T>& items, R (*function)(T*, unsigned int))
+template <class Result, class Type, class Container>
+std::vector<Result> threadForEach(Container items, Result (*function)(Type*))
 {
-	typedef typename vector<T>::size_type size_type;
+	typedef typename std::vector<Type>::size_type size_type;
+	typedef typename std::vector<Result>::iterator result_iter;
 
-	ThreadPool<R,T> pool(core_count());
-	vector<R> results(items.size());
+	std::vector<Result> results(items.size());
+	result_iter result = results.begin();
+	ThreadScheduler<Result,Type> scheduler(core_count());
 
-	for (size_type i = 0; i < items.size(); ++i) 
-		pool.schedule(function, items[i], i, results[i]);
+	for (Type& item : items)
+	{
+		scheduler.schedule(ReturnFunction<Result,Type>(function, &*result)(Type*), &item);
+		++result;
+	}
 	
-	pool.run();
+	scheduler.run();
 	
 	return results;
 }

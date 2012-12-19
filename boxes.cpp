@@ -7,11 +7,11 @@ bool box_sort(const Coord& v1, const Coord& v2)
 }
 
 // Find all the boxes in the image
-vector<Coord> findBoxes(Pixels& img,
+std::vector<Coord> findBoxes(Pixels& img,
 	const unsigned int max_x, const unsigned int max_y,
 	unsigned int& ret_width, BoxData* box_data)
 {
-	vector<Coord> boxes;
+	std::vector<Coord> boxes;
 
 	// Find all the boxes searching from down the image going up at a diagonal to the
 	// top for each y value. The max_y+max_x also scans coming up from the bottom of
@@ -39,7 +39,7 @@ vector<Coord> findBoxes(Pixels& img,
 						ret_width = box.width();
 
 					// Make sure we didn't already have this point
-					if (find(boxes.begin(), boxes.end(), box.midpoint()) == boxes.end())
+					if (std::find(boxes.begin(), boxes.end(), box.midpoint()) == boxes.end())
 						boxes.push_back(box.midpoint());
 				}
 				
@@ -51,8 +51,8 @@ vector<Coord> findBoxes(Pixels& img,
 	}
 
 	// Add boxes that are farther apart than MAX_ERROR to unique
-	vector<Coord> unique;
-	sort(boxes.begin(), boxes.end(), box_sort);
+	std::vector<Coord> unique;
+	std::sort(boxes.begin(), boxes.end(), box_sort);
 	
 	// Our comparison below will start at element 1, so initially
 	// add the first box
@@ -60,7 +60,7 @@ vector<Coord> findBoxes(Pixels& img,
 		unique.push_back(boxes[0]);
 	
 	for (unsigned int i = 1; i < boxes.size(); ++i)
-		if (abs(1.0*boxes[i].y - boxes[i-1].y) > MAX_ERROR || abs(1.0*boxes[i].x - boxes[i-1].x) > MAX_ERROR)
+		if (std::abs(1.0*boxes[i].y - boxes[i-1].y) > MAX_ERROR || std::abs(1.0*boxes[i].x - boxes[i-1].x) > MAX_ERROR)
 			unique.push_back(boxes[i]);
 
 	return unique;

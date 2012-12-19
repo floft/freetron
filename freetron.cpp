@@ -3,11 +3,9 @@
  *
  * Todo:
  *   - Add << and >> for Pixels for easy testing
+ *   - Use size_t, iterators, int, etc. instead of unsigned int
  *   - Develop better algorithm for finding if bubble is filled in
- *   - Use Threading class for each image
- *   - Use size_t, iterators, etc. instead of converting all to uint and whatnot
  *   - Use dynamic_bitset for storing bools in Pixels
- *   - Write [multithreaded?] rotation code
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe
  *      start processing other pages after key has been processed while reading
  *      other images
@@ -31,12 +29,9 @@
 #include "box.h"
 #include "threading.h"
 
-using namespace std;
-using namespace PoDoFo;
-
 void help()
 {
-	cout << "Usage: freetron in.pdf" << endl;
+	std::cout << "Usage: freetron in.pdf" << std::endl;
 }
 
 // Return type for threads
@@ -51,8 +46,13 @@ struct Info
 };
 
 // Called in a new thread for each image
-Info parseImage(Pixels* image, unsigned int thread_id)
+Info parseImage(Pixels* image)
 {
+	// Use this to get a unique ID each time this function is called,
+	// used for writing out the debug images
+	static unsigned int thread_id = 0;
+	++thread_id;
+
 	// Keep the diagonal information local to a thread
 	BoxData box_data;
 
@@ -66,7 +66,7 @@ Info parseImage(Pixels* image, unsigned int thread_id)
 
 	// Find all the boxes on the left, and find box_height while we're at it
 	unsigned int box_width;
-	vector<Coord> boxes = findBoxes(*image, image->width(), image->height(), box_width, &box_data);
+	std::vector<Coord> boxes = findBoxes(*image, image->width(), image->height(), box_width, &box_data);
 
 	// Find ID number
 	unsigned int id = findID(*image, boxes, image->width(), image->height(), box_width);
@@ -77,7 +77,7 @@ Info parseImage(Pixels* image, unsigned int thread_id)
 		for (const Coord& box : boxes)
 			image->mark(box);
 		
-		ostringstream s;
+		std::ostringstream s;
 		s << "debug" << thread_id << ".png";
 		image->save(s.str());
 	}
@@ -88,7 +88,7 @@ Info parseImage(Pixels* image, unsigned int thread_id)
 int main(int argc, char* argv[])
 {
 	ilInit();
-	vector<Pixels> images;
+	std::vector<Pixels> images;
 
 	if (argc != 2)
 	{
@@ -101,25 +101,25 @@ int main(int argc, char* argv[])
 	{
 		images = extract(argv[1]);
 	}
-	catch (const runtime_error& error)
+	catch (const std::runtime_error& error)
 	{
-		cerr << "Error: " << error.what() << endl;
+		std::cerr << "Error: " << error.what() << std::endl;
 		return 1;
 	}
-	catch (const PdfError& error)
+	catch (const PoDoFo::PdfError& error)
 	{
 		error.PrintErrorMsg();
 		return error.GetError();
 	}
 	
 	// Find ID of each page in separate thread
-	vector<Info> results = threadForEach<Info>(images, parseImage);
+	std::vector<Info> results = threadForEach(images, parseImage);
 
 	for (const Info& i : results)
 		if (i.id > 0)
-			cout << i.thread_id << ": " << i.id << endl;
+			std::cout << i.thread_id << ": " << i.id << std::endl;
 		else
-			cout << i.thread_id << ": error" << endl;
+			std::cout << i.thread_id << ": error" << std::endl;
 	
 	return 0;
 }

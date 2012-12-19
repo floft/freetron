@@ -1,7 +1,7 @@
 #include "pixels.h"
 
 // DevIL/OpenIL isn't multithreaded
-mutex Pixels::write_lock;
+std::mutex Pixels::write_lock;
 
 Pixels::Pixels()
 	:w(0), h(0), loaded(false)
@@ -34,13 +34,13 @@ Pixels::Pixels(ILenum type, const char* lump, const unsigned int size)
 		// Move data into a nicer format
 		unsigned int x = 0;
 		unsigned int y = 0;
-		p = vector<vector<unsigned char>>(height, vector<unsigned char>(width));
+		p = std::vector<std::vector<unsigned char>>(height, std::vector<unsigned char>(width));
 
 		// Start at third
 		for (unsigned int i = 2; i < total; i+=3)
 		{
 			// Average for grayscale
-			p[y][x] = floor((1.0*data[i-2]+data[i-1]+data[i])/3);
+			p[y][x] = std::floor((1.0*data[i-2]+data[i-1]+data[i])/3);
 			
 			// Increase y every time we get to end of row
 			if (x+1 == width)
@@ -59,7 +59,7 @@ Pixels::Pixels(ILenum type, const char* lump, const unsigned int size)
 	}
 	else
 	{
-		throw runtime_error("could not read image");
+		throw std::runtime_error("could not read image");
 	}
 	
 	ilDeleteImages(1, &name);
@@ -78,9 +78,9 @@ void Pixels::mark(const Coord& c)
 	marks.push_back(c);
 }
 
-void Pixels::save(const string& filename) const
+void Pixels::save(const std::string& filename) const
 {
-	vector<vector<unsigned char>> copy = p;
+	std::vector<std::vector<unsigned char>> copy = p;
 
 	// Draw the marks on a copy of the image
 	for (const Coord& c : marks)
@@ -100,7 +100,7 @@ void Pixels::save(const string& filename) const
 	}
 
 	// Only execute in one thread since DevIL/OpenIL doesn't support multithreading
-	unique_lock<mutex> lock(write_lock);
+	std::unique_lock<std::mutex> lock(write_lock);
 
 	// Convert this back to a real black and white image
 	ILuint name;
@@ -140,7 +140,7 @@ void Pixels::save(const string& filename) const
 	ilTexImage(w, h, 1, 3, IL_RGB, IL_UNSIGNED_BYTE, data);
 	
 	if (!ilSaveImage(filename.c_str()) || ilGetError() == IL_INVALID_PARAM)
-		throw runtime_error("could not save image");
+		throw std::runtime_error("could not save image");
 	
 	ilDeleteImages(1, &name);
 }
@@ -148,10 +148,10 @@ void Pixels::save(const string& filename) const
 void Pixels::rotate(double rad, Coord point)
 {
 	// Right size, default to white (255 or 1111 1111)
-	vector<vector<unsigned char>> copy(h, vector<unsigned char>(w, 0xff));
+	std::vector<std::vector<unsigned char>> copy(h, std::vector<unsigned char>(w, 0xff));
 
-	const double sin_rad = sin(rad);
-	const double cos_rad = cos(rad);
+	const double sin_rad = std::sin(rad);
+	const double cos_rad = std::cos(rad);
 
 	for (unsigned int y = 0; y < h; ++y)
 	{
@@ -162,8 +162,8 @@ void Pixels::rotate(double rad, Coord point)
 			const int trans_y = y - point.y;
 			// Yes, this rounding will result in holes in the image, but the default
 			// (see above) is white
-			const unsigned int new_x = round(trans_x*cos_rad + trans_y*sin_rad + point.x);
-			const unsigned int new_y = round(trans_y*cos_rad - trans_x*sin_rad + point.y);
+			const unsigned int new_x = std::round(trans_x*cos_rad + trans_y*sin_rad + point.x);
+			const unsigned int new_y = std::round(trans_y*cos_rad - trans_x*sin_rad + point.y);
 
 			// Get rid of invalid points
 			if (new_y < h && new_x < w)

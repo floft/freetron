@@ -1,7 +1,7 @@
 #include "read.h"
 
 // See if the boxes are skewed
-bool vertical(const vector<Coord>& boxes,
+bool vertical(const std::vector<Coord>& boxes,
 	const unsigned int start_box, const unsigned int end_box)
 {
 	// (start_box-1)+1 = start_box
@@ -12,19 +12,19 @@ bool vertical(const vector<Coord>& boxes,
 	return true;
 }
 
-double answerBlack(Pixels& img, const vector<Coord>& boxes,
+double answerBlack(Pixels& img, const std::vector<Coord>& boxes,
 	const unsigned int start_box, const unsigned int end_box,
 	const unsigned int start_x, const unsigned int stop_x,
 	const unsigned int max_y,
 	const unsigned int box_width, const unsigned int bubble_jump)
 {
-	vector<double> colors;
+	std::vector<double> colors;
 	const unsigned int box_height = box_width/ASPECT;
 
 	// For each row, find max value
 	for (unsigned int i = start_box-1; i < end_box && i < boxes.size(); ++i)
 	{
-		vector<double> row;
+		std::vector<double> row;
 
 		for (unsigned int search_x = start_x; search_x <= stop_x; search_x+=bubble_jump)
 			// box_height is approximately the radius of the bubble if it was a circle
@@ -50,13 +50,13 @@ double answerBlack(Pixels& img, const vector<Coord>& boxes,
 }
 
 // Go right from (x,y) looking for circle of color greater than answer_black
-vector<unsigned int> findFilled(Pixels& img,
+std::vector<unsigned int> findFilled(Pixels& img,
 	const unsigned int x, const unsigned int y,
 	const unsigned int stop_x, const unsigned int max_y,
 	const unsigned int box_width, const unsigned int bubble_jump,
 	const double answer_black)
 {
-	vector<unsigned int> position;
+	std::vector<unsigned int> position;
 	const unsigned int box_height = box_width/ASPECT;
 
 	for (unsigned int search_x = x; search_x <= stop_x; search_x+=bubble_jump)
@@ -65,7 +65,7 @@ vector<unsigned int> findFilled(Pixels& img,
 		{
 			position.push_back(search_x);
 
-			//cout << averageColor(img, search_x, y, box_height, stop_x, max_y) << " > " << answer_black << endl;
+			//std::cout << averageColor(img, search_x, y, box_height, stop_x, max_y) << " > " << answer_black << std::endl;
 
 			if (DEBUG)
 				img.mark(Coord(search_x, y));
@@ -76,12 +76,12 @@ vector<unsigned int> findFilled(Pixels& img,
 }
 
 // Find ID number from card
-unsigned int findID(Pixels& img, const vector<Coord>& boxes,
+unsigned int findID(Pixels& img, const std::vector<Coord>& boxes,
 	const unsigned int max_x, const unsigned int max_y,
 	const unsigned int box_width)
 {
 	unsigned int id = 0;
-	map<unsigned int, unsigned int> filled;
+	std::map<unsigned int, unsigned int> filled;
 	
 	// ID is boxes 2-11 (counting from 1)
 	const unsigned int& start_box = ID_START;
@@ -111,7 +111,7 @@ unsigned int findID(Pixels& img, const vector<Coord>& boxes,
 	// ID is boxes 2 - 11
 	for (unsigned int i = start_box-1; i < end_box && i < boxes.size(); ++i)
 	{
-		vector<unsigned int> position = findFilled(img, start_x, boxes[i].y, stop_x, max_y,
+		std::vector<unsigned int> position = findFilled(img, start_x, boxes[i].y, stop_x, max_y,
 			box_width, bubble_jump, answer_black);
 
 		// at x = position, the value is box # - 1 (0 = box 2);
@@ -121,7 +121,7 @@ unsigned int findID(Pixels& img, const vector<Coord>& boxes,
 
 	// Get ID number from map
 	int i;
-	map<unsigned int, unsigned int>::const_iterator iter;
+	std::map<unsigned int, unsigned int>::const_iterator iter;
 
 	for (i = filled.size()-1, iter = filled.begin(); iter != filled.end(); ++iter, --i)
 	{

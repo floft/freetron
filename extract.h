@@ -11,21 +11,18 @@
 #ifndef H_EXTRACT
 #define H_EXTRACT
 
-#include <cstdio>
 #include <vector>
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <cstring>
 #include <tiffio.h>
 #include <tiffio.hxx>
 #include <podofo/podofo.h>
 
 #include "pixels.h"
 
-using namespace std;
-using namespace PoDoFo;
-
-vector<Pixels> extract(const char* filename);
-Pixels readPDFImage(PdfObject* object, const unsigned int type);
+std::vector<Pixels> extract(const char* filename);
+Pixels readPDFImage(PoDoFo::PdfObject* object, const unsigned int type);
 
 #endif

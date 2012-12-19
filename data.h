@@ -7,8 +7,6 @@
 
 #include <iostream>
 
-using namespace std;
-
 struct Coord
 {
 	unsigned int x;
@@ -18,7 +16,7 @@ struct Coord
 	Coord(const unsigned int x, const unsigned int y) :x(x), y(y) { }
 };
 
-ostream& operator<<(ostream& os, const Coord& c);
+std::ostream& operator<<(std::ostream& os, const Coord& c);
 bool operator==(const Coord& c1, const Coord& c2);
 bool operator!=(const Coord& c1, const Coord& c2);
 

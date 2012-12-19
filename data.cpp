@@ -1,6 +1,6 @@
 #include "data.h"
 
-ostream& operator<<(ostream& os, const Coord& c)
+std::ostream& operator<<(std::ostream& os, const Coord& c)
 {
 	return os << "(" << c.x << "," << c.y << ")";
 }

@@ -19,14 +19,14 @@
 
 class Pixels
 {
-	vector<Coord> marks;
-	vector<vector<unsigned char>> p;
+	std::vector<Coord> marks;
+	std::vector<std::vector<unsigned char>> p;
 	unsigned int w;
 	unsigned int h;
 	bool loaded;
 
 	// Lock this so that only one thread can save() at the same time
-	static mutex write_lock;
+	static std::mutex write_lock;
 
 public:
 	Pixels(); // Useful for placeholder
@@ -47,7 +47,7 @@ public:
 
 	// Used for debugging, marks are written to a copy of this when saved
 	void mark(const Coord& m);
-	void save(const string& filename) const;
+	void save(const std::string& filename) const;
 };
 
 #endif

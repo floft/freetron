@@ -8,10 +8,10 @@ double averageColor(Pixels& img,
 	const unsigned int max_x, const unsigned int max_y)
 {
 	// Find square around circle of radius r centered at (x,y)
-	const unsigned int x1 = min((x<r)?0:x-r, max_x);
-	const unsigned int y1 = min((y<r)?0:y-r, max_y);
-	const unsigned int x2 = min(x+r, max_x);
-	const unsigned int y2 = min(y+r, max_y);
+	const unsigned int x1 = std::min((x<r)?0:x-r, max_x);
+	const unsigned int y1 = std::min((y<r)?0:y-r, max_y);
+	const unsigned int x2 = std::min(x+r, max_x);
+	const unsigned int y2 = std::min(y+r, max_y);
 
 	const unsigned int mid_x = (x1+x2)/2;
 	const unsigned int mid_y = (y1+y2)/2;
@@ -26,7 +26,7 @@ double averageColor(Pixels& img,
 	{
 		for (unsigned int search_x = x1; search_x < x2; ++search_x)
 		{
-			if (pow(abs(search_x-mid_x),2) + pow(abs(search_y-mid_y),2) <= r2)
+			if (std::pow(std::abs(search_x-mid_x),2) + std::pow(std::abs(search_y-mid_y),2) <= r2)
 			{
 				if (img.black(Coord(search_x, search_y)))
 					++black;
@@ -65,7 +65,7 @@ bool Box::valid()
 	
 	// What should the width be approximately given the aspect ratio (width/height)
 	const double approx_width = ASPECT*h;
-	const unsigned int real_diag = ceil(sqrt(pow(w,2)+pow(h,2)));
+	const unsigned int real_diag = std::ceil(std::sqrt(w*w+h*h));
 
 	// See if the diag is about the right length, if the width and height are about right,
 	// and if a circle in the center of the possible box is almost entirely black.

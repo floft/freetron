@@ -115,7 +115,7 @@ double findRotation(Pixels& img, Coord& ret_coord,
 	
 	// If denominator is zero, don't rotate
 	if (top.y != bottom.y)
-		angle = atan((1.0*bottom.x - top.x)/(1.0*bottom.y - top.y));
+		angle = std::atan((1.0*bottom.x - top.x)/(1.0*bottom.y - top.y));
 
 	return angle;
 }

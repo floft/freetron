@@ -14,15 +14,13 @@
 #include "options.h"
 #include "pixels.h"
 
-using namespace std;
-
 // Store data for each image separately (for multithreading)
 struct BoxData
 {
 	// The diagonal based on the first few valid boxes
 	unsigned int diag = 0;
 	// Used to see if there's several of the same-sized boxes
-	vector<unsigned int> diags;
+	std::vector<unsigned int> diags;
 };
 
 // Average color of all pixels within radius r of (x,y)
