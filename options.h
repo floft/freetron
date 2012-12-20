@@ -29,6 +29,6 @@ const unsigned int ID_START = 2;
 const unsigned int ID_END   = 11;
 
 // Threading
-const unsigned int THREAD_WAIT = 50;	// Check if we can create new thread every 50 milliseconds
+const unsigned int THREAD_WAIT = 10;	// Check if we can create new thread every few milliseconds
 
 #endif

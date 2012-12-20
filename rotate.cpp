@@ -2,19 +2,18 @@
 
 // Find top left and bottom right box. Then, determine slope of these two
 // and return the amount to rotate.
-double findRotation(Pixels& img, Coord& ret_coord,
-	const unsigned int max_x, const unsigned int max_y, BoxData* data)
+double findRotation(Pixels& img, Coord& ret_coord, BoxData* data)
 {
 	Coord top;
 	Coord bottom;
 
 	// Set to max large values
-	double min_top_dist    = max_y;
-	double min_bottom_dist = max_y;
+	double min_top_dist    = img.height();
+	double min_bottom_dist = img.height();
 
 	// Top and bottom points
 	const Coord origin(0, 0);
-	const Coord extreme(0, max_y - 1);
+	const Coord extreme(0, img.height() - 1);
 
 	//
 	// The top-left box
@@ -25,20 +24,20 @@ double findRotation(Pixels& img, Coord& ret_coord,
 
 	// Search from top left up a y = x line going down the image
 	// Max y+x for also scanning the bottom of the image if shifted to the right
-	for (unsigned int z = 0; z < max_y + max_x && !found; ++z)
+	for (unsigned int z = 0; z < img.height() + img.width() && !found; ++z)
 	{
-		for (unsigned int x = 0, y = z; x <= z && x < max_x && !found; ++x, --y)
+		for (unsigned int x = 0, y = z; x <= z && x < img.width() && !found; ++x, --y)
 		{
 			// This is an imaginary point (skip till we get to points on the
 			// bottom of the image)
-			if (y > max_y - 1)
+			if (y > img.height() - 1)
 				continue;
 
 			// See if it might be a box
 			if (img.black(Coord(x, y)))
 			{
 				Coord point(x, y);
-				Box box(img, point, max_x, max_y, data);
+				Box box(img, point, data);
 
 				if (box.valid())
 				{
@@ -71,19 +70,19 @@ double findRotation(Pixels& img, Coord& ret_coord,
 
 	// Start searching at the bottom
 	// Stop searching once reaching the y value of the top-left box
-	for (unsigned int z = max_y + max_x; z > top.y && !found; --z)
+	for (unsigned int z = img.height() + img.width(); z > top.y && !found; --z)
 	{
-		for (unsigned int x = 0, y = z; x <= z && x < max_x && !found; ++x, --y)
+		for (unsigned int x = 0, y = z; x <= z && x < img.width() && !found; ++x, --y)
 		{
 			// This is an imaginary point (below the bottom)
-			if (y > max_y - 1)
+			if (y > img.height() - 1)
 				continue;
 
 			// It's black
 			if (img.black(Coord(x, y)))
 			{
 				Coord point(x, y);
-				Box box(img, point, max_x, max_y, data);
+				Box box(img, point, data);
 
 				if (box.valid())
 				{

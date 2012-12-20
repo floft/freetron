@@ -4,14 +4,13 @@
 // 0 = complete white, 1 = complete black
 double averageColor(Pixels& img,
 	const unsigned int x, const unsigned int y,
-	const unsigned int r,
-	const unsigned int max_x, const unsigned int max_y)
+	const unsigned int r)
 {
 	// Find square around circle of radius r centered at (x,y)
-	const unsigned int x1 = std::min((x<r)?0:x-r, max_x);
-	const unsigned int y1 = std::min((y<r)?0:y-r, max_y);
-	const unsigned int x2 = std::min(x+r, max_x);
-	const unsigned int y2 = std::min(y+r, max_y);
+	const unsigned int x1 = std::min((x<r)?0:x-r, img.width());
+	const unsigned int y1 = std::min((y<r)?0:y-r, img.height());
+	const unsigned int x2 = std::min(x+r, img.width());
+	const unsigned int y2 = std::min(y+r, img.height());
 
 	const unsigned int mid_x = (x1+x2)/2;
 	const unsigned int mid_y = (y1+y2)/2;
@@ -42,9 +41,8 @@ double averageColor(Pixels& img,
 		return 0;
 }
 
-Box::Box(Pixels& pixels, const Coord& point,
-	const unsigned int maxX, const unsigned int maxY, BoxData* data)
-	:max_x(maxX), max_y(maxY), img(&pixels), data(data)
+Box::Box(Pixels& pixels, const Coord& point, BoxData* data)
+	:img(&pixels), data(data)
 {
 	const Coord left   = leftmost(point);
 	const Coord right  = rightmost(point);
@@ -74,7 +72,7 @@ bool Box::valid()
 			(data->diag == 0 && real_diag >= MIN_DIAG && real_diag <= MAX_DIAG) ||  // Get rid of 1-5 px boxes
 			(real_diag >= data->diag-MAX_ERROR && real_diag <= data->diag+MAX_ERROR)      // Use found valid diagonal
 		) &&
-		averageColor(*img, mp.x, mp.y, h/2, max_x, max_y) > MIN_BLACK)
+		averageColor(*img, mp.x, mp.y, h/2) > MIN_BLACK)
 	{
 		// This is a valid box, so use this diagonal to speed up calculations on next box
 		// But, nothing worse than incorrect values, better to not use this than
@@ -174,7 +172,7 @@ unsigned int Box::goDown(const Coord& p, const Coord& orig) const
 	unsigned int new_y = p.y;
 	unsigned int white_count = 0;
 
-	for (unsigned int search_y = p.y; search_y < max_y && white_count <= MAX_ERROR &&
+	for (unsigned int search_y = p.y; search_y < img->height() && white_count <= MAX_ERROR &&
 		(data->diag == 0 || distance(p.x, search_y, orig.x, orig.y) <= data->diag+MAX_ERROR); ++search_y)
 	{
 		if (img->black(Coord(p.x, search_y)))
@@ -196,7 +194,7 @@ unsigned int Box::goRight(const Coord& p, const Coord& orig) const
 	unsigned int new_x = p.x;
 	unsigned int white_count = 0;
 
-	for (unsigned int search_x = p.x; search_x < max_x && white_count <= MAX_ERROR &&
+	for (unsigned int search_x = p.x; search_x < img->width() && white_count <= MAX_ERROR &&
 		(data->diag == 0 || distance(search_x, p.y, orig.x, orig.y) <= data->diag+MAX_ERROR); ++search_x)
 	{
 		if (img->black(Coord(search_x, p.y)))

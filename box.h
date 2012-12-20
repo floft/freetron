@@ -17,6 +17,8 @@
 // Store data for each image separately (for multithreading)
 struct BoxData
 {
+	// Approximate width of the box
+	unsigned int width = 0;
 	// The diagonal based on the first few valid boxes
 	unsigned int diag = 0;
 	// Used to see if there's several of the same-sized boxes
@@ -27,8 +29,7 @@ struct BoxData
 // 0 = complete white, 1 = complete black
 double averageColor(Pixels& img,
 	const unsigned int x, const unsigned int y,
-	const unsigned int r,
-	const unsigned int max_x, const unsigned int max_y);
+	const unsigned int r);
 
 // Determine if it's a box and calculate midpoint, width, and height
 class Box
@@ -50,8 +51,7 @@ class Box
 
 public:
 	Box() { } // Only used as a placeholder, then copy another box to it
-	Box(Pixels& pixels, const Coord& point,
-		const unsigned int maxX, const unsigned int maxY, BoxData* data);
+	Box(Pixels& pixels, const Coord& point, BoxData* data);
 
 	bool valid();
 	unsigned int width() const  { return w; }

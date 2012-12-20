@@ -2,6 +2,7 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
+ *   - Change unsigned ints to ints (e.g. for unsigned i; i > 0; --i will die)
  *   - Add << and >> for Pixels for easy testing
  *   - Use size_t, iterators, int, etc. instead of unsigned int
  *   - Develop better algorithm for finding if bubble is filled in
@@ -53,23 +54,22 @@ Info parseImage(Pixels* image)
 	static unsigned int thread_id = 0;
 	++thread_id;
 
-	// Box information for this image, needed because of multithreading
+	// Box information for this image
 	BoxData data;
 
 	// Rotate the image
 	Coord rotate_point;
-	double rotation = findRotation(*image, rotate_point, image->width(), image->height(), &data);
+	double rotation = findRotation(*image, rotate_point, &data);
 
 	// Negative since the origin is the top-left point
 	if (rotation != 0)
 		image->rotate(-rotation, rotate_point);
 
-	// Find all the boxes on the left, and find box_height while we're at it
-	unsigned int box_width;
-	std::vector<Coord> boxes = findBoxes(*image, image->width(), image->height(), box_width, &data);
+	// Find all the boxes on the left
+	std::vector<Coord> boxes = findBoxes(*image, &data);
 
 	// Find ID number
-	unsigned int id = findID(*image, boxes, image->width(), image->height(), box_width);
+	unsigned int id = findID(*image, boxes, &data);
 
 	// Debug information
 	if (DEBUG)

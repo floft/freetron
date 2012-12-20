@@ -7,36 +7,34 @@ bool box_sort(const Coord& v1, const Coord& v2)
 }
 
 // Find all the boxes in the image
-std::vector<Coord> findBoxes(Pixels& img,
-	const unsigned int max_x, const unsigned int max_y,
-	unsigned int& ret_width, BoxData* data)
+std::vector<Coord> findBoxes(Pixels& img, BoxData* data)
 {
 	std::vector<Coord> boxes;
 
 	// Find all the boxes searching from down the image going up at a diagonal to the
-	// top for each y value. The max_y+max_x also scans coming up from the bottom of
+	// top for each y value. The height+width also scans coming up from the bottom of
 	// the image.
-	for (unsigned int z = 0; z < max_y + max_x; ++z)
+	for (unsigned int z = 0; z < img.height() + img.width(); ++z)
 	{
-		for (unsigned int x = 0, y = z; x <= z && x < max_x; ++x, --y)
+		for (unsigned int x = 0, y = z; x <= z && x < img.width(); ++x, --y)
 		{
 			// This is an imaginary point (skip till we get to points on the
 			// bottom of the image)
-			if (y > max_y - 1)
+			if (y > img.height() - 1)
 				continue;
 
 			// See if it might be a box
 			if (img.black(Coord(x, y)))
 			{
 				Coord point(x, y);
-				Box box(img, point, max_x, max_y, data);
+				Box box(img, point, data);
 
 				if (box.valid())
 				{
 					// If we don't have a valid width yet, use this box
 					// TODO: verify this is similar on multiple boxes?
 					if (boxes.size() == 0)
-						ret_width = box.width();
+						data->width = box.width();
 
 					// Make sure we didn't already have this point
 					if (std::find(boxes.begin(), boxes.end(), box.midpoint()) == boxes.end())
