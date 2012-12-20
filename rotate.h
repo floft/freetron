@@ -16,6 +16,6 @@
 
 // Find top-left and bottom-left boxes and give rotation to make them vertical
 double findRotation(Pixels& img, Coord& ret_coord,
-	const unsigned int max_x, const unsigned int max_y, BoxData* box_data);
+	const unsigned int max_x, const unsigned int max_y, BoxData* data);
 
 #endif

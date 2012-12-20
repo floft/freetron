@@ -40,6 +40,7 @@ template <class Result, class Type> class Thread
 public:
 	Thread() { }
 
+	// Start running a new function using this Thread
 	void start(Result (*function)(Type*), Type* item, Result* return_location)
 	{
 		started  = true;
@@ -50,9 +51,9 @@ public:
 		thread = std::thread(std::move(task), item);
 	}
 
+	// If the future isn't in the ready state, we'll assume the thread is still running
 	bool running() const
 	{
-		// If it's not ready, we'll assume it's still running
 		if (started)
 			return !(future.wait_for(std::chrono::seconds(0)) == std::future_status::ready);
 		else
@@ -79,16 +80,19 @@ public:
 	}
 };
 
-// Note that nothing is ever ran unless you call run()
+// Create a certain number of threads and start running a function in a thread
+// if there is one available; otherwise, wait and then run it.
 template <class Result, class Type> class ThreadScheduler
 {
+	typedef typename std::vector<Thread<Result,Type>>::size_type size_type;
+
 	std::vector<Thread<Result,Type>> pool;
 
 public:
-	ThreadScheduler(unsigned int size)
+	ThreadScheduler(size_type size)
 		:pool(size) { }
 	
-	void schedule(Result (*function)(Type*), Type* item, Result* return_location)
+	void start(Result (*function)(Type*), Type* item, Result* return_location)
 	{
 		// Get or wait to get one of the threads
 		Thread<Result,Type>* thread;
@@ -102,18 +106,21 @@ public:
 		thread->start(function, item, return_location);
 	}
 
+	// Wait for all threads to finish and save the output on each of them
 	void wait()
 	{
 		for (Thread<Result,Type>& t : pool)
 			t.put();
 	}
 
+	// Wait and save output before destroying
 	~ThreadScheduler()
 	{
 		wait();
 	}
 
 private:
+	// Get a thread and if one isn't available, return null.
 	Thread<Result,Type>* get()
 	{
 		for (Thread<Result,Type>& t : pool)
@@ -128,16 +135,16 @@ private:
 template <class Result, class Type, class Container>
 std::vector<Result> threadForEach(Container items, Result (*function)(Type*))
 {
-	typedef typename std::vector<Result>::iterator result_iter;
+	typedef typename std::vector<Result>::size_type size_type;
 
+	size_type thread_id = 0;
 	std::vector<Result> results(items.size());
-	result_iter result = results.begin();
 	ThreadScheduler<Result,Type> scheduler(core_count());
 
 	for (Type& item : items)
 	{
-		scheduler.schedule(function, &item, &*result);
-		++result;
+		scheduler.start(function, &item, &results[thread_id]);
+		++thread_id;
 	}
 	
 	scheduler.wait();

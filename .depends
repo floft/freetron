@@ -2,7 +2,7 @@ data.o: data.cpp data.h
 boxes.o: boxes.cpp boxes.h options.h pixels.h data.h math.h box.h
 read.o: read.cpp read.h options.h pixels.h data.h math.h box.h
 freetron.o: freetron.cpp extract.h pixels.h data.h options.h rotate.h \
- math.h box.h read.h boxes.h threading.h
+ math.h box.h read.h boxes.h threading.h cores.h
 box.o: box.cpp box.h data.h math.h options.h pixels.h
 extract.o: extract.cpp extract.h pixels.h data.h options.h
 math.o: math.cpp math.h data.h

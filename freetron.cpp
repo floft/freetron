@@ -53,12 +53,12 @@ Info parseImage(Pixels* image)
 	static unsigned int thread_id = 0;
 	++thread_id;
 
-	// Keep the diagonal information local to a thread
-	BoxData box_data;
+	// Box information for this image, needed because of multithreading
+	BoxData data;
 
 	// Rotate the image
 	Coord rotate_point;
-	double rotation = findRotation(*image, rotate_point, image->width(), image->height(), &box_data);
+	double rotation = findRotation(*image, rotate_point, image->width(), image->height(), &data);
 
 	// Negative since the origin is the top-left point
 	if (rotation != 0)
@@ -66,7 +66,7 @@ Info parseImage(Pixels* image)
 
 	// Find all the boxes on the left, and find box_height while we're at it
 	unsigned int box_width;
-	std::vector<Coord> boxes = findBoxes(*image, image->width(), image->height(), box_width, &box_data);
+	std::vector<Coord> boxes = findBoxes(*image, image->width(), image->height(), box_width, &data);
 
 	// Find ID number
 	unsigned int id = findID(*image, boxes, image->width(), image->height(), box_width);
