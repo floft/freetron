@@ -14,9 +14,9 @@
     defined(sun) || defined(__sun) || \
     defined(__APPLE__)
 #include <unistd.h>
-unsigned int core_count()
+int core_count()
 {
-	static unsigned int count = 0;
+	static int count = 0;
 
 	if (count == 0)
 		count = sysconf(_SC_NPROCESSORS_ONLN);
@@ -31,9 +31,9 @@ unsigned int core_count()
 #elif defined(__WIN32) || defined(__WIN32__)
 // TODO: don't include hyperthreading
 #include <windows.h>
-unsigned int core_count()
+int core_count()
 {
-	static unsigned int count = 0;
+	static int count = 0;
 
 	if (count == 0)
 	{
@@ -52,7 +52,7 @@ unsigned int core_count()
 #else
 // Default to using two threads
 // TODO: is this bad?
-inline unsigned int core_count() { return 2; }
+inline int core_count() { return 2; }
 #endif
 
 #endif

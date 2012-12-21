@@ -19,6 +19,6 @@ double distance(const Coord& p1, const Coord& p2);
 double average(const std::vector<double>& v);
 double max_value(const std::vector<double>& v);
 double min_value(const std::vector<double>& v);
-unsigned int round(const unsigned int x, const unsigned int r);
+int round(const int x, const int r);
 
 #endif

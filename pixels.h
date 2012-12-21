@@ -21,8 +21,8 @@ class Pixels
 {
 	std::vector<Coord> marks;
 	std::vector<std::vector<unsigned char>> p;
-	unsigned int w;
-	unsigned int h;
+	int w;
+	int h;
 	bool loaded;
 
 	// Lock this so that only one thread can save() at the same time
@@ -30,11 +30,11 @@ class Pixels
 
 public:
 	Pixels(); // Useful for placeholder
-	Pixels(ILenum type, const char* lump, const unsigned int size);
+	Pixels(ILenum type, const char* lump, const int size);
 
-	bool valid() const { return loaded; }
-	unsigned int width() const { return w; }
-	unsigned int height() const { return h; }
+	inline bool valid()  const { return loaded; }
+	inline int  width()  const { return w; }
+	inline int  height() const { return h; }
 
 	// This doesn't extend the image at all. If rotation and points
 	// are determined correctly, it won't rotate out of the image.

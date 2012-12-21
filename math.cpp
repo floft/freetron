@@ -61,7 +61,7 @@ double min_value(const std::vector<double>& v)
 
 // Round x to the nearest r
 //   see: http://stackoverflow.com/a/3407254
-unsigned int round(const unsigned int x, const unsigned int r)
+int round(const int x, const int r)
 {
 	int remainder = x%r;
 

@@ -9,11 +9,11 @@
 
 struct Coord
 {
-	unsigned int x;
-	unsigned int y;
+	int x;
+	int y;
 
 	Coord() :x(0), y(0) { }
-	Coord(const unsigned int x, const unsigned int y) :x(x), y(y) { }
+	Coord(const int x, const int y) :x(x), y(y) { }
 };
 
 std::ostream& operator<<(std::ostream& os, const Coord& c);

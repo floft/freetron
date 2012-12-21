@@ -9,14 +9,16 @@ bool box_sort(const Coord& v1, const Coord& v2)
 // Find all the boxes in the image
 std::vector<Coord> findBoxes(Pixels& img, BoxData* data)
 {
+	typedef std::vector<Coord>::size_type size_type;
+
 	std::vector<Coord> boxes;
 
 	// Find all the boxes searching from down the image going up at a diagonal to the
 	// top for each y value. The height+width also scans coming up from the bottom of
 	// the image.
-	for (unsigned int z = 0; z < img.height() + img.width(); ++z)
+	for (int z = 0; z < img.height() + img.width(); ++z)
 	{
-		for (unsigned int x = 0, y = z; x <= z && x < img.width(); ++x, --y)
+		for (int x = 0, y = z; x <= z && x < img.width(); ++x, --y)
 		{
 			// This is an imaginary point (skip till we get to points on the
 			// bottom of the image)
@@ -27,7 +29,7 @@ std::vector<Coord> findBoxes(Pixels& img, BoxData* data)
 			if (img.black(Coord(x, y)))
 			{
 				Coord point(x, y);
-				Box box(img, point, data);
+				Box box(&img, point, data);
 
 				if (box.valid())
 				{
@@ -57,7 +59,7 @@ std::vector<Coord> findBoxes(Pixels& img, BoxData* data)
 	if (boxes.size() > 0)
 		unique.push_back(boxes[0]);
 	
-	for (unsigned int i = 1; i < boxes.size(); ++i)
+	for (size_type i = 1; i < boxes.size(); ++i)
 		if (std::abs(1.0*boxes[i].y - boxes[i-1].y) > MAX_ERROR || std::abs(1.0*boxes[i].x - boxes[i-1].x) > MAX_ERROR)
 			unique.push_back(boxes[i]);
 

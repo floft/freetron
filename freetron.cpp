@@ -38,11 +38,11 @@ void help()
 // Return type for threads
 struct Info
 {
-	unsigned int thread_id = 0;
-	unsigned int id = 0;
+	int thread_id = 0;
+	int id = 0;
 
 	Info() { }
-	Info(unsigned int t, unsigned int i)
+	Info(int t, int i)
 		:thread_id(t), id(i) { }
 };
 
@@ -51,8 +51,8 @@ Info parseImage(Pixels* image)
 {
 	// Use this to get a unique ID each time this function is called,
 	// used for writing out the debug images
-	static unsigned int thread_id = 0;
-	++thread_id;
+	static int static_thread_id = 0;
+	const int thread_id = static_thread_id++;
 
 	// Box information for this image
 	BoxData data;
@@ -69,7 +69,7 @@ Info parseImage(Pixels* image)
 	std::vector<Coord> boxes = findBoxes(*image, &data);
 
 	// Find ID number
-	unsigned int id = findID(*image, boxes, &data);
+	int id = findID(*image, boxes, &data);
 
 	// Debug information
 	if (DEBUG)

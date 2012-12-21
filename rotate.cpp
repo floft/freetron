@@ -24,9 +24,9 @@ double findRotation(Pixels& img, Coord& ret_coord, BoxData* data)
 
 	// Search from top left up a y = x line going down the image
 	// Max y+x for also scanning the bottom of the image if shifted to the right
-	for (unsigned int z = 0; z < img.height() + img.width() && !found; ++z)
+	for (int z = 0; z < img.height() + img.width() && !found; ++z)
 	{
-		for (unsigned int x = 0, y = z; x <= z && x < img.width() && !found; ++x, --y)
+		for (int x = 0, y = z; x <= z && x < img.width() && !found; ++x, --y)
 		{
 			// This is an imaginary point (skip till we get to points on the
 			// bottom of the image)
@@ -37,7 +37,7 @@ double findRotation(Pixels& img, Coord& ret_coord, BoxData* data)
 			if (img.black(Coord(x, y)))
 			{
 				Coord point(x, y);
-				Box box(img, point, data);
+				Box box(&img, point, data);
 
 				if (box.valid())
 				{
@@ -70,9 +70,9 @@ double findRotation(Pixels& img, Coord& ret_coord, BoxData* data)
 
 	// Start searching at the bottom
 	// Stop searching once reaching the y value of the top-left box
-	for (unsigned int z = img.height() + img.width(); z > top.y && !found; --z)
+	for (int z = img.height() + img.width(); z > top.y && !found; --z)
 	{
-		for (unsigned int x = 0, y = z; x <= z && x < img.width() && !found; ++x, --y)
+		for (int x = 0, y = z; x <= z && x < img.width() && !found; ++x, --y)
 		{
 			// This is an imaginary point (below the bottom)
 			if (y > img.height() - 1)
@@ -82,7 +82,7 @@ double findRotation(Pixels& img, Coord& ret_coord, BoxData* data)
 			if (img.black(Coord(x, y)))
 			{
 				Coord point(x, y);
-				Box box(img, point, data);
+				Box box(&img, point, data);
 
 				if (box.valid())
 				{

@@ -18,28 +18,28 @@
 struct BoxData
 {
 	// Approximate width of the box
-	unsigned int width = 0;
+	int width = 0;
 	// The diagonal based on the first few valid boxes
-	unsigned int diag = 0;
+	int diag = 0;
 	// Used to see if there's several of the same-sized boxes
-	std::vector<unsigned int> diags;
+	std::vector<int> diags;
 };
 
 // Average color of all pixels within radius r of (x,y)
 // 0 = complete white, 1 = complete black
 double averageColor(Pixels& img,
-	const unsigned int x, const unsigned int y,
-	const unsigned int r);
+	const int x, const int y,
+	const int r);
 
 // Determine if it's a box and calculate midpoint, width, and height
 class Box
 {
 	// Dimensions of image
-	unsigned int max_x = 0;
-	unsigned int max_y = 0;
+	int max_x = 0;
+	int max_y = 0;
 	// Width/height of box
-	unsigned int w = 0;
-	unsigned int h = 0;
+	int w = 0;
+	int h = 0;
 	// Aspect ratio of this "box"
 	double ar = 0;
 	// The image, but don't ever delete this...
@@ -51,13 +51,13 @@ class Box
 
 public:
 	Box() { } // Only used as a placeholder, then copy another box to it
-	Box(Pixels& pixels, const Coord& point, BoxData* data);
+	Box(Pixels* pixels, const Coord& point, BoxData* data);
 
 	bool valid();
-	unsigned int width() const  { return w; }
-	unsigned int height() const { return h; }
-	double aspect() const  { return ar; }
-	const Coord& midpoint() const { return mp; }
+	inline int width() const  { return w; }
+	inline int height() const { return h; }
+	inline double aspect() const  { return ar; }
+	inline const Coord& midpoint() const { return mp; }
 
 private:
 	// See if diags contains any beyond error margins
@@ -67,10 +67,10 @@ private:
 	Coord midPoint(const Coord& p1, const Coord& p2) const;
 
 	// Go a direction until MAX_ERROR white pixels, return last black point
-	unsigned int goUp(const Coord& p, const Coord& orig) const;
-	unsigned int goLeft(const Coord& p, const Coord& orig) const;
-	unsigned int goDown(const Coord& p, const Coord& orig) const;
-	unsigned int goRight(const Coord& p, const Coord& orig) const;
+	int goUp(const Coord& p, const Coord& orig) const;
+	int goLeft(const Coord& p, const Coord& orig) const;
+	int goDown(const Coord& p, const Coord& orig) const;
+	int goRight(const Coord& p, const Coord& orig) const;
 
 	// Find extreme points in a direction
 	Coord leftmost(const Coord& point) const;
