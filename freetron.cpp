@@ -2,8 +2,6 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Add << and >> for Pixels for easy testing
- *   - Use size_t, iterators, int, etc. instead of unsigned int
  *   - Develop better algorithm for finding if bubble is filled in
  *   - Use dynamic_bitset for storing bools in Pixels
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe

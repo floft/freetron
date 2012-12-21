@@ -141,6 +141,10 @@ std::vector<Result> threadForEach(Container items, Result (*function)(Type*))
 	std::vector<Result> results(items.size());
 	ThreadScheduler<Result,Type> scheduler(core_count());
 
+	// Not sure if we'd ever run into this...
+	if (results.size() != items.size())
+		throw std::runtime_error("size mismatch, didn't allocate space properly in threadForEach");
+
 	for (Type& item : items)
 	{
 		scheduler.start(function, &item, &results[thread_id]);

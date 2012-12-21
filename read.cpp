@@ -2,7 +2,7 @@
 
 // See if the boxes are skewed
 bool vertical(const std::vector<Coord>& boxes,
-	const int start_box, const int end_box)
+	const int start_box, const std::vector<Coord>::size_type end_box)
 {
 	typedef std::vector<Coord>::size_type size_type;
 
@@ -15,7 +15,7 @@ bool vertical(const std::vector<Coord>& boxes,
 }
 
 double answerBlack(Pixels& img, const std::vector<Coord>& boxes,
-	const int start_box, const int end_box,
+	const int start_box, const std::vector<Coord>::size_type end_box,
 	const int start_x, const int stop_x,
 	const int box_width, const int bubble_jump)
 {
@@ -87,8 +87,8 @@ int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData* data)
 	std::map<int, int> filled;
 	
 	// ID is boxes 2-11 (counting from 1)
-	const int& start_box = ID_START;
-	const int& end_box   = ID_END;
+	const size_type& start_box = ID_START;
+	const size_type& end_box   = ID_END;
 
 	// If the boxes don't exist, ...
 	if (boxes.size() < end_box)

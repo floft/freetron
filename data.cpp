@@ -5,9 +5,9 @@ std::ostream& operator<<(std::ostream& os, const Coord& c)
 	return os << "(" << c.x << "," << c.y << ")";
 }
 
-std::istream& operator>>(std::istream& is, Coord& c);
+std::istream& operator>>(std::istream& is, Coord& c)
 {
-	is.exceptions(is.exceptions()|ios_base::badbit);
+	is.exceptions(is.exceptions()|std::ios_base::badbit);
 
 	char paren1, comma, paren2;
 

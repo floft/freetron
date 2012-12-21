@@ -46,15 +46,9 @@ public:
 	// Default to white to assume that this isn't a useful pixel
 	bool black(Coord c, const bool default_value = false) const;
 
-	// Used for debugging, marks are written to a copy of this when saved
+	// Used for debugging, marks are written to a copy of the image when saved
 	void mark(const Coord& m);
 	void save(const std::string& filename) const;
-
-	friend std::ostream& operator<<(std::ostream& os, const Pixels& img);
-	friend std::ostream& operator>>(std::ostream& os, const Pixels& img);
 };
-
-std::ostream& operator<<(std::ostream& os, const Pixels& img);
-std::ostream& operator>>(std::ostream& os, const Pixels& img);
 
 #endif

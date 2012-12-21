@@ -18,23 +18,24 @@ Pixels::Pixels(ILenum type, const char* lump, const int size)
 
 	if (ilLoadL(type, lump, static_cast<ILuint>(size)))
 	{
-		ILuint width  = ilGetInteger(IL_IMAGE_WIDTH);
-		ILuint height = ilGetInteger(IL_IMAGE_HEIGHT);
-
-		// These will come in handy later (duh)
-		w = width;
-		h = height;
+		w = ilGetInteger(IL_IMAGE_WIDTH);
+		h = ilGetInteger(IL_IMAGE_HEIGHT);
 		
+		// If the image height or width is larger than int's max, it will appear
+		// to be negative. Just don't use extremely large (many gigapixel) images.
+		if (w < 0 || h < 0)
+			throw std::runtime_error("use a smaller image, can't store dimensions in int");
+
 		// 3 because IL_RGB
-		const int total = width*height*3;
+		const int total = w*h*3;
 		unsigned char* data = new unsigned char[total];
 
-		ilCopyPixels(0, 0, 0, width, height, 1, IL_RGB, IL_UNSIGNED_BYTE, data);
+		ilCopyPixels(0, 0, 0, w, h, 1, IL_RGB, IL_UNSIGNED_BYTE, data);
 		
 		// Move data into a nicer format
 		int x = 0;
 		int y = 0;
-		p = std::vector<std::vector<unsigned char>>(height, std::vector<unsigned char>(width));
+		p = std::vector<std::vector<unsigned char>>(h, std::vector<unsigned char>(w));
 
 		// Start at third
 		for (int i = 2; i < total; i+=3)
@@ -43,7 +44,7 @@ Pixels::Pixels(ILenum type, const char* lump, const int size)
 			p[y][x] = std::floor((1.0*data[i-2]+data[i-1]+data[i])/3);
 			
 			// Increase y every time we get to end of row
-			if (x+1 == width)
+			if (x+1 == w)
 			{
 				x=0;
 				++y;
@@ -167,31 +168,4 @@ void Pixels::rotate(double rad, Coord point)
 	}
 
 	p = copy;
-}
-
-std::ostream& operator<<(std::ostream& os, const Pixels& img)
-{
-	os << "PixelData" << std::endl
-	   << img.w << " "
-	   << img.h << " "
-	   << img.loaded << std::endl;
-	
-	for (const Coord
-
-	for (const std::vector<unsigned char>& row : img.p)
-	{
-		for (const unsigned int pixel : row)
-		{
-			os << pixel;
-		}
-
-		os << std::endl;
-	}
-
-	return os;
-}
-
-Pixels operator>>(std::istream& is, Pixels& img)
-{
-	return is;
 }
