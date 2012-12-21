@@ -168,3 +168,30 @@ void Pixels::rotate(double rad, Coord point)
 
 	p = copy;
 }
+
+std::ostream& operator<<(std::ostream& os, const Pixels& img)
+{
+	os << "PixelData" << std::endl
+	   << img.w << " "
+	   << img.h << " "
+	   << img.loaded << std::endl;
+	
+	for (const Coord
+
+	for (const std::vector<unsigned char>& row : img.p)
+	{
+		for (const unsigned int pixel : row)
+		{
+			os << pixel;
+		}
+
+		os << std::endl;
+	}
+
+	return os;
+}
+
+Pixels operator>>(std::istream& is, Pixels& img)
+{
+	return is;
+}

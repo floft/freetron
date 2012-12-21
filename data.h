@@ -17,6 +17,7 @@ struct Coord
 };
 
 std::ostream& operator<<(std::ostream& os, const Coord& c);
+std::istream& operator>>(std::istream& is, Coord& c);
 bool operator==(const Coord& c1, const Coord& c2);
 bool operator!=(const Coord& c1, const Coord& c2);
 

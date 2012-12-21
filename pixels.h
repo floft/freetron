@@ -11,6 +11,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <iostream>
 #include <stdexcept>
 #include <IL/il.h>
 
@@ -48,6 +49,12 @@ public:
 	// Used for debugging, marks are written to a copy of this when saved
 	void mark(const Coord& m);
 	void save(const std::string& filename) const;
+
+	friend std::ostream& operator<<(std::ostream& os, const Pixels& img);
+	friend std::ostream& operator>>(std::ostream& os, const Pixels& img);
 };
+
+std::ostream& operator<<(std::ostream& os, const Pixels& img);
+std::ostream& operator>>(std::ostream& os, const Pixels& img);
 
 #endif

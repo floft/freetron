@@ -2,7 +2,6 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Change unsigned ints to ints (e.g. for unsigned i; i > 0; --i will die)
  *   - Add << and >> for Pixels for easy testing
  *   - Use size_t, iterators, int, etc. instead of unsigned int
  *   - Develop better algorithm for finding if bubble is filled in
