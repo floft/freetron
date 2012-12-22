@@ -20,5 +20,6 @@ double average(const std::vector<double>& v);
 double max_value(const std::vector<double>& v);
 double min_value(const std::vector<double>& v);
 int round(const int x, const int r);
+int smartFloor(const double value, const double epsilon = 0.00001);
 
 #endif

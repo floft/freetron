@@ -70,3 +70,9 @@ int round(const int x, const int r)
 
 	return x + r - remainder;
 }
+
+// Floor but after adding a bit
+int smartFloor(const double value, const double epsilon)
+{
+	return std::floor(value + epsilon);
+}

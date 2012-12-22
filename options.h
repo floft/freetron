@@ -22,6 +22,7 @@ const int    MIN_JUMP    = 500;		// Increase in distance to top or bottom left n
 const int    DECENT_SIZE = 15;		// Continue searching for a box if only encountering black specs less than 5 pixels wide
 const int    MAX_DIAG    = 150;		// Used as a check to verify we have decent values, if failed and correct, it'll just take a bit longer
 const int    MIN_DIAG    = 40;		// It will probably never be less than this, really just needs to be above 10 or so to get rid of rounding problems
+const int    DARK_RAD    = 5;		// "Radius" of square to check around a point to find a region that is more black
 const vsize  DIAG_COUNT  = 5;		// Calculate diagonal if at least 5 are within error margins (vsize since always used as: vector.size() > DIAG_COUNT)
 
 

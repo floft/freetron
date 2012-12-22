@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <IL/il.h>
 
+#include "math.h"
 #include "data.h"
 #include "options.h"
 

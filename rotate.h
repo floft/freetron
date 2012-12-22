@@ -15,6 +15,6 @@
 #include "box.h"
 
 // Find top-left and bottom-left boxes and give rotation to make them vertical
-double findRotation(Pixels& img, Coord& ret_coord, BoxData* data);
+double findRotation(const Pixels& img, Coord& ret_coord, BoxData* data);
 
 #endif

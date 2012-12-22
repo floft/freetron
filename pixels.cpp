@@ -158,12 +158,18 @@ void Pixels::rotate(double rad, Coord point)
 			const int trans_y = y - point.y;
 			// Yes, this rounding will result in holes in the image, but the default
 			// (see above) is white
-			const int new_x = std::round(trans_x*cos_rad + trans_y*sin_rad + point.x);
-			const int new_y = std::round(trans_y*cos_rad - trans_x*sin_rad + point.y);
+			const int new_x = smartFloor(trans_x*cos_rad + trans_y*sin_rad + point.x);
+			const int new_y = smartFloor(trans_y*cos_rad - trans_x*sin_rad + point.y);
 
 			// Get rid of invalid points
 			if (new_y < h && new_x < w && new_y > 0 && new_x > 0)
-				copy[new_y][new_x] = p[y][x];
+			{
+				// If something rounded here before, average them
+				if (copy[new_y][new_x] != 0xff)
+					copy[new_y][new_x] = (copy[new_y][new_x]+p[y][x])/2;
+				else
+					copy[new_y][new_x] = p[y][x];
+			}
 		}
 	}
 

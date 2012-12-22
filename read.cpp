@@ -14,7 +14,7 @@ bool vertical(const std::vector<Coord>& boxes,
 	return true;
 }
 
-double answerBlack(Pixels& img, const std::vector<Coord>& boxes,
+double answerBlack(const Pixels& img, const std::vector<Coord>& boxes,
 	const int start_box, const std::vector<Coord>::size_type end_box,
 	const int start_x, const int stop_x,
 	const int box_width, const int bubble_jump)

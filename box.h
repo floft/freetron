@@ -25,9 +25,23 @@ struct BoxData
 	std::vector<int> diags;
 };
 
+// Find square around coordinants keeping it within the image bounds
+class Square
+{
+	Coord topleft;
+	Coord bottomright;
+	Coord midpoint;
+
+public:
+	Square(const Pixels& img, const int x, const int y, const int r);
+	inline const Coord& topLeft()     const { return topleft; }
+	inline const Coord& bottomRight() const { return bottomright; }
+	inline const Coord& midPoint()    const { return midpoint; }
+};
+
 // Average color of all pixels within radius r of (x,y)
 // 0 = complete white, 1 = complete black
-double averageColor(Pixels& img,
+double averageColor(const Pixels& img,
 	const int x, const int y,
 	const int r);
 
@@ -43,15 +57,18 @@ class Box
 	// Aspect ratio of this "box"
 	double ar = 0;
 	// The image, but don't ever delete this...
-	Pixels* img = nullptr;
+	const Pixels* img = nullptr;
 	// The calculated midpoint
 	Coord mp;
 	// Store diagonal information
 	BoxData* data;
 
+	// TODO: remove this
+	std::vector<Coord> coords;
+
 public:
 	Box() { } // Only used as a placeholder, then copy another box to it
-	Box(Pixels* pixels, const Coord& point, BoxData* data);
+	Box(const Pixels* pixels, const Coord& point, BoxData* data);
 
 	bool valid();
 	inline int width() const  { return w; }
@@ -65,6 +82,9 @@ private:
 	
 	// Find the midpoint between two points
 	Coord midPoint(const Coord& p1, const Coord& p2) const;
+
+	// Find most dense region of black around a point, i.e. get into the box
+	Coord findDark(const Coord& p) const;
 
 	// Go a direction until MAX_ERROR white pixels, return last black point
 	int goUp(const Coord& p, const Coord& orig) const;

@@ -27,7 +27,15 @@
 
 #include "pixels.h"
 
-std::vector<Pixels> extract(const char* filename);
-Pixels readPDFImage(PoDoFo::PdfObject* object, const unsigned int type);
+enum PixelTypes
+{
+	PIXEL_PNM6,	// Default
+	PIXEL_JPG,	// DCTDecode
+	PIXEL_TIF,	// CCITTFaxDecode
+	PIXEL_PNM5	// FlateDecode
+};
+
+std::vector<Pixels> extract(std::string filename);
+Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelTypes type = PixelTypes());
 
 #endif

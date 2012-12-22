@@ -2,6 +2,7 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
+ *   - Fix Box::valid bug adding invalid diagonal
  *   - Develop better algorithm for finding if bubble is filled in
  *   - Use dynamic_bitset for storing bools in Pixels
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe

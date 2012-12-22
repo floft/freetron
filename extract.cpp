@@ -1,10 +1,10 @@
 #include "extract.h"
 
-std::vector<Pixels> extract(const char* filename)
+std::vector<Pixels> extract(std::string filename)
 {
 	std::vector<Pixels> images;
 	PoDoFo::PdfObject* obj = nullptr;
-	PoDoFo::PdfMemDocument document(filename);
+	PoDoFo::PdfMemDocument document(filename.c_str());
 	PoDoFo::TCIVecObjects it = document.GetObjects().begin();
 
 	while (it != document.GetObjects().end())
@@ -19,16 +19,29 @@ std::vector<Pixels> extract(const char* filename)
 			{
 				obj = (*it)->GetDictionary().GetKey(PoDoFo::PdfName::KeyFilter);
 
+				// JPEG and Flate are in another array
 				if (obj && obj->IsArray() && obj->GetArray().GetSize() == 1 &&
-				    obj->GetArray()[0].IsName() && obj->GetArray()[0].GetName().GetName() == "DCTDecode")
+				    ((obj->GetArray()[0].IsName() && obj->GetArray()[0].GetName().GetName() == "DCTDecode") ||
+				     (obj->GetArray()[0].IsName() && obj->GetArray()[0].GetName().GetName() == "FlateDecode")))
 					obj = &obj->GetArray()[0];
 				
-				if(obj && obj->IsName() && obj->GetName().GetName() == "DCTDecode")
-					images.push_back(readPDFImage(*it, IL_JPG));
-				else if (obj && obj->IsName() && obj->GetName().GetName() == "CCITTFaxDecode")
-					images.push_back(readPDFImage(*it, IL_TIF));
+				if (obj && obj->IsName())
+				{
+					std::string name = obj->GetName().GetName();
+
+					if(name == "DCTDecode")
+						images.push_back(readPDFImage(*it, PIXEL_JPG));
+					else if (name == "CCITTFaxDecode")
+						images.push_back(readPDFImage(*it, PIXEL_TIF));
+					else if (name == "FlateDecode")
+						images.push_back(readPDFImage(*it, PIXEL_PNM5));
+					else
+						images.push_back(readPDFImage(*it));
+				}
 				else
-					images.push_back(readPDFImage(*it, IL_PNM));
+				{
+					images.push_back(readPDFImage(*it));
+				}
 
 				document.FreeObjectMemory(*it);
 			}
@@ -41,18 +54,18 @@ std::vector<Pixels> extract(const char* filename)
 	return images;
 }
 
-Pixels readPDFImage(PoDoFo::PdfObject* object, const unsigned int type)
+Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelTypes type)
 {
 	Pixels pixels;
 	const unsigned int width  = object->GetDictionary().GetKey(PoDoFo::PdfName("Width"))->GetNumber();
 	const unsigned int height = object->GetDictionary().GetKey(PoDoFo::PdfName("Height"))->GetNumber();
 
-	if (type == IL_JPG)
+	if (type == PIXEL_JPG)
 	{
 		PoDoFo::PdfMemStream* stream = dynamic_cast<PoDoFo::PdfMemStream*>(object->GetStream());
-		pixels = Pixels(type, stream->Get(), stream->GetLength());
+		pixels = Pixels(IL_JPG, stream->Get(), stream->GetLength());
 	}
-	else if (type == IL_TIF)
+	else if (type == PIXEL_TIF)
 	{
 		// Monochrome, otherwise wouldn't have used CCITT
 		const unsigned int bits = 1;
@@ -88,13 +101,19 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const unsigned int type)
 
 		delete[] buffer;
 
-		pixels = Pixels(type, os.str().c_str(), os.tellp());
+		pixels = Pixels(IL_TIF, os.str().c_str(), os.tellp());
 	}
 	else
 	{
 		std::ostringstream os;
-		os << "P6\n"
-		   << width  << " "
+
+		// It works. Don't know why GetFilteredCopy outputs a different version.
+		if (type == PIXEL_PNM5)
+			os << "P5\n";
+		else
+			os << "P6\n";
+
+		os << width  << " "
 		   << height << "\n"
 		   << "255\n";
 		std::string s = os.str();
@@ -109,7 +128,7 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const unsigned int type)
 		std::memcpy(stream, header, s.size());
 		std::memcpy(stream+s.size(), buffer, len);
 
-		pixels = Pixels(type, stream, len+s.size());
+		pixels = Pixels(IL_PNM, stream, len+s.size());
 		std::free(buffer);
 		delete[] stream;
 	}
