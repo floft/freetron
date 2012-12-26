@@ -146,8 +146,10 @@ void Pixels::rotate(double rad, Coord point)
 	// Right size, default to white (255 or 1111 1111)
 	std::vector<std::vector<unsigned char>> copy(h, std::vector<unsigned char>(w, 0xff));
 
-	const double sin_rad = std::sin(rad);
-	const double cos_rad = std::cos(rad);
+	// -rad because we're calculating the rotation to get from the new rotated
+	// image to the original image
+	const double sin_rad = std::sin(-rad);
+	const double cos_rad = std::cos(-rad);
 
 	for (int y = 0; y < h; ++y)
 	{
@@ -156,20 +158,13 @@ void Pixels::rotate(double rad, Coord point)
 			// "Translate" it, and then add back in the point's x and y
 			const int trans_x = x - point.x;
 			const int trans_y = y - point.y;
-			// Yes, this rounding will result in holes in the image, but the default
-			// (see above) is white
-			const int new_x = smartFloor(trans_x*cos_rad + trans_y*sin_rad + point.x);
-			const int new_y = smartFloor(trans_y*cos_rad - trans_x*sin_rad + point.y);
+			// Find where to copy from
+			const int old_x = smartFloor(trans_x*cos_rad + trans_y*sin_rad + point.x);
+			const int old_y = smartFloor(trans_y*cos_rad - trans_x*sin_rad + point.y);
 
 			// Get rid of invalid points
-			if (new_y < h && new_x < w && new_y > 0 && new_x > 0)
-			{
-				// If something rounded here before, average them
-				if (copy[new_y][new_x] != 0xff)
-					copy[new_y][new_x] = (copy[new_y][new_x]+p[y][x])/2;
-				else
-					copy[new_y][new_x] = p[y][x];
-			}
+			if (old_y < h && old_x < w && old_y > 0 && old_x > 0)
+				copy[y][x] = p[old_y][old_x];
 		}
 	}
 

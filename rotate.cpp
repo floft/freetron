@@ -41,13 +41,13 @@ double findRotation(Pixels& img, Coord& ret_coord, BoxData* data)
 
 				if (box.valid())
 				{
-					double current_top_dist = distance(point, origin);
+					double current_top_dist = distance(box.midpoint(), origin);
 
 					// See if this box is closer to the top left than the previous one
 					if (current_top_dist < min_top_dist)
 					{
 						min_top_dist = current_top_dist;
-						top = point;
+						top = box.midpoint();
 					}
 					// We are getting farther away, so we already found the closest box
 					else if (current_top_dist - min_top_dist > MIN_JUMP)
@@ -86,13 +86,13 @@ double findRotation(Pixels& img, Coord& ret_coord, BoxData* data)
 
 				if (box.valid())
 				{
-					double current_bottom_dist = distance(point, extreme);
+					double current_bottom_dist = distance(box.midpoint(), extreme);
 
 					// It's closer than the previous box
 					if (current_bottom_dist < min_bottom_dist)
 					{
 						min_bottom_dist = current_bottom_dist;
-						bottom = point;
+						bottom = box.midpoint();
 					}
 					// We're starting to get farther away, so we probably found the closest point
 					else if (current_bottom_dist - min_bottom_dist > MIN_JUMP)

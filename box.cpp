@@ -118,12 +118,14 @@ bool Box::valid()
 	const double approx_height = w/ASPECT;
 	const int real_diag = std::ceil(std::sqrt(w*w+h*h));
 
-	if (Square(*img, 40, 436, 20).in(mp))
+	//if (Square(*img, 40, 436, 20).in(mp))
+	if (Square(*img, 42, 1101, 20).in(mp))
 	{
 		static int blah = 0;
 		++blah;
 
-		if (blah > 110)
+		//if (blah > 110)
+		if (blah < 2)
 		{
 			img->mark(topleft);
 			img->mark(topright);
