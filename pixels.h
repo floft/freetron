@@ -45,7 +45,7 @@ public:
 
 	// Default is used if coord doesn't exist (which should never happen)
 	// Default to white to assume that this isn't a useful pixel
-	bool black(Coord c, const bool default_value = false) const;
+	bool black(const Coord& c, const bool default_value = false) const;
 
 	// Used for debugging, marks are written to a copy of the image when saved
 	void mark(const Coord& m);

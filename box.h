@@ -37,6 +37,7 @@ public:
 	inline const Coord& topLeft()     const { return topleft; }
 	inline const Coord& bottomRight() const { return bottomright; }
 	inline const Coord& midPoint()    const { return midpoint; }
+	bool in(const Coord& c) const;
 };
 
 // Average color of all pixels within radius r of (x,y)
@@ -56,19 +57,16 @@ class Box
 	int h = 0;
 	// Aspect ratio of this "box"
 	double ar = 0;
-	// The image, but don't ever delete this...
-	const Pixels* img = nullptr;
-	// The calculated midpoint
-	Coord mp;
+	// The image, but don't ever delete this... TODO: add const
+	Pixels* img = nullptr;
+	// The calculated points
+	Coord mp, topleft, topright, bottomleft, bottomright;
 	// Store diagonal information
 	BoxData* data;
 
-	// TODO: remove this
-	std::vector<Coord> coords;
-
 public:
 	Box() { } // Only used as a placeholder, then copy another box to it
-	Box(const Pixels* pixels, const Coord& point, BoxData* data);
+	Box(Pixels* pixels, const Coord& point, BoxData* data);
 
 	bool valid();
 	inline int width() const  { return w; }
@@ -86,6 +84,9 @@ private:
 	// Find most dense region of black around a point, i.e. get into the box
 	Coord findDark(const Coord& p) const;
 
+	// Determine average color of all pixels within corners of box
+	double boxColor() const;
+
 	// Go a direction until MAX_ERROR white pixels, return last black point
 	int goUp(const Coord& p, const Coord& orig) const;
 	int goLeft(const Coord& p, const Coord& orig) const;
@@ -97,6 +98,16 @@ private:
 	Coord topmost(const Coord& point) const;
 	Coord rightmost(const Coord& point) const;
 	Coord bottommost(const Coord& point) const;
+
+	// Go up and left, up and right, down and left, or down and right
+	inline Coord topLeft(const Coord& p, const Coord& orig) const
+		{ return Coord(goLeft(p, orig), goUp(p, orig)); }
+	inline Coord topRight(const Coord& p, const Coord& orig) const
+		{ return Coord(goRight(p, orig), goUp(p, orig)); }
+	inline Coord bottomLeft(const Coord& p, const Coord& orig) const
+		{ return Coord(goLeft(p, orig), goDown(p, orig)); }
+	inline Coord bottomRight(const Coord& p, const Coord& orig) const
+		{ return Coord(goRight(p, orig), goDown(p, orig)); }
 };
 
 #endif

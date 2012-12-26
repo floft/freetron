@@ -2,13 +2,14 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Fix Box::valid bug adding invalid diagonal
+ *   - Redo findRotation
+ *   - Pass in const Pixels& wherever possible
  *   - Develop better algorithm for finding if bubble is filled in
  *   - Use dynamic_bitset for storing bools in Pixels
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe
  *      start processing other pages after key has been processed while reading
  *      other images
- *   - Use neural network?
+ *   - Use neural network? Genetic quadrilateral-finding algorithm?
  */
 
 #include <vector>

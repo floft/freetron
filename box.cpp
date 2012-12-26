@@ -16,6 +16,13 @@ Square::Square(const Pixels& img, const int x, const int y, const int r)
 	midpoint        = Coord(mid_x, mid_y);
 }
 
+// Useful for debugging
+bool Square::in(const Coord& c) const
+{
+	return (c.x >= topleft.x && c.x <= bottomright.x &&
+	        c.y >= topleft.y && c.y <= bottomright.y);
+}
+
 // Average color of all pixels within radius r of (x,y)
 // 0 = complete white, 1 = complete black
 double averageColor(const Pixels& img,
@@ -57,7 +64,7 @@ double averageColor(const Pixels& img,
 		return 0;
 }
 
-Box::Box(const Pixels* pixels, const Coord& point, BoxData* data)
+Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
 	:img(pixels), data(data)
 {
 	const Coord dark   = findDark(point);
@@ -66,37 +73,39 @@ Box::Box(const Pixels* pixels, const Coord& point, BoxData* data)
 	const Coord top    = topmost(dark);
 	const Coord bottom = bottommost(dark);
 
-	mp = Coord((left.x + right.x)/2, (top.y + bottom.y)/2);
-
 	// Rotated counter-clockwise (top is farther right than bottom)
 	if (top.x - bottom.x > MAX_ERROR)
 	{
 		// Top is top-right, left is top-left
-		w = distance(top,    left);
 		// Bottom is bottom-left, left is top-left
-		h = distance(bottom, left);
+		topleft = topLeft(left, dark);
+		topright = topRight(top, dark);
+		bottomleft = bottomLeft(bottom, dark);
+		bottomright = bottomRight(right, dark);
 	}
 	// Rotated clockwise (top is farther left than bottom)
 	else if (bottom.x - top.x > MAX_ERROR)
 	{
 		// Top is top-left, right is top-right
-		w = distance(top,    right);
 		// Bottom is bottom-right, right is top-right
-		h = distance(bottom, right);
+		topleft  = topLeft(top, dark);
+		topright = topRight(right, dark);
+		bottomleft = bottomLeft(left, dark);
+		bottomright = bottomRight(bottom, dark);
 	}
 	// Not really rotated
 	else
 	{
-		h  = bottom.y - top.y;
-		w  = right.x  - left.x;
+		topleft  = topLeft(left, dark);
+		topright = topRight(right, dark);
+		bottomleft = bottomLeft(left, dark);
+		bottomright = bottomRight(right, dark);
 	}
-	
-	ar = (h>0)?1.0*w/h:0;
 
-	coords.push_back(top);
-	coords.push_back(left);
-	coords.push_back(bottom);
-	coords.push_back(right);
+	w  = distance(topleft, topright);
+	h  = distance(topleft, bottomleft);
+	mp = Coord((topleft.x + bottomright.x)/2, (topleft.y + bottomright.y)/2);
+	ar = (h>0)?1.0*w/h:0;
 }
 
 bool Box::valid()
@@ -106,44 +115,43 @@ bool Box::valid()
 		return false;
 	
 	// What should the width be approximately given the aspect ratio (width/height)
-	const double approx_width = ASPECT*h;
+	const double approx_height = w/ASPECT;
 	const int real_diag = std::ceil(std::sqrt(w*w+h*h));
 
-	// TODO:
-	// Is this picking up the top box when determining rotation? Is width and height correct
-	// in Box::Box() for counter-clockwise? For some reason data->diag is 41 when not rotated and
-	// then when rotated comes out to the correct value of 50.
-	//
-	// Problem: incorrect diagonal is added to data->diag, which messes everything up
-
-	if (mp.x > 390 && mp.x < 440 &&
-	    mp.y > 730 && mp.y < 750)
+	if (Square(*img, 40, 436, 20).in(mp))
 	{
-		static int count = 0;
-		++count;
+		static int blah = 0;
+		++blah;
 
-		if (count == 1)
+		if (blah > 110)
 		{
-			for (const Coord& c : coords)
-				std::cout << c << " ";
-			std::cout << std::endl;
-			std::cout << data->diag << std::endl;
+			img->mark(topleft);
+			img->mark(topright);
+			img->mark(bottomleft);
+			img->mark(bottomright);
 
-			std::cout << mp << " " << approx_width << " " << real_diag << std::endl;
-			std::cout << w << " " << h << std::endl;
+			std::cout << w << " " << h << " " << approx_height << " " << real_diag << " " << data->diag << std::endl;
+			std::cout << (h >= approx_height-MAX_ERROR && h <= approx_height+MAX_ERROR) << " "
+				  << (real_diag >= MIN_DIAG && real_diag <= MAX_DIAG) << " "
+				  << boxColor() << std::endl;
 		}
 	}
 
 	// See if the diag is about the right length, if the width and height are about right,
 	// and if a circle in the center of the possible box is almost entirely black.
-	if (w >= approx_width-MAX_ERROR && w <= approx_width+MAX_ERROR &&
-		real_diag >= MIN_DIAG && real_diag <= MAX_DIAG && // Got to be somewhat close
+	if (h >= approx_height-MAX_ERROR && h <= approx_height+MAX_ERROR &&
+		std::abs(distance(topleft, bottomright) - distance(topright, bottomleft)) < MAX_ERROR && // A rectangle
 		(
 			(data->diag == 0 && real_diag >= MIN_DIAG && real_diag <= MAX_DIAG) ||	 // Get rid of 1-5 px boxes
 			(real_diag >= data->diag-MAX_ERROR && real_diag <= data->diag+MAX_ERROR) // Use found valid diagonal
 		) &&
-		averageColor(*img, mp.x, mp.y, h/2) > MIN_BLACK)
+		boxColor() > MIN_BLACK)	// A black box
 	{
+		/*img->mark(topleft);
+		img->mark(topright);
+		img->mark(bottomleft);
+		img->mark(bottomright);*/
+
 		// This is a valid box, so use this diagonal to speed up calculations on next box
 		// But, nothing worse than incorrect values, better to not use this than
 		// stop searching for the corners early. Thus, make sure there's DIAG_COUNT similar
@@ -381,14 +389,9 @@ Coord Box::findDark(const Coord& p) const
 	Square bounds(*img, p.x, p.y, DARK_RAD);
 	double darkest = averageColor(*img, p.x, p.y, DARK_RAD);
 
-	const int x1 = bounds.topLeft().x;
-	const int y1 = bounds.topLeft().y;
-	const int x2 = bounds.bottomRight().x;
-	const int y2 = bounds.bottomRight().y;
-
-	for (int y = y1; y <= y2; y+=DARK_RAD)
+	for (int y = bounds.topLeft().y; y <= bounds.bottomRight().y; y+=DARK_RAD)
 	{
-		for (int x = x1; x <= x2; x+=DARK_RAD)
+		for (int x = bounds.topLeft().x; x <= bounds.bottomRight().x; x+=DARK_RAD)
 		{
 			double current = averageColor(*img, x, y, DARK_RAD);
 
@@ -402,4 +405,34 @@ Coord Box::findDark(const Coord& p) const
 	}
 
 	return point;
+}
+
+// Get average color of pixels within the corners of the box
+double Box::boxColor() const
+{
+	int black = 0;
+	int total = 0;
+	Square bounds(*img, mp.x, mp.y, (bottomright.x - topleft.x)/2);
+
+	for (int y = bounds.topLeft().y; y <= bounds.bottomRight().y; ++y)
+	{
+		for (int x = bounds.topLeft().x; x <= bounds.bottomRight().x; ++x)
+		{
+			if (y >= lineFunctionY(topleft,    topright,    x) &&
+			    y <= lineFunctionY(bottomleft, bottomright, x) &&
+			    x >= lineFunctionX(topleft,    bottomleft,  y) &&
+			    x <= lineFunctionX(topright,   bottomright, y))
+			{
+				if (img->black(Coord(x,y)))
+					++black;
+
+				++total;
+			}
+		}
+	}
+
+	if (total > 0)
+		return 1.0*black/total;
+	else
+		return 0;
 }

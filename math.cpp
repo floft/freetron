@@ -76,3 +76,21 @@ int smartFloor(const double value, const double epsilon)
 {
 	return std::floor(value + epsilon);
 }
+
+// y = m(x-x1)+y1
+int lineFunctionY(const Coord& a, const Coord& b, int x)
+{
+	if (b.x - a.x == 0)
+		return 0;
+	else    
+		return smartFloor(1.0*(b.y - a.y)/(b.x - a.x)*(x - a.x) + a.y);
+}
+
+// x = (y-y1)/m+x1
+int lineFunctionX(const Coord& a, const Coord& b, int y)
+{
+	if (b.y - a.y == 0)
+		return 0;
+	else
+		return smartFloor(1.0*(b.x - a.x)/(b.y - a.y)*(y - a.y) + a.x);
+}

@@ -2,7 +2,7 @@
 
 // Find top left and bottom right box. Then, determine slope of these two
 // and return the amount to rotate.
-double findRotation(const Pixels& img, Coord& ret_coord, BoxData* data)
+double findRotation(Pixels& img, Coord& ret_coord, BoxData* data)
 {
 	Coord top;
 	Coord bottom;

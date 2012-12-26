@@ -66,7 +66,7 @@ Pixels::Pixels(ILenum type, const char* lump, const int size)
 	ilDeleteImages(1, &name);
 }
 
-bool Pixels::black(Coord c, const bool default_value) const
+bool Pixels::black(const Coord& c, const bool default_value) const
 {
 	if (c.x > w || c.y > h)
 		return default_value;

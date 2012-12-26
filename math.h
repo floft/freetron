@@ -21,5 +21,7 @@ double max_value(const std::vector<double>& v);
 double min_value(const std::vector<double>& v);
 int round(const int x, const int r);
 int smartFloor(const double value, const double epsilon = 0.00001);
+int lineFunctionX(const Coord& a, const Coord& b, int y);
+int lineFunctionY(const Coord& a, const Coord& b, int x);
 
 #endif
