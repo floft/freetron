@@ -41,6 +41,9 @@ std::vector<Coord> findBoxes(Pixels& img, BoxData* data)
 					// Make sure we didn't already have this point
 					if (std::find(boxes.begin(), boxes.end(), box.midpoint()) == boxes.end())
 						boxes.push_back(box.midpoint());
+
+					// Jump past this box
+					y += box.height();
 				}
 				
 				// We only care about the left-most black blob, skip if this is a decent-sized blob

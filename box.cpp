@@ -67,40 +67,10 @@ double averageColor(const Pixels& img,
 Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
 	:img(pixels), data(data)
 {
-	const Coord dark   = findDark(point);
-	const Coord left   = leftmost(dark);
-	const Coord right  = rightmost(dark);
-	const Coord top    = topmost(dark);
-	const Coord bottom = bottommost(dark);
-
-	// Rotated counter-clockwise (top is farther right than bottom)
-	if (top.x - bottom.x > MAX_ERROR)
-	{
-		// Top is top-right, left is top-left
-		// Bottom is bottom-left, left is top-left
-		topleft = topLeft(left, dark);
-		topright = topRight(top, dark);
-		bottomleft = bottomLeft(bottom, dark);
-		bottomright = bottomRight(right, dark);
-	}
-	// Rotated clockwise (top is farther left than bottom)
-	else if (bottom.x - top.x > MAX_ERROR)
-	{
-		// Top is top-left, right is top-right
-		// Bottom is bottom-right, right is top-right
-		topleft  = topLeft(top, dark);
-		topright = topRight(right, dark);
-		bottomleft = bottomLeft(left, dark);
-		bottomright = bottomRight(bottom, dark);
-	}
-	// Not really rotated
-	else
-	{
-		topleft  = topLeft(left, dark);
-		topright = topRight(right, dark);
-		bottomleft = bottomLeft(left, dark);
-		bottomright = bottomRight(right, dark);
-	}
+	topleft     = edge(point,       Direction::TL);
+	topright    = edge(topleft,     Direction::TR);
+	bottomright = edge(topright,    Direction::BR);
+	bottomleft  = edge(bottomright, Direction::BL);
 
 	w  = distance(topleft, topright);
 	h  = distance(topleft, bottomleft);
@@ -119,13 +89,15 @@ bool Box::valid()
 	const int real_diag = std::ceil(std::sqrt(w*w+h*h));
 
 	//if (Square(*img, 40, 436, 20).in(mp))
-	if (Square(*img, 42, 1101, 20).in(mp))
+	//if (Square(*img, 42, 1101, 20).in(mp))
+	//if (Square(*img, 346, 839, 20).in(mp))
+	if (Square(*img, 350, 790, 20).in(mp))
 	{
 		static int blah = 0;
 		++blah;
 
 		//if (blah > 110)
-		if (blah < 2)
+		if (blah < 10)
 		{
 			img->mark(topleft);
 			img->mark(topright);
@@ -437,4 +409,112 @@ double Box::boxColor() const
 		return 1.0*black/total;
 	else
 		return 0;
+}
+
+// Walk an edge in a specified direction
+Coord Box::edge(const Coord& point, Direction dir) const
+{
+	Coord dist_base;
+	Coord final = point;
+	Coord position = point;
+	
+	double dist = img->height();
+
+	static const Coord tl(0, 0);
+	static const Coord tr(img->width()-1, 0);
+	static const Coord br(img->width()-1, img->height()-1);
+	static const Coord bl(0, img->height()-1);
+
+	// Which point to base distance off
+	switch (dir)
+	{
+		case Direction::TL: dist_base = tl; break;
+		case Direction::TR: dist_base = tr; break;
+		case Direction::BR: dist_base = br; break;
+		case Direction::BL: dist_base = bl; break;
+		default: return point;
+	}
+
+	while (true)
+	{
+		// First three best choices for movement
+		Coord first, second, third, fourth;
+
+		switch (dir)
+		{
+			// Movement precedence
+			// 1 2 3
+			// 0 0 4
+			// 0 0 0
+			case Direction::TL:
+				first  = Coord(position.x-1, position.y-1);
+				second = Coord(position.x,   position.y-1);
+				third  = Coord(position.x+1, position.y-1);
+				fourth = Coord(position.x+1, position.y);
+				break;
+
+			// 0 0 1
+			// 0 0 2
+			// 0 4 3
+			case Direction::TR:
+				first  = Coord(position.x+1, position.y-1);
+				second = Coord(position.x+1, position.y);
+				third  = Coord(position.x+1, position.y+1);
+				fourth = Coord(position.x,   position.y+1);
+				break;
+
+			// 0 0 0
+			// 4 0 0
+			// 3 2 1
+			case Direction::BR:
+				first  = Coord(position.x+1, position.y+1);
+				second = Coord(position.x,   position.y+1);
+				third  = Coord(position.x-1, position.y+1);
+				fourth = Coord(position.x-1, position.y);
+				break;
+			
+			// 3 4 0
+			// 2 0 0
+			// 1 0 0
+			case Direction::BL:
+				first  = Coord(position.x-1, position.y+1);
+				second = Coord(position.x-1, position.y);
+				third  = Coord(position.x-1, position.y-1);
+				fourth = Coord(position.x,   position.y-1);
+				break;
+
+			default:
+				return point;
+		}
+
+		// Move in a certain direction, and if we can't return last good point
+		if (img->black(first))
+			position = first;
+		else if (img->black(second))
+			position = second;
+		else if (img->black(third))
+			position = third;
+		else if (img->black(fourth))
+			position = fourth;
+		else
+			return final;
+
+		double new_dist = distance(position, dist_base);
+
+		// Determine if we should end if we're closer to our goal
+		if (new_dist < dist)
+		{
+			final = position;
+			dist  = new_dist;
+		}
+		else if (new_dist - dist > EDGE_JUMP)
+		{
+			return final;
+		}
+
+		// If we've gone more than the digonal, we're not in a box
+		// TODO: data->diag == 0 || distance(point, position) > data->diag
+	}
+
+	return final;
 }

@@ -2,6 +2,7 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
+ *   - Use bottom boxes to find bubbles
  *   - Redo findRotation
  *   - Pass in const Pixels& wherever possible
  *   - Develop better algorithm for finding if bubble is filled in
@@ -57,12 +58,12 @@ Info parseImage(Pixels* image)
 	BoxData data;
 
 	// Rotate the image
-	Coord rotate_point;
-	double rotation = findRotation(*image, rotate_point, &data);
+	//Coord rotate_point;
+	//double rotation = findRotation(*image, rotate_point, &data);
 
 	// Negative since the origin is the top-left point
-	if (rotation != 0)
-		image->rotate(-rotation, rotate_point);
+	//if (rotation != 0)
+	//	image->rotate(-rotation, rotate_point);
 
 	// Find all the boxes on the left
 	std::vector<Coord> boxes = findBoxes(*image, &data);

@@ -19,6 +19,7 @@ const double MIN_BLACK   = 0.75;	// Minimum percent (0-1) of pixels black in cir
 const int    GRAY_SHADE  = 127;		// Average RGB considered black
 const int    MAX_ERROR   = 5;		// Max error in pixels
 const int    MIN_JUMP    = 500;		// Increase in distance to top or bottom left needed to give up searching for closer box (better too high than too low)
+const int    EDGE_JUMP   = 15;		// If we've gone beyond this many pixels from being closer to Top left for instance, we've found the corner
 const int    DECENT_SIZE = 15;		// Continue searching for a box if only encountering black specs less than 5 pixels wide
 const int    MAX_DIAG    = 150;		// Used as a check to verify we have decent values, if failed and correct, it'll just take a bit longer
 const int    MIN_DIAG    = 40;		// It will probably never be less than this, really just needs to be above 10 or so to get rid of rounding problems

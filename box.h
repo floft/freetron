@@ -25,6 +25,12 @@ struct BoxData
 	std::vector<int> diags;
 };
 
+// Direction for walking edge (top left, top right...)
+enum class Direction
+{
+	TL, TR, BL, BR
+};
+
 // Find square around coordinants keeping it within the image bounds
 class Square
 {
@@ -99,15 +105,8 @@ private:
 	Coord rightmost(const Coord& point) const;
 	Coord bottommost(const Coord& point) const;
 
-	// Go up and left, up and right, down and left, or down and right
-	inline Coord topLeft(const Coord& p, const Coord& orig) const
-		{ return Coord(goLeft(p, orig), goUp(p, orig)); }
-	inline Coord topRight(const Coord& p, const Coord& orig) const
-		{ return Coord(goRight(p, orig), goUp(p, orig)); }
-	inline Coord bottomLeft(const Coord& p, const Coord& orig) const
-		{ return Coord(goLeft(p, orig), goDown(p, orig)); }
-	inline Coord bottomRight(const Coord& p, const Coord& orig) const
-		{ return Coord(goRight(p, orig), goDown(p, orig)); }
+	// Walk the edge in a certain direction
+	Coord edge(const Coord& point, Direction dir) const;
 };
 
 #endif

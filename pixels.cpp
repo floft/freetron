@@ -68,7 +68,8 @@ Pixels::Pixels(ILenum type, const char* lump, const int size)
 
 bool Pixels::black(const Coord& c, const bool default_value) const
 {
-	if (c.x > w || c.y > h)
+	if (c.x >= w || c.y >= h ||
+	    c.x < 0 || c.y < 0)
 		return default_value;
 	
 	return p[c.y][c.x] < GRAY_SHADE;
