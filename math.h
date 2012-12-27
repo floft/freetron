@@ -24,4 +24,27 @@ int smartFloor(const double value, const double epsilon = 0.00001);
 int lineFunctionX(const Coord& a, const Coord& b, int y);
 int lineFunctionY(const Coord& a, const Coord& b, int x);
 
+// Two functions that allow a simple mapMinValue<Coord>(start, end) returning
+// the value of the minimum key in the map
+template<class T>
+class mapKeyCompare
+{
+public:
+	bool operator()(const T& a, const T& b)
+	{
+		return (a.first < b.first);
+	}
+};
+
+template<class Result, class Type, class Iter>
+Result mapMinValue(Iter start, Iter end)
+{
+	Iter min = std::min_element(start, end, mapKeyCompare<Type>());
+
+	if (min != end)
+		return min->second;
+	else
+		return Result();
+}
+
 #endif

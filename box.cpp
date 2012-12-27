@@ -88,10 +88,7 @@ bool Box::valid()
 	const double approx_height = w/ASPECT;
 	const int real_diag = std::ceil(std::sqrt(w*w+h*h));
 
-	//if (Square(*img, 40, 436, 20).in(mp))
-	//if (Square(*img, 42, 1101, 20).in(mp))
-	//if (Square(*img, 346, 839, 20).in(mp))
-	if (Square(*img, 350, 790, 20).in(mp))
+	if (Square(*img, 415, 2600, 20).in(mp))
 	{
 		static int blah = 0;
 		++blah;
@@ -121,11 +118,6 @@ bool Box::valid()
 		) &&
 		boxColor() > MIN_BLACK)	// A black box
 	{
-		/*img->mark(topleft);
-		img->mark(topright);
-		img->mark(bottomleft);
-		img->mark(bottomright);*/
-
 		// This is a valid box, so use this diagonal to speed up calculations on next box
 		// But, nothing worse than incorrect values, better to not use this than
 		// stop searching for the corners early. Thus, make sure there's DIAG_COUNT similar
@@ -174,213 +166,6 @@ Coord Box::midPoint(const Coord& p1, const Coord& p2) const
 	return Coord((p1.x+p2.x)/2, (p1.y+p2.y)/2);
 }
 
-// Go up till $error pixels, return new y
-int Box::goUp(const Coord& p, const Coord& orig) const
-{
-	int new_y = p.y;
-	int white_count = 0;
-
-	// Go until $error white pixels, hit top of image, or diag
-	// is greater than possible for a box.
-	for (int search_y = p.y; search_y >= 0 && white_count <= MAX_ERROR &&
-		(data->diag == 0 || distance(p.x, search_y, orig.x, orig.y) <= data->diag+MAX_ERROR); --search_y)
-	{
-		if (img->black(Coord(p.x, search_y)))
-		{
-			new_y = search_y;
-			white_count = 0;
-		}
-		else
-		{
-			++white_count;
-		}
-	}
-	
-	return new_y;
-}
-
-int Box::goLeft(const Coord& p, const Coord& orig) const
-{
-	int new_x = p.x;
-	int white_count = 0;
-
-	for (int search_x = p.x; search_x >= 0 && white_count <= MAX_ERROR &&
-		(data->diag == 0 || distance(search_x, p.y, orig.x, orig.y) <= data->diag+MAX_ERROR); --search_x)
-	{
-		if (img->black(Coord(search_x, p.y)))
-		{
-			new_x = search_x;
-			white_count = 0;
-		}
-		else
-		{
-			++white_count;
-		}
-	}
-	
-	return new_x;
-}
-
-int Box::goDown(const Coord& p, const Coord& orig) const
-{
-	int new_y = p.y;
-	int white_count = 0;
-
-	for (int search_y = p.y; search_y < img->height() && white_count <= MAX_ERROR &&
-		(data->diag == 0 || distance(p.x, search_y, orig.x, orig.y) <= data->diag+MAX_ERROR); ++search_y)
-	{
-		if (img->black(Coord(p.x, search_y)))
-		{
-			new_y = search_y;
-			white_count = 0;
-		}
-		else
-		{
-			++white_count;
-		}
-	}
-	
-	return new_y;
-}
-
-int Box::goRight(const Coord& p, const Coord& orig) const
-{
-	int new_x = p.x;
-	int white_count = 0;
-
-	for (int search_x = p.x; search_x < img->width() && white_count <= MAX_ERROR &&
-		(data->diag == 0 || distance(search_x, p.y, orig.x, orig.y) <= data->diag+MAX_ERROR); ++search_x)
-	{
-		if (img->black(Coord(search_x, p.y)))
-		{
-			new_x = search_x;
-			white_count = 0;
-		}
-		else
-		{
-			++white_count;
-		}
-	}
-	
-	return new_x;
-}
-// Find the leftmost coordinate of a box
-Coord Box::leftmost(const Coord& point) const
-{
-	Coord left = point;
-
-	// Continue till a leftmost point is found or we are beyond what could be a box
-	while (data->diag == 0 || distance(point, left) <= data->diag+MAX_ERROR)
-	{
-		// Go up and down till white, find midpoint
-		left.y = (goUp(left, point) + goDown(left, point))/2;
-
-		// Go left from average of top and bottom black points
-		int left_x = goLeft(left, point);
-
-		// If we haven't gone left any, we found the leftmost point
-		if (left_x == left.x)
-			break;
-
-		// If we have gone left, do all of this again for the next leftmost point
-		left.x = left_x;
-	}
-
-	return left;
-}
-
-// Find the topmost coordinate of a box
-Coord Box::topmost(const Coord& point) const
-{
-	Coord top = point;
-
-	// Go left and right, find midpoint. Go up. If we can't move, we found it.
-	while (data->diag == 0 || distance(point, top) <= data->diag+MAX_ERROR)
-	{
-		top.x = (goLeft(top, point) + goRight(top, point))/2;
-
-		int top_y = goUp(top, point);
-
-		if (top_y == top.y)
-			break;
-
-		top.y = top_y;
-	}
-
-	return top;
-}
-
-// Find the rightmost coordinate of a box
-Coord Box::rightmost(const Coord& point) const
-{
-	Coord right = point;
-
-	// Continue till a rightmost point is found or we are beyond what could be a box
-	while (data->diag == 0 || distance(point, right) <= data->diag+MAX_ERROR)
-	{
-		// Go up and down till white, find midpoint
-		right.y = (goUp(right, point) + goDown(right, point))/2;
-
-		// Go right from average of top and bottom black points
-		int right_x = goRight(right, point);
-
-		// If we haven't gone right any, we found the rightmost point
-		if (right_x == right.x)
-			break;
-
-		// If we have gone left, do all of this again for the next leftmost point
-		right.x = right_x;
-	}
-
-	return right;
-}
-
-// Find the bottommost coordinate of a box
-Coord Box::bottommost(const Coord& point) const
-{
-	Coord bottom = point;
-
-	// Go left and right, find midpoint. Go down. If we can't move, we found it.
-	while (data->diag == 0 || distance(point, bottom) <= data->diag+MAX_ERROR)
-	{
-		bottom.x = (goLeft(bottom, point) + goRight(bottom, point))/2;
-
-		int bottom_y = goDown(bottom, point);
-
-		if (bottom_y == bottom.y)
-			break;
-
-		bottom.y = bottom_y;
-	}
-
-	return bottom;
-}
-
-// Check points on a square around a box to find a spot more black than around the current point
-Coord Box::findDark(const Coord& p) const
-{
-	Coord point = p;
-	Square bounds(*img, p.x, p.y, DARK_RAD);
-	double darkest = averageColor(*img, p.x, p.y, DARK_RAD);
-
-	for (int y = bounds.topLeft().y; y <= bounds.bottomRight().y; y+=DARK_RAD)
-	{
-		for (int x = bounds.topLeft().x; x <= bounds.bottomRight().x; x+=DARK_RAD)
-		{
-			double current = averageColor(*img, x, y, DARK_RAD);
-
-			// Greater than because 1 = pure black
-			if (current > darkest)
-			{
-				point = Coord(x,y);
-				darkest = current;
-			}
-		}
-	}
-
-	return point;
-}
-
 // Get average color of pixels within the corners of the box
 double Box::boxColor() const
 {
@@ -414,30 +199,15 @@ double Box::boxColor() const
 // Walk an edge in a specified direction
 Coord Box::edge(const Coord& point, Direction dir) const
 {
-	Coord dist_base;
-	Coord final = point;
-	Coord position = point;
+	Coord position    = point;
+	Coord last_first  = point;
+	Coord last_second = point;
+	Coord last_third  = point;
+	Coord last_fourth = point;
 	
-	double dist = img->height();
-
-	static const Coord tl(0, 0);
-	static const Coord tr(img->width()-1, 0);
-	static const Coord br(img->width()-1, img->height()-1);
-	static const Coord bl(0, img->height()-1);
-
-	// Which point to base distance off
-	switch (dir)
-	{
-		case Direction::TL: dist_base = tl; break;
-		case Direction::TR: dist_base = tr; break;
-		case Direction::BR: dist_base = br; break;
-		case Direction::BL: dist_base = bl; break;
-		default: return point;
-	}
-
 	while (true)
 	{
-		// First three best choices for movement
+		// The preferences for which direction to move
 		Coord first, second, third, fourth;
 
 		switch (dir)
@@ -483,38 +253,77 @@ Coord Box::edge(const Coord& point, Direction dir) const
 				fourth = Coord(position.x,   position.y-1);
 				break;
 
+			// Return because breaking would only break out of the switch
 			default:
 				return point;
 		}
 
-		// Move in a certain direction, and if we can't return last good point
+		// See if we can move in a direction, save that as the last time we used that preference
 		if (img->black(first))
-			position = first;
-		else if (img->black(second))
-			position = second;
-		else if (img->black(third))
-			position = third;
-		else if (img->black(fourth))
-			position = fourth;
-		else
-			return final;
-
-		double new_dist = distance(position, dist_base);
-
-		// Determine if we should end if we're closer to our goal
-		if (new_dist < dist)
 		{
-			final = position;
-			dist  = new_dist;
+			position   = first;
+			last_first = first;
 		}
-		else if (new_dist - dist > EDGE_JUMP)
+		else if (img->black(second))
 		{
-			return final;
+			position    = second;
+			last_second = second;
+		}
+		else if (img->black(third))
+		{
+			position   = third;
+			last_third = third;
+		}
+		else if (img->black(fourth))
+		{
+			position    = fourth;
+			last_fourth = fourth;
+		}
+		else
+		{
+			break;
 		}
 
 		// If we've gone more than the digonal, we're not in a box
-		// TODO: data->diag == 0 || distance(point, position) > data->diag
+		if (data->diag != 0 && distance(point, position) > data->diag+MAX_ERROR)
+			break;
 	}
 
-	return final;
+	// Determine which corner we wish to be close to
+	Coord dist_base;
+	static const Coord tl(0,		0);
+	static const Coord tr(img->width()-1,	0);
+	static const Coord br(img->width()-1,	img->height()-1);
+	static const Coord bl(0, 		img->height()-1);
+
+	switch (dir)
+	{
+		case Direction::TL: dist_base = tl; break;
+		case Direction::TR: dist_base = tr; break;
+		case Direction::BR: dist_base = br; break;
+		case Direction::BL: dist_base = bl; break;
+	}
+
+	// Create a map of distances from last points of different precedence,
+	// Pick the closest one
+	const std::map<double, Coord> dist = {
+		{ distance(dist_base, last_fourth), last_fourth },
+		{ distance(dist_base, last_third),  last_third  },
+		{ distance(dist_base, last_second), last_second },
+		{ distance(dist_base, last_first),  last_first  }
+	};
+	
+	if (Square(*img, 415, 2600, 20).in(last_first) && dir == Direction::TL)
+	{
+		std::map<double, Coord>::const_iterator iter;
+
+		for (iter = dist.begin(); iter != dist.end(); ++iter)
+		{
+			std::cout << iter->first << ": " << iter->second << std::endl;
+		}
+
+		std::cout << std::endl;
+	}
+
+	return mapMinValue<Coord, std::pair<double, Coord>>(dist.begin(), dist.end());
 }

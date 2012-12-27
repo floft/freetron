@@ -58,12 +58,12 @@ Info parseImage(Pixels* image)
 	BoxData data;
 
 	// Rotate the image
-	//Coord rotate_point;
-	//double rotation = findRotation(*image, rotate_point, &data);
+	Coord rotate_point;
+	double rotation = findRotation(*image, rotate_point, &data);
 
 	// Negative since the origin is the top-left point
-	//if (rotation != 0)
-	//	image->rotate(-rotation, rotate_point);
+	if (rotation != 0)
+		image->rotate(-rotation, rotate_point);
 
 	// Find all the boxes on the left
 	std::vector<Coord> boxes = findBoxes(*image, &data);

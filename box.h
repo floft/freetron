@@ -5,6 +5,7 @@
 #ifndef H_BOX
 #define H_BOX
 
+#include <map>
 #include <cmath>
 #include <vector>
 #include <algorithm>
@@ -87,23 +88,8 @@ private:
 	// Find the midpoint between two points
 	Coord midPoint(const Coord& p1, const Coord& p2) const;
 
-	// Find most dense region of black around a point, i.e. get into the box
-	Coord findDark(const Coord& p) const;
-
 	// Determine average color of all pixels within corners of box
 	double boxColor() const;
-
-	// Go a direction until MAX_ERROR white pixels, return last black point
-	int goUp(const Coord& p, const Coord& orig) const;
-	int goLeft(const Coord& p, const Coord& orig) const;
-	int goDown(const Coord& p, const Coord& orig) const;
-	int goRight(const Coord& p, const Coord& orig) const;
-
-	// Find extreme points in a direction
-	Coord leftmost(const Coord& point) const;
-	Coord topmost(const Coord& point) const;
-	Coord rightmost(const Coord& point) const;
-	Coord bottommost(const Coord& point) const;
 
 	// Walk the edge in a certain direction
 	Coord edge(const Coord& point, Direction dir) const;

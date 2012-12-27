@@ -53,6 +53,31 @@ std::vector<Coord> findBoxes(Pixels& img, BoxData* data)
 		}
 	}
 
+	/*for (int y = 0; y < img.height(); ++y)
+	{
+		for (int x = 0; x < img.width(); ++x)
+		{
+			Coord point(x, y);
+
+			if (img.black(point))
+			{
+				Box box(&img, point, data);
+
+				if (box.valid())
+				{
+					// TODO: what if this isn't quite exact?
+					if (boxes.size() == 0)
+						data->width = box.width();
+
+					if (std::find(boxes.begin(), boxes.end(), box.midpoint()) == boxes.end())
+						boxes.push_back(box.midpoint());
+
+					x += box.width();
+				}
+			}
+		}
+	}*/
+
 	// Add boxes that are farther apart than MAX_ERROR to unique
 	std::vector<Coord> unique;
 	std::sort(boxes.begin(), boxes.end(), box_sort);
