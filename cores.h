@@ -9,7 +9,10 @@
 #ifndef H_CORES
 #define H_CORES
 
-// This mess is to determine CPU cores
+// Default to using two threads
+// TODO: is this bad?
+#define DEFAULT_CORES 2
+
 #if defined(linux) || defined(__linux) || defined(__linux__) || \
     defined(sun) || defined(__sun) || \
     defined(__APPLE__)
@@ -24,7 +27,7 @@ int core_count()
 	// What if that says we don't have a processor?
 	// Will that ever happen?
 	if (count == 0)
-		return 1;
+		return DEFAULT_CORES;
 	
 	return count;
 }
@@ -43,16 +46,14 @@ int core_count()
 	}
 	
 	if (count == 0)
-		return 1;
+		return DEFAULT_CORES;
 
 	return count;
 }
 //#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 // TODO: figure out how to get # of cores on BSD
 #else
-// Default to using two threads
-// TODO: is this bad?
-inline int core_count() { return 2; }
+inline int core_count() { return DEFAULT_CORES; }
 #endif
 
 #endif
