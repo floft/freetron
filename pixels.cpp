@@ -142,6 +142,8 @@ void Pixels::save(const std::string& filename) const
 	ilDeleteImages(1, &name);
 }
 
+// In the future, it may be a good idea to implement something like the "Rotation by
+// Area Mapping" talked about on http://www.leptonica.com/rotation.html
 void Pixels::rotate(double rad, Coord point)
 {
 	// Right size, default to white (255 or 1111 1111)
