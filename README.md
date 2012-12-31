@@ -10,6 +10,7 @@ lookup) the students their grade and a copy of their sheet, and then display
 statistics about the exam.
 
 **Dependencies**  
+*a C++11 compiler*  
 PoDoFo (LGPL)  
 OpenIL/DevIL (LGPL)  
 libtiff (custom: http://www.libtiff.org/misc.html)
