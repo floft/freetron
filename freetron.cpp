@@ -79,7 +79,10 @@ Info parseImage(Pixels* image)
 		
 		std::ostringstream s;
 		s << "debug" << thread_id << ".png";
+		std::ostringstream s2;
+		s2 << "debug" << thread_id << "_blank.png";
 		image->save(s.str());
+		image->save(s2.str(),false);
 	}
 
 	return Info(thread_id, id);

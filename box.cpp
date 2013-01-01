@@ -87,8 +87,6 @@ Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
 	// Walk edge of box
 	while (true)
 	{
-		//img->mark(position);
-
 		// Possible movements
 		const Coord zero  = matrix(position, 0, dir);
 		const Coord one   = matrix(position, 1, dir);
@@ -96,6 +94,7 @@ Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
 		const Coord three = matrix(position, 3, dir);
 		const Coord four  = matrix(position, 4, dir);
 
+		// TODO: explaination? make this more readable?
 		if (img->black(two))
 		{
 			if (img->black(four))
@@ -157,7 +156,6 @@ Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
 		// If we've gone more than the digonal, we're not in a box
 		if (data->diag != 0 && distance(point, position) > data->diag+DIAG_ERROR)
 		{
-			//std::cout << data->diag << " " << distance(point, position) << std::endl;
 			corners = 0;
 			break;
 		}

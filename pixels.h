@@ -50,7 +50,7 @@ public:
 
 	// Used for debugging, marks are written to a copy of the image when saved
 	void mark(const Coord& m);
-	void save(const std::string& filename) const;
+	void save(const std::string& filename, const bool show_marks = true) const;
 
 	// Rotate all points in a vector
 	std::vector<Coord> rotateVector(std::vector<Coord> v,

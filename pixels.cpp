@@ -85,31 +85,34 @@ void Pixels::mark(const Coord& c)
 		marks.push_back(c);
 }
 
-void Pixels::save(const std::string& filename) const
+void Pixels::save(const std::string& filename, bool show_marks) const
 {
 	std::vector<std::vector<unsigned char>> copy = p;
 
 	// Draw the marks on a copy of the image
-	for (const Coord& c : marks)
+	if (show_marks)
 	{
-		if (MARK_SIZE > 1)
+		for (const Coord& c : marks)
 		{
-			// Left
-			for (int i = c.x; i > c.x-MARK_SIZE && i > 0; --i)
-				copy[c.y][i] = MARK_COLOR;
-			// Right
-			for (int i = c.x; i < c.x+MARK_SIZE && i < w; ++i)
-				copy[c.y][i] = MARK_COLOR;
-			// Up
-			for (int i = c.y; i > c.y-MARK_SIZE && i > 0; --i)
-				copy[i][c.x] = MARK_COLOR;
-			// Down
-			for (int i = c.y; i < c.y+MARK_SIZE && i < h; ++i)
-				copy[i][c.x] = MARK_COLOR;
-		}
-		else
-		{
-			copy[c.y][c.x] = MARK_COLOR;
+			if (MARK_SIZE > 1)
+			{
+				// Left
+				for (int i = c.x; i > c.x-MARK_SIZE && i > 0; --i)
+					copy[c.y][i] = MARK_COLOR;
+				// Right
+				for (int i = c.x; i < c.x+MARK_SIZE && i < w; ++i)
+					copy[c.y][i] = MARK_COLOR;
+				// Up
+				for (int i = c.y; i > c.y-MARK_SIZE && i > 0; --i)
+					copy[i][c.x] = MARK_COLOR;
+				// Down
+				for (int i = c.y; i < c.y+MARK_SIZE && i < h; ++i)
+					copy[i][c.x] = MARK_COLOR;
+			}
+			else
+			{
+				copy[c.y][c.x] = MARK_COLOR;
+			}
 		}
 	}
 
@@ -206,8 +209,9 @@ std::vector<Coord> Pixels::rotateVector(std::vector<Coord> v, const Coord& point
 		const int trans_y = m.y - point.y;
 
 		// Rotate + translate back
-		const int new_x = smartFloor(trans_x*cos_rad + trans_y*sin_rad) + point.x;
-		const int new_y = smartFloor(trans_y*cos_rad - trans_x*sin_rad) + point.y;
+		// Using std::round seems to make them closer to what is expected
+		const int new_x = std::round(trans_x*cos_rad + trans_y*sin_rad) + point.x;
+		const int new_y = std::round(trans_y*cos_rad - trans_x*sin_rad) + point.y;
 
 		if (new_x > 0 && new_y > 0 &&
 		    new_x < w && new_y < h)
