@@ -27,8 +27,9 @@ class Pixels
 	int h;
 	bool loaded;
 
-	// Lock this so that only one thread can save() at the same time
-	static std::mutex write_lock;
+	// Lock this so that only one thread can read an image or save()
+	// OpenIL/DevIL is not multithreaded
+	static std::mutex lock;
 
 public:
 	Pixels(); // Useful for placeholder
@@ -41,7 +42,7 @@ public:
 	// This doesn't extend the image at all. If rotation and points
 	// are determined correctly, it won't rotate out of the image.
 	// Note: rad is angle of rotation in radians
-	void rotate(double rad, Coord point = Coord(0,0));
+	void rotate(double rad, const Coord& point);
 
 	// Default is used if coord doesn't exist (which should never happen)
 	// Default to white to assume that this isn't a useful pixel
@@ -50,6 +51,10 @@ public:
 	// Used for debugging, marks are written to a copy of the image when saved
 	void mark(const Coord& m);
 	void save(const std::string& filename) const;
+
+	// Rotate all points in a vector
+	std::vector<Coord> rotateVector(std::vector<Coord> v,
+		const Coord& point, double rad) const;
 };
 
 #endif

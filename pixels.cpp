@@ -1,7 +1,7 @@
 #include "pixels.h"
 
 // DevIL/OpenIL isn't multithreaded
-std::mutex Pixels::write_lock;
+std::mutex Pixels::lock;
 
 Pixels::Pixels()
 	:w(0), h(0), loaded(false)
@@ -12,6 +12,9 @@ Pixels::Pixels()
 Pixels::Pixels(ILenum type, const char* lump, const int size)
 	:w(0), h(0), loaded(false)
 {
+	// Only execute in one thread since DevIL/OpenIL doesn't support multithreading
+	std::unique_lock<std::mutex> lck(lock);
+
 	ILuint name;
 	ilGenImages(1, &name);
 	ilBindImage(name);
@@ -41,7 +44,7 @@ Pixels::Pixels(ILenum type, const char* lump, const int size)
 		for (int i = 2; i < total; i+=3)
 		{
 			// Average for grayscale
-			p[y][x] = std::floor((1.0*data[i-2]+data[i-1]+data[i])/3);
+			p[y][x] = smartFloor((1.0*data[i-2]+data[i-1]+data[i])/3);
 			
 			// Increase y every time we get to end of row
 			if (x+1 == w)
@@ -77,7 +80,9 @@ bool Pixels::black(const Coord& c, const bool default_value) const
 
 void Pixels::mark(const Coord& c)
 {
-	marks.push_back(c);
+	if (c.x > 0 && c.y > 0 &&
+	    c.x < w && c.y < h)
+		marks.push_back(c);
 }
 
 void Pixels::save(const std::string& filename) const
@@ -87,22 +92,29 @@ void Pixels::save(const std::string& filename) const
 	// Draw the marks on a copy of the image
 	for (const Coord& c : marks)
 	{
-		// Left
-		for (int i = c.x; i > c.x-MARK_SIZE && i > 0; --i)
-			copy[c.y][i] = MARK_COLOR;
-		// Right
-		for (int i = c.x; i < c.x+MARK_SIZE && i < w; ++i)
-			copy[c.y][i] = MARK_COLOR;
-		// Up
-		for (int i = c.y; i > c.y-MARK_SIZE && i > 0; --i)
-			copy[i][c.x] = MARK_COLOR;
-		// Down
-		for (int i = c.y; i < c.y+MARK_SIZE && i < h; ++i)
-			copy[i][c.x] = MARK_COLOR;
+		if (MARK_SIZE > 1)
+		{
+			// Left
+			for (int i = c.x; i > c.x-MARK_SIZE && i > 0; --i)
+				copy[c.y][i] = MARK_COLOR;
+			// Right
+			for (int i = c.x; i < c.x+MARK_SIZE && i < w; ++i)
+				copy[c.y][i] = MARK_COLOR;
+			// Up
+			for (int i = c.y; i > c.y-MARK_SIZE && i > 0; --i)
+				copy[i][c.x] = MARK_COLOR;
+			// Down
+			for (int i = c.y; i < c.y+MARK_SIZE && i < h; ++i)
+				copy[i][c.x] = MARK_COLOR;
+		}
+		else
+		{
+			copy[c.y][c.x] = MARK_COLOR;
+		}
 	}
 
-	// Only execute in one thread since DevIL/OpenIL doesn't support multithreading
-	std::unique_lock<std::mutex> lock(write_lock);
+	// One thread again
+	std::unique_lock<std::mutex> lck(lock);
 
 	// Convert this back to a real black and white image
 	ILuint name;
@@ -144,16 +156,18 @@ void Pixels::save(const std::string& filename) const
 
 // In the future, it may be a good idea to implement something like the "Rotation by
 // Area Mapping" talked about on http://www.leptonica.com/rotation.html
-void Pixels::rotate(double rad, Coord point)
+void Pixels::rotate(double rad, const Coord& point)
 {
 	// Right size, default to white (255 or 1111 1111)
 	std::vector<std::vector<unsigned char>> copy(h, std::vector<unsigned char>(w, 0xff));
 
 	// -rad because we're calculating the rotation to get from the new rotated
-	// image to the original image
+	// image to the original image. We're walking the new image instead of the
+	// original so as to not get blank spots from rounding.
 	const double sin_rad = std::sin(-rad);
 	const double cos_rad = std::cos(-rad);
 
+	// Rotate image
 	for (int y = 0; y < h; ++y)
 	{
 		for (int x = 0; x < w; ++x)
@@ -161,15 +175,44 @@ void Pixels::rotate(double rad, Coord point)
 			// "Translate" it, and then add back in the point's x and y
 			const int trans_x = x - point.x;
 			const int trans_y = y - point.y;
+
 			// Find where to copy from
-			const int old_x = smartFloor(trans_x*cos_rad + trans_y*sin_rad + point.x);
-			const int old_y = smartFloor(trans_y*cos_rad - trans_x*sin_rad + point.y);
+			const int old_x = smartFloor(trans_x*cos_rad + trans_y*sin_rad) + point.x;
+			const int old_y = smartFloor(trans_y*cos_rad - trans_x*sin_rad) + point.y;
 
 			// Get rid of invalid points
-			if (old_y < h && old_x < w && old_y > 0 && old_x > 0)
+			if (old_x > 0 && old_y > 0 &&
+			    old_x < w && old_y < h)
 				copy[y][x] = p[old_y][old_x];
 		}
 	}
 
 	p = copy;
+
+	// Rotate marks as well
+	marks = rotateVector(marks, point, rad);
+}
+
+// Rotate all points in a vector (more or less the same as rotating the image)
+std::vector<Coord> Pixels::rotateVector(std::vector<Coord> v, const Coord& point, double rad) const
+{
+	const double sin_rad = std::sin(rad);
+	const double cos_rad = std::cos(rad);
+
+	for (Coord& m : v)
+	{
+		// Translate to origin
+		const int trans_x = m.x - point.x;
+		const int trans_y = m.y - point.y;
+
+		// Rotate + translate back
+		const int new_x = smartFloor(trans_x*cos_rad + trans_y*sin_rad) + point.x;
+		const int new_y = smartFloor(trans_y*cos_rad - trans_x*sin_rad) + point.y;
+
+		if (new_x > 0 && new_y > 0 &&
+		    new_x < w && new_y < h)
+			m = Coord(new_x, new_y);
+	}
+
+	return v;
 }

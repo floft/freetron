@@ -1,5 +1,8 @@
 /*
  * Code to find a box from a pixel, determine if it's a box, etc.
+ *
+ * Useful links on edge detection:
+ *  http://www.m-hikari.com/ams/ams-password-2008/ams-password29-32-2008/nadernejadAMS29-32-2008.pdf
  */
 
 #ifndef H_BOX
@@ -7,7 +10,9 @@
 
 #include <map>
 #include <cmath>
+#include <array>
 #include <vector>
+#include <stdexcept>
 #include <algorithm>
 
 #include "data.h"
@@ -29,7 +34,7 @@ struct BoxData
 // Direction for walking edge (top left, top right...)
 enum class Direction
 {
-	TL, TR, BL, BR
+	TL, TR, BL, BR, Unknown
 };
 
 // Find square around coordinants keeping it within the image bounds
@@ -64,7 +69,9 @@ class Box
 	int h = 0;
 	// Aspect ratio of this "box"
 	double ar = 0;
-	// The image, but don't ever delete this... TODO: add const
+	// Whether or not we have discovered the corners
+	bool possibly_valid = false;
+	// The image	TODO: add const
 	Pixels* img = nullptr;
 	// The calculated points
 	Coord mp, topleft, topright, bottomleft, bottomright;
@@ -91,8 +98,11 @@ private:
 	// Determine average color of all pixels within corners of box
 	double boxColor() const;
 
-	// Walk the edge in a certain direction
-	Coord edge(const Coord& point, Direction dir) const;
+	// Determine probable direction based on 9 surrounding pixels
+	Direction findDirection(const Coord& p) const;
+
+	// Return reference to the matrix for walking edge in a direction
+	Coord matrix(const Coord& p, int index, Direction dir) const;
 };
 
 #endif

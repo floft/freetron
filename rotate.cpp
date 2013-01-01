@@ -2,7 +2,7 @@
 
 // Find top left and bottom right box. Then, determine slope of these two
 // and return the amount to rotate.
-double findRotation(Pixels& img, Coord& ret_coord, BoxData* data)
+double findRotation(Pixels& img, const std::vector<Coord>& boxes, Coord& ret_coord, BoxData* data)
 {
 	Coord top;
 	Coord bottom;
@@ -15,96 +15,22 @@ double findRotation(Pixels& img, Coord& ret_coord, BoxData* data)
 	const Coord origin(0, 0);
 	const Coord extreme(0, img.height() - 1);
 
-	//
-	// The top-left box
-	//
-
-	// Goto statements are evil
-	bool found = false;
-
-	// Search from top left up a y = x line going down the image
-	// Max y+x for also scanning the bottom of the image if shifted to the right
-	for (int z = 0; z < img.height() + img.width() && !found; ++z)
+	// Find closest box to top and bottom left
+	for (const Coord& c : boxes)
 	{
-		for (int x = 0, y = z; x <= z && x < img.width() && !found; ++x, --y)
+		double dist_origin  = distance(c, origin);
+		double dist_extreme = distance(c, extreme);
+
+		if (dist_origin < min_top_dist)
 		{
-			// This is an imaginary point (skip till we get to points on the
-			// bottom of the image)
-			if (y > img.height() - 1)
-				continue;
-
-			// See if it might be a box
-			if (img.black(Coord(x, y)))
-			{
-				Coord point(x, y);
-				Box box(&img, point, data);
-
-				if (box.valid())
-				{
-					double current_top_dist = distance(box.midpoint(), origin);
-
-					// See if this box is closer to the top left than the previous one
-					if (current_top_dist < min_top_dist)
-					{
-						min_top_dist = current_top_dist;
-						top = box.midpoint();
-					}
-					// We are getting farther away, so we already found the closest box
-					else if (current_top_dist - min_top_dist > MIN_JUMP)
-					{
-						found = true;
-					}
-				}
-				
-				// We only care about the left-most black blob, skip if this is a decent-sized blob
-				if (box.width() > DECENT_SIZE)
-					break;
-			}
+			top = c;
+			min_top_dist = dist_origin;
 		}
-	}
 
-	// 
-	// The bottom-left box
-	//
-	found = false;
-
-	// Start searching at the bottom
-	// Stop searching once reaching the y value of the top-left box
-	for (int z = img.height() + img.width(); z > top.y && !found; --z)
-	{
-		for (int x = 0, y = z; x <= z && x < img.width() && !found; ++x, --y)
+		if (dist_extreme < min_bottom_dist)
 		{
-			// This is an imaginary point (below the bottom)
-			if (y > img.height() - 1)
-				continue;
-
-			// It's black
-			if (img.black(Coord(x, y)))
-			{
-				Coord point(x, y);
-				Box box(&img, point, data);
-
-				if (box.valid())
-				{
-					double current_bottom_dist = distance(box.midpoint(), extreme);
-
-					// It's closer than the previous box
-					if (current_bottom_dist < min_bottom_dist)
-					{
-						min_bottom_dist = current_bottom_dist;
-						bottom = box.midpoint();
-					}
-					// We're starting to get farther away, so we probably found the closest point
-					else if (current_bottom_dist - min_bottom_dist > MIN_JUMP)
-					{
-						found = true;
-					}
-				}
-				
-				// We only care about the left-most black blob, skip if this is a decent-sized blob
-				if (box.width() > DECENT_SIZE)
-					break;
-			}
+			bottom = c;
+			min_bottom_dist = dist_extreme;
 		}
 	}
 

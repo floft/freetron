@@ -39,8 +39,9 @@ std::vector<Coord> findBoxes(Pixels& img, BoxData* data)
 					if (std::find(boxes.begin(), boxes.end(), box.midpoint()) == boxes.end())
 						boxes.push_back(box.midpoint());
 
-					// Skip the rest of this box
-					//x += box.width();
+					// The horizontal jump to the other side of the box will never be less
+					// than the width; it will be the width if already rotated
+					x += box.width();
 				}
 			}
 		}

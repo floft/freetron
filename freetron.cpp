@@ -3,14 +3,11 @@
  *
  * Todo:
  *   - Use bottom boxes to find bubbles
- *   - Redo findRotation
  *   - Pass in const Pixels& wherever possible
  *   - Develop better algorithm for finding if bubble is filled in
- *   - Use dynamic_bitset for storing bools in Pixels
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe
  *      start processing other pages after key has been processed while reading
  *      other images
- *   - Use neural network? Genetic quadrilateral-finding algorithm?
  */
 
 #include <vector>
@@ -56,17 +53,20 @@ Info parseImage(Pixels* image)
 
 	// Box information for this image
 	BoxData data;
+	
+	// Find all the boxes
+	std::vector<Coord> boxes = findBoxes(*image, &data);
 
 	// Rotate the image
 	Coord rotate_point;
-	double rotation = findRotation(*image, rotate_point, &data);
+	double rotation = findRotation(*image, boxes, rotate_point, &data);
 
 	// Negative since the origin is the top-left point
 	if (rotation != 0)
+	{
 		image->rotate(-rotation, rotate_point);
-
-	// Find all the boxes on the left
-	std::vector<Coord> boxes = findBoxes(*image, &data);
+		boxes = image->rotateVector(boxes, rotate_point, -rotation);
+	}
 
 	// Find ID number
 	int id = findID(*image, boxes, &data);

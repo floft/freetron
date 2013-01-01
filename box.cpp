@@ -67,15 +67,121 @@ double averageColor(const Pixels& img,
 Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
 	:img(pixels), data(data)
 {
-	topleft     = edge(point,       Direction::TL);
-	topright    = edge(topleft,     Direction::TR);
-	bottomright = edge(topright,    Direction::BR);
-	bottomleft  = edge(bottomright, Direction::BL);
+	if (!img)
+		throw std::runtime_error("img passed to Box was null");
 
-	w  = distance(topleft, topright);
-	h  = distance(topleft, bottomleft);
-	mp = Coord((topleft.x + bottomright.x)/2, (topleft.y + bottomright.y)/2);
-	ar = (h>0)?1.0*w/h:0;
+	// We will want exactly four corners
+	int corners = 0;
+
+	// Start one pixel above this first point (we wouldn't have been given this
+	// point if the pixel above it was black)
+	const Coord orig(point.x, point.y-1);
+	
+	// We'll create a new point that we'll modify since we need to see when we
+	// get back to our original location.
+	Coord position = orig;
+
+	// We start off at a point somewhere on the top edge
+	Direction dir = Direction::TR;
+	
+	// Walk edge of box
+	while (true)
+	{
+		//img->mark(position);
+
+		// Possible movements
+		const Coord zero  = matrix(position, 0, dir);
+		const Coord one   = matrix(position, 1, dir);
+		const Coord two   = matrix(position, 2, dir);
+		const Coord three = matrix(position, 3, dir);
+		const Coord four  = matrix(position, 4, dir);
+
+		if (img->black(two))
+		{
+			if (img->black(four))
+			{
+				break;
+			}
+			else
+			{
+				position = four;
+			}
+		}
+		else if (img->black(one))
+		{
+			position = two;
+		}
+		else if (img->black(zero))
+		{
+			position = one;
+		}
+		else if (img->black(three))
+		{
+			position = zero;
+		}
+		else
+		{
+			// We have turned the corner
+			++corners;
+			
+			// Doesn't matter at this point
+			if (corners > 4)
+				break;
+
+			// Save this point
+			switch (dir)
+			{
+				case Direction::TL: topleft     = position; break;
+				case Direction::TR: topright    = position; break;
+				case Direction::BR: bottomright = position; break;
+				case Direction::BL: bottomleft  = position; break;
+				default: throw std::runtime_error("invalid direction");
+			}
+
+			// Determine new direction and continue
+			dir = findDirection(position);
+
+			// Not a box
+			if (dir == Direction::Unknown)
+			{
+				corners = 0;
+				break;
+			}
+
+			// If we're back where we started (or we never left it)
+			if (position == orig)
+				break;
+
+		}
+
+		// If we've gone more than the digonal, we're not in a box
+		if (data->diag != 0 && distance(point, position) > data->diag+DIAG_ERROR)
+		{
+			//std::cout << data->diag << " " << distance(point, position) << std::endl;
+			corners = 0;
+			break;
+		}
+	}
+
+	// Looks like we have a quadrilateral, it might be a box
+	if (corners == 4)
+	{
+		w  = distance(topleft, topright);
+		h  = distance(topleft, bottomleft);
+		mp = Coord((topleft.x + bottomright.x)/2, (topleft.y + bottomright.y)/2);
+		ar = (h>0)?1.0*w/h:0;
+
+		possibly_valid = true;
+	}
+	
+	if (Square(*img, 322, 829, 50).in(point))
+	{
+		img->mark(topleft);
+		img->mark(topright);
+		img->mark(bottomleft);
+		img->mark(bottomright);
+		std::cout << corners << std::endl;
+	}
 }
 
 bool Box::valid()
@@ -84,25 +190,31 @@ bool Box::valid()
 	if (!img)
 		return false;
 	
+	// If we didn't find the four courners, then none of the below checks apply
+	if (!possibly_valid)
+		return false;
+	
 	// What should the width be approximately given the aspect ratio (width/height)
 	const double approx_height = w/ASPECT;
 	const int real_diag = std::ceil(std::sqrt(w*w+h*h));
 
-	if (Square(*img, 415, 2600, 20).in(mp))
+	if (Square(*img, 300, 1288, 50).in(mp))
 	{
 		static int blah = 0;
 		++blah;
 
-		//if (blah > 110)
-		if (blah < 10)
+		if (blah < 2)
 		{
 			img->mark(topleft);
 			img->mark(topright);
 			img->mark(bottomleft);
 			img->mark(bottomright);
 
+			std::cout << topleft << " " << topright << " " << bottomleft << " " << bottomright << std::endl;
+
 			std::cout << w << " " << h << " " << approx_height << " " << real_diag << " " << data->diag << std::endl;
-			std::cout << (h >= approx_height-MAX_ERROR && h <= approx_height+MAX_ERROR) << " "
+			std::cout << (h >= approx_height-HEIGHT_ERROR && h <= approx_height+HEIGHT_ERROR) << " "
+				  << (std::abs(distance(topleft, bottomright) - distance(topright, bottomleft)) < DIAG_ERROR) << " "
 				  << (real_diag >= MIN_DIAG && real_diag <= MAX_DIAG) << " "
 				  << boxColor() << std::endl;
 		}
@@ -110,14 +222,20 @@ bool Box::valid()
 
 	// See if the diag is about the right length, if the width and height are about right,
 	// and if a circle in the center of the possible box is almost entirely black.
-	if (h >= approx_height-MAX_ERROR && h <= approx_height+MAX_ERROR &&
-		std::abs(distance(topleft, bottomright) - distance(topright, bottomleft)) < MAX_ERROR && // A rectangle
+	if (h >= approx_height-HEIGHT_ERROR && h <= approx_height+HEIGHT_ERROR &&
+		std::abs(distance(topleft, bottomright) - distance(topright, bottomleft)) < DIAG_ERROR && // A rectangle
+		real_diag >= MIN_DIAG && real_diag <= MAX_DIAG && // Get rid of 1-5px boxes
 		(
-			(data->diag == 0 && real_diag >= MIN_DIAG && real_diag <= MAX_DIAG) ||	 // Get rid of 1-5 px boxes
-			(real_diag >= data->diag-MAX_ERROR && real_diag <= data->diag+MAX_ERROR) // Use found valid diagonal
+			data->diag == 0 ||
+			(real_diag >= data->diag-DIAG_ERROR && real_diag <= data->diag+DIAG_ERROR) // Use found valid diagonal
 		) &&
 		boxColor() > MIN_BLACK)	// A black box
 	{
+		img->mark(topleft);
+		img->mark(topright);
+		img->mark(bottomleft);
+		img->mark(bottomright);
+
 		// This is a valid box, so use this diagonal to speed up calculations on next box
 		// But, nothing worse than incorrect values, better to not use this than
 		// stop searching for the corners early. Thus, make sure there's DIAG_COUNT similar
@@ -132,6 +250,7 @@ bool Box::valid()
 			// See if they're valid, and use it if they are; otherwise, try again
 			else
 			{
+				// TODO: throw out only bad diags instead of starting over?
 				if (absurdDiagonal())
 					data->diags.clear();
 				else
@@ -152,9 +271,11 @@ bool Box::absurdDiagonal() const
 	// Need at least two to have something beyond error of the previous one
 	if (data->diags.size() < 2)
 		return true;
+	
+	// TODO: sort the diags?
 
 	for (size_type i = 1; i < data->diags.size(); ++i)
-		if (data->diags[i] > data->diags[i-1]+MAX_ERROR || data->diags[i] < data->diags[i-1]-MAX_ERROR)
+		if (data->diags[i] > data->diags[i-1]+DIAG_ERROR || data->diags[i] < data->diags[i-1]-DIAG_ERROR)
 			return true;
 	
 	return false;
@@ -196,134 +317,88 @@ double Box::boxColor() const
 		return 0;
 }
 
-// Walk an edge in a specified direction
-Coord Box::edge(const Coord& point, Direction dir) const
+// Generate movement preferences depending on the direction we wish to go
+Coord Box::matrix(const Coord& p, int index, Direction dir) const
 {
-	Coord position    = point;
-	Coord last_first  = point;
-	Coord last_second = point;
-	Coord last_third  = point;
-	Coord last_fourth = point;
-	
-	while (true)
-	{
-		// The preferences for which direction to move
-		Coord first, second, third, fourth;
+	// 2 1 0
+	// 4   3
+	// 7 6 5
+	static const std::array<Coord, 8> matrixTL = {{
+		Coord( 1, -1),
+		Coord( 0, -1),
+		Coord(-1, -1),
+		Coord( 1,  0),
+		Coord(-1,  0),
+		Coord( 1,  1),
+		Coord( 0,  1),
+		Coord(-1,  1)
+	}};
 
-		switch (dir)
-		{
-			// Movement precedence
-			// 1 2 3
-			// 0 0 4
-			// 0 0 0
-			case Direction::TL:
-				first  = Coord(position.x-1, position.y-1);
-				second = Coord(position.x,   position.y-1);
-				third  = Coord(position.x+1, position.y-1);
-				fourth = Coord(position.x+1, position.y);
-				break;
-
-			// 0 0 1
-			// 0 0 2
-			// 0 4 3
-			case Direction::TR:
-				first  = Coord(position.x+1, position.y-1);
-				second = Coord(position.x+1, position.y);
-				third  = Coord(position.x+1, position.y+1);
-				fourth = Coord(position.x,   position.y+1);
-				break;
-
-			// 0 0 0
-			// 4 0 0
-			// 3 2 1
-			case Direction::BR:
-				first  = Coord(position.x+1, position.y+1);
-				second = Coord(position.x,   position.y+1);
-				third  = Coord(position.x-1, position.y+1);
-				fourth = Coord(position.x-1, position.y);
-				break;
+	// 7 4 2
+	// 6   1
+	// 5 3 0
+	static const std::array<Coord, 8> matrixTR = {{
+		Coord( 1,  1),
+		Coord( 1,  0),
+		Coord( 1, -1),
+		Coord( 0,  1),
+		Coord( 0, -1),
+		Coord(-1,  1),
+		Coord(-1,  0),
+		Coord(-1, -1)
+	}};
 			
-			// 3 4 0
-			// 2 0 0
-			// 1 0 0
-			case Direction::BL:
-				first  = Coord(position.x-1, position.y+1);
-				second = Coord(position.x-1, position.y);
-				third  = Coord(position.x-1, position.y-1);
-				fourth = Coord(position.x,   position.y-1);
-				break;
+	// 5 6 7
+	// 3   4
+	// 0 1 2
+	static const std::array<Coord, 8> matrixBR = {{
+		Coord(-1,  1),
+		Coord( 0,  1),
+		Coord( 1,  1),
+		Coord(-1,  0),
+		Coord( 1,  0),
+		Coord(-1, -1),
+		Coord( 0, -1),
+		Coord( 1, -1)
+	}};
 
-			// Return because breaking would only break out of the switch
-			default:
-				return point;
-		}
-
-		// See if we can move in a direction, save that as the last time we used that preference
-		if (img->black(first))
-		{
-			position   = first;
-			last_first = first;
-		}
-		else if (img->black(second))
-		{
-			position    = second;
-			last_second = second;
-		}
-		else if (img->black(third))
-		{
-			position   = third;
-			last_third = third;
-		}
-		else if (img->black(fourth))
-		{
-			position    = fourth;
-			last_fourth = fourth;
-		}
-		else
-		{
-			break;
-		}
-
-		// If we've gone more than the digonal, we're not in a box
-		if (data->diag != 0 && distance(point, position) > data->diag+MAX_ERROR)
-			break;
-	}
-
-	// Determine which corner we wish to be close to
-	Coord dist_base;
-	static const Coord tl(0,		0);
-	static const Coord tr(img->width()-1,	0);
-	static const Coord br(img->width()-1,	img->height()-1);
-	static const Coord bl(0, 		img->height()-1);
+	// 0 3 5
+	// 1   6
+	// 2 4 7
+	static const std::array<Coord, 8> matrixBL = {{
+		Coord(-1, -1),
+		Coord(-1,  0),
+		Coord(-1,  1),
+		Coord( 0, -1),
+		Coord( 0,  1),
+		Coord( 1, -1),
+		Coord( 1,  0),
+		Coord( 1,  1)
+	}};
 
 	switch (dir)
 	{
-		case Direction::TL: dist_base = tl; break;
-		case Direction::TR: dist_base = tr; break;
-		case Direction::BR: dist_base = br; break;
-		case Direction::BL: dist_base = bl; break;
+		case Direction::TL: return p+matrixTL[index];
+		case Direction::TR: return p+matrixTR[index];
+		case Direction::BR: return p+matrixBR[index];
+		case Direction::BL: return p+matrixBL[index];
+		default: throw std::runtime_error("genMatrix called without valid direction");
 	}
+}
 
-	// Create a map of distances from last points of different precedence,
-	// Pick the closest one
-	const std::map<double, Coord> dist = {
-		{ distance(dist_base, last_fourth), last_fourth },
-		{ distance(dist_base, last_third),  last_third  },
-		{ distance(dist_base, last_second), last_second },
-		{ distance(dist_base, last_first),  last_first  }
-	};
-	
-	if (Square(*img, 415, 2600, 20).in(last_first) && dir == Direction::TL)
-	{
-		std::map<double, Coord>::const_iterator iter;
+Direction Box::findDirection(const Coord& p) const
+{
+	// Matrix indexes are based on TR (arbitrary choice, any would work)
+	Direction tr = Direction::TR;
 
-		for (iter = dist.begin(); iter != dist.end(); ++iter)
-		{
-			std::cout << iter->first << ": " << iter->second << std::endl;
-		}
+	if (img->black(matrix(p, 3, tr)))
+		return Direction::TR;
+	if (img->black(matrix(p, 6, tr)))
+		return Direction::BR;
+	if (img->black(matrix(p, 4, tr)))
+		return Direction::BL;
+	if (img->black(matrix(p, 1, tr)))
+		return Direction::TL;
 
-		std::cout << std::endl;
-	}
-
-	return mapMinValue<Coord, std::pair<double, Coord>>(dist.begin(), dist.end());
+	return Direction::Unknown;
 }
