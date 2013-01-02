@@ -1,5 +1,5 @@
-boxes.o: boxes.cpp boxes.h options.h pixels.h math.h data.h box.h
 data.o: data.cpp data.h
+boxes.o: boxes.cpp boxes.h options.h pixels.h math.h data.h box.h
 read.o: read.cpp read.h options.h pixels.h math.h data.h box.h
 freetron.o: freetron.cpp extract.h pixels.h math.h data.h options.h \
  rotate.h box.h read.h boxes.h threading.h cores.h

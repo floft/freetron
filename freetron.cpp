@@ -62,11 +62,11 @@ Info parseImage(Pixels* image)
 	double rotation = findRotation(*image, boxes, rotate_point, &data);
 
 	// Negative since the origin is the top-left point
-	if (rotation != 0)
+	/*if (rotation != 0)
 	{
 		image->rotate(-rotation, rotate_point);
 		boxes = image->rotateVector(boxes, rotate_point, -rotation);
-	}
+	}*/
 
 	// Find ID number
 	int id = findID(*image, boxes, &data);

@@ -23,6 +23,8 @@ const int    DIAG_ERROR   = 15;		// Max error for the diagonal
 const int    MAX_DIAG     = 150;	// Used as a check to verify we have decent values, if failed and correct, it'll just take a bit longer
 const int    MIN_DIAG     = 40;		// It will probably never be less than this, really just needs to be above 10 or so to get rid of rounding problems
 const vsize  DIAG_COUNT   = 5;		// Calculate diagonal if at least 5 are within error margins (vsize since always used as: vector.size() > DIAG_COUNT)
+const int    CORNER_DIST  = 5;		// To have turned a corner on the edge of a box, you must go at least this many pixels
+const int    MAX_TURNS    = 10;		// Most boxes will have 4, some will have 5 or 6, none should have much more
 
 
 // Relative values

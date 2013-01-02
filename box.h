@@ -12,6 +12,7 @@
 #include <cmath>
 #include <array>
 #include <vector>
+#include <iostream>
 #include <stdexcept>
 #include <algorithm>
 
@@ -36,6 +37,9 @@ enum class Direction
 {
 	TL, TR, BL, BR, Unknown
 };
+
+// For debugging...
+std::ostream& operator<<(std::ostream& os, const Direction& d);
 
 // Find square around coordinants keeping it within the image bounds
 class Square

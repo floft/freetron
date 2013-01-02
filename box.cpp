@@ -69,8 +69,14 @@ Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
 {
 	if (!img)
 		throw std::runtime_error("img passed to Box was null");
+	
+	// Distance from last turn
+	int dist = 0;
 
-	// We will want exactly four corners
+	// Total number of "corners" or turns. We'll give up if we get too many.
+	int turns = 0;
+
+	// We must go at least CORNER_DIST from last turn to be considered a corner
 	int corners = 0;
 
 	// Start one pixel above this first point (we wouldn't have been given this
@@ -87,6 +93,9 @@ Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
 	// Walk edge of box
 	while (true)
 	{
+		if (Square(*img, 144, 2677, 5).in(point))
+			std::cout << dir << std::endl;
+
 		// Possible movements
 		const Coord zero  = matrix(position, 0, dir);
 		const Coord one   = matrix(position, 1, dir);
@@ -99,30 +108,52 @@ Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
 		{
 			if (img->black(four))
 			{
+				// 2 1 0
+				// 4   3
+				// 7 6 5
+				if (Square(*img, 144, 2677, 5).in(point))
+				{
+				//	std::cout << dir << std::endl;
+				}
+
 				break;
 			}
 			else
 			{
 				position = four;
+				++dist;
 			}
 		}
 		else if (img->black(one))
 		{
 			position = two;
+			++dist;
 		}
 		else if (img->black(zero))
 		{
 			position = one;
+			++dist;
 		}
 		else if (img->black(three))
 		{
 			position = zero;
+			++dist;
 		}
 		else
 		{
+			// We've turned
+			++turns;
+
+			if (turns > MAX_TURNS)
+				break;
+
 			// We have turned the corner
-			++corners;
-			
+			if (dist > CORNER_DIST)
+				++corners;
+
+			// Since we've turned, now set dist back
+			dist = 0;
+
 			// Doesn't matter at this point
 			if (corners > 4)
 				break;
@@ -172,13 +203,14 @@ Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
 		possibly_valid = true;
 	}
 	
-	if (Square(*img, 322, 829, 50).in(point))
+	if (Square(*img, 144, 2677, 5).in(point))
 	{
 		img->mark(topleft);
 		img->mark(topright);
 		img->mark(bottomleft);
 		img->mark(bottomright);
-		std::cout << corners << std::endl;
+		std::cout << corners << " " << (int)dir << " " <<
+			distance(point,position) << " " << data->diag+DIAG_ERROR << std::endl;
 	}
 }
 
@@ -389,14 +421,27 @@ Direction Box::findDirection(const Coord& p) const
 	// Matrix indexes are based on TR (arbitrary choice, any would work)
 	Direction tr = Direction::TR;
 
+	if (img->black(matrix(p, 1, tr)))
+		return Direction::TL;
 	if (img->black(matrix(p, 3, tr)))
 		return Direction::TR;
 	if (img->black(matrix(p, 6, tr)))
 		return Direction::BR;
 	if (img->black(matrix(p, 4, tr)))
 		return Direction::BL;
-	if (img->black(matrix(p, 1, tr)))
-		return Direction::TL;
 
 	return Direction::Unknown;
+}
+
+std::ostream& operator<<(std::ostream& os, const Direction& d)
+{
+	switch (d)
+	{
+		case Direction::TL: return os << "TopLeft";
+		case Direction::TR: return os << "TopRight";
+		case Direction::BL: return os << "BottomLeft";
+		case Direction::BR: return os << "BottomRight";
+		case Direction::Unknown: return os << "Unknown";
+		default: return os << "Unknown?";
+	}
 }
