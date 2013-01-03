@@ -13,7 +13,6 @@
 
 static const double pi = 3.14159265358979323846264338327950;
 
-double stdDev(const std::vector<double>& v, double& average);
 inline double distance(const double x1, const double y1, const double x2, const double y2);
 inline double distance(const Coord& p1, const Coord& p2);
 inline double average(const std::vector<double>& v);
@@ -24,28 +23,26 @@ inline int smartFloor(const double value, const double epsilon = 0.00001);
 inline int lineFunctionX(const Coord& a, const Coord& b, int y);
 inline int lineFunctionY(const Coord& a, const Coord& b, int x);
 
-// Two functions that allow a simple mapMinValue<Coord>(start, end) returning
-// the value of the minimum key in the map. Example:
-//  Coord c = mapMinValue<Coord, std::pair<double, Coord>>(m.begin(), m.end())
-template<class T>
-class mapKeyCompare
+// Standard Deviation:
+//   sqrt(1/n*((x1 - avg)^2 + (x2 - avg)^2 + ... (xn - avg)^2))
+//
+// Type should probably be std::vector<double>
+template<class Type>
+double stdDev(const Type& v)
 {
-public:
-	bool operator()(const T& a, const T& b)
-	{
-		return (a.first < b.first);
-	}
-};
+	if (v.size() == 0)
+		return 0;
 
-template<class Result, class Type, class Iter>
-Result mapMinValue(Iter start, Iter end)
-{
-	Iter min = std::min_element(start, end, mapKeyCompare<Type>());
+	double total = 0;
+	std::accumulate(v.begin(), v.end(), total);
 
-	if (min != end)
-		return min->second;
-	else
-		return Result();
+	double mean = total/v.size();
+	double inroot = 0;
+
+	for (const double elem : v)
+		inroot += std::pow(mean - elem, 2);
+	
+	return std::sqrt(inroot/v.size());
 }
 
 /*

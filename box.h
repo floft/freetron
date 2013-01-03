@@ -17,9 +17,12 @@
 #include <algorithm>
 
 #include "data.h"
+#include "blobs.h"
 #include "math.h"
 #include "options.h"
 #include "pixels.h"
+#include "forget.h"
+#include "maputils.h"
 
 // Store data for each image separately (for multithreading)
 struct BoxData
@@ -35,7 +38,7 @@ struct BoxData
 // Direction for walking edge (top left, top right...)
 enum class Direction
 {
-	TL, TR, BL, BR, Unknown
+	Unknown, TL, TR, BL, BR
 };
 
 // For debugging...
@@ -80,11 +83,15 @@ class Box
 	// The calculated points
 	Coord mp, topleft, topright, bottomleft, bottomright;
 	// Store diagonal information
-	BoxData* data;
+	BoxData* data = nullptr;
+
+	// Used to walk the edge of a box. Relative coordinates
+	// around the current position.
+	static const std::array<Coord, 8> matrix;
 
 public:
 	Box() { } // Only used as a placeholder, then copy another box to it
-	Box(Pixels* pixels, const Coord& point, BoxData* data);
+	Box(Pixels* pixels, const Blobs& blobs, const Coord& point, BoxData* data);
 
 	bool valid();
 	inline int width() const  { return w; }
@@ -102,11 +109,16 @@ private:
 	// Determine average color of all pixels within corners of box
 	double boxColor() const;
 
-	// Determine probable direction based on 9 surrounding pixels
-	Direction findDirection(const Coord& p) const;
+	// Find next pixel to go to when walking edge, returns index of matrix
+	// or -1 if all are black
+	int findEdge(const Coord& p, int label, const Blobs& blobs) const;
 
-	// Return reference to the matrix for walking edge in a direction
-	Coord matrix(const Coord& p, int index, Direction dir) const;
+	// Determine what direction we're going from the previous movements
+	Direction findDirection(const Forget<int>& previous) const;
+
+	// See if we are moving in the opposite direction, thus getting into
+	// an infinite loop.
+	bool turnedAround(Direction dir, int index) const;
 };
 
 #endif

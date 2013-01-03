@@ -26,12 +26,25 @@ bool operator!=(const Coord& c1, const Coord& c2)
 	return !(c1==c2);
 }
 
-Coord operator+(const Coord& c1, const Coord& c2)
+bool operator<(const Coord& c1, const Coord& c2)
 {
-	return Coord(c1.x+c2.x, c1.y+c2.y);
+	return (c1.y < c2.y || (c1.y == c2.y && c1.x < c2.x));
 }
 
-Coord operator+=(const Coord& c1, const Coord& c2)
+bool operator>(const Coord& c1, const Coord& c2)
 {
-	return c1+c2;
+	return !(c1 < c2) && !(c1 == c2);
+}
+
+Coord Coord::operator+(const Coord& c) const
+{
+	return Coord(x+c.x, y+c.y);
+}
+
+Coord& Coord::operator+=(const Coord& c)
+{
+	x += c.x;
+	y += c.y;
+
+	return *this;
 }

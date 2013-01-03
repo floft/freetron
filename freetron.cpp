@@ -23,6 +23,7 @@
 #include "rotate.h"
 #include "data.h"
 #include "read.h"
+#include "blobs.h"
 #include "boxes.h"
 #include "box.h"
 #include "threading.h"
@@ -51,11 +52,14 @@ Info parseImage(Pixels* image)
 	static int static_thread_id = 0;
 	const int thread_id = static_thread_id++;
 
+	// Find all objects in image
+	const Blobs blobs(*image);
+
 	// Box information for this image
 	BoxData data;
 	
 	// Find all the boxes
-	std::vector<Coord> boxes = findBoxes(*image, &data);
+	std::vector<Coord> boxes = findBoxes(*image, blobs, &data);
 
 	// Rotate the image
 	Coord rotate_point;
@@ -92,6 +96,7 @@ int main(int argc, char* argv[])
 {
 	ilInit();
 	std::vector<Pixels> images;
+	std::vector<Info> results;
 
 	if (argc != 2)
 	{
@@ -99,10 +104,13 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	// Attempt to get the images from the PDF
 	try
 	{
+		// Get the images from the PDF
 		images = extract(argv[1]);
+	
+		// Find ID of each page in separate thread
+		results = threadForEach(images, parseImage);
 	}
 	catch (const std::runtime_error& error)
 	{
@@ -114,10 +122,8 @@ int main(int argc, char* argv[])
 		error.PrintErrorMsg();
 		return error.GetError();
 	}
-	
-	// Find ID of each page in separate thread
-	std::vector<Info> results = threadForEach(images, parseImage);
 
+	// Parse results
 	for (const Info& i : results)
 		if (i.id > 0)
 			std::cout << i.thread_id << ": " << i.id << std::endl;

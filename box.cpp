@@ -1,5 +1,19 @@
 #include "box.h"
 
+//  0 1 2
+//  7   3
+//  6 5 4
+const std::array<Coord, 8> Box::matrix = {{
+	Coord(-1, -1),
+	Coord( 0, -1),
+	Coord( 1, -1),
+	Coord( 1,  0),
+	Coord( 1,  1),
+	Coord( 0,  1),
+	Coord(-1,  1),
+	Coord(-1,  0)
+}};
+
 // Find square around point
 Square::Square(const Pixels& img, const int x, const int y, const int r)
 {
@@ -64,129 +78,150 @@ double averageColor(const Pixels& img,
 		return 0;
 }
 
-Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
+Box::Box(Pixels* pixels, const Blobs& blobs, const Coord& point, BoxData* data)
 	:img(pixels), data(data)
 {
 	if (!img)
 		throw std::runtime_error("img passed to Box was null");
+
+	// Current label
+	const int label = blobs.label(point);
+
+	if (label == Blobs::default_label)
+		throw std::runtime_error("box can't be created from default label");
 	
-	// Distance from last turn
-	int dist = 0;
-
-	// Total number of "corners" or turns. We'll give up if we get too many.
-	int turns = 0;
-
+	// Keep track of previous movements by the index of the matrix
+	Forget<int> previous(PIXEL_RECALL);
+	
 	// We must go at least CORNER_DIST from last turn to be considered a corner
 	int corners = 0;
 
+	// Set this when we get PIXEL_RECALL pixels in, so we known when to stop
+	Coord end;
+
+	// The last unknown direction coordinate, which will be used when we eventually
+	// determine what direction we are going.
+	Coord interest;
+	
 	// Start one pixel above this first point (we wouldn't have been given this
 	// point if the pixel above it was black)
-	const Coord orig(point.x, point.y-1);
-	
-	// We'll create a new point that we'll modify since we need to see when we
-	// get back to our original location.
-	Coord position = orig;
+	Coord position(point.x, point.y-1);
 
-	// We start off at a point somewhere on the top edge
+	// Direction we're walking, and previous one so we can see if we've changed direction
 	Direction dir = Direction::TR;
+	Direction dir_prev;
+
+	bool test = false;
+	if (Square(*img, 144, 2677, 5).in(point))
+		test = true;
 	
-	// Walk edge of box
+	// Walk edge of box. As a fail-safe, give up if we've gone more pixels than an
+	// outrageously large box.
 	while (true)
 	{
-		if (Square(*img, 144, 2677, 5).in(point))
-			std::cout << dir << std::endl;
+		img->mark(position);
+		std::cout << point << " " << position << std::endl;
 
-		// Possible movements
-		const Coord zero  = matrix(position, 0, dir);
-		const Coord one   = matrix(position, 1, dir);
-		const Coord two   = matrix(position, 2, dir);
-		const Coord three = matrix(position, 3, dir);
-		const Coord four  = matrix(position, 4, dir);
+		// Find next pixel to go to
+		int index = findEdge(position, label, blobs);
 
-		// TODO: explaination? make this more readable?
-		if (img->black(two))
+		// All black, give up
+		if (index == -1)
 		{
-			if (img->black(four))
+			if (test) std::cout << "index" << std::endl;
+			corners = 0;
+			break;
+		}
+
+		// Give up if we just turned around. We don't want infinite loops.
+		/*if (turnedAround(dir, index))
+		{
+			std::cout << "Backwards: " << point << std::endl;
+			corners = 0;
+			break;
+		}*/
+
+		/*if (badPixel(point))
+		{
+			corners = 0;
+			break;
+		}*/
+
+		if (test)
+			std::cout << matrix[index] << ": " << position << " ";
+
+		// Go to new position
+		position += matrix[index];
+
+		if (test)
+			std::cout << position << std::endl;
+		
+		// Remember this position for finding corners
+		previous.remember(index);
+
+		if (test)
+		{
+			for (int i : previous)
+				std::cout << i << " ";
+			std::cout << std::endl;
+		}
+
+		// We've walked around the entire object now
+		if (position == end)
+		{
+			if (test) std::cout << "end" << std::endl;
+			break;
+		}
+
+		// Determine direction if we've gone more than PIXEL_RECALL
+		if (previous.count() > PIXEL_RECALL)
+		{
+			if (end == Coord())
+				end = position;
+
+			dir_prev = dir;
+			dir = findDirection(previous);
+
+			if (dir != dir_prev)
 			{
-				// 2 1 0
-				// 4   3
-				// 7 6 5
-				if (Square(*img, 144, 2677, 5).in(point))
+				// If we know the direction, set this point to the last time
+				// we were half way between two directions (Unknown).
+				switch (dir)
 				{
-				//	std::cout << dir << std::endl;
+					case Direction::TL:
+						topleft = interest;
+						++corners;
+						break;
+					case Direction::TR:
+						topright = interest;
+						++corners;
+						break;
+					case Direction::BR:
+						bottomright = interest;
+						++corners;
+						break;
+					case Direction::BL:
+						bottomleft = interest;
+						++corners;
+						break;
+					case Direction::Unknown:
+						interest = position;
+						break;
 				}
-
-				break;
-			}
-			else
-			{
-				position = four;
-				++dist;
 			}
 		}
-		else if (img->black(one))
+
+		// Doesn't matter at this point
+		if (corners > 4)
 		{
-			position = two;
-			++dist;
-		}
-		else if (img->black(zero))
-		{
-			position = one;
-			++dist;
-		}
-		else if (img->black(three))
-		{
-			position = zero;
-			++dist;
-		}
-		else
-		{
-			// We've turned
-			++turns;
-
-			if (turns > MAX_TURNS)
-				break;
-
-			// We have turned the corner
-			if (dist > CORNER_DIST)
-				++corners;
-
-			// Since we've turned, now set dist back
-			dist = 0;
-
-			// Doesn't matter at this point
-			if (corners > 4)
-				break;
-
-			// Save this point
-			switch (dir)
-			{
-				case Direction::TL: topleft     = position; break;
-				case Direction::TR: topright    = position; break;
-				case Direction::BR: bottomright = position; break;
-				case Direction::BL: bottomleft  = position; break;
-				default: throw std::runtime_error("invalid direction");
-			}
-
-			// Determine new direction and continue
-			dir = findDirection(position);
-
-			// Not a box
-			if (dir == Direction::Unknown)
-			{
-				corners = 0;
-				break;
-			}
-
-			// If we're back where we started (or we never left it)
-			if (position == orig)
-				break;
-
+			if (test) std::cout << "corners" << std::endl;
+			break;
 		}
 
-		// If we've gone more than the digonal, we're not in a box
+		// If we've gone more than the diagonal, we're definitely not in a box
 		if (data->diag != 0 && distance(point, position) > data->diag+DIAG_ERROR)
 		{
+			if (test) std::cout << "dist" << std::endl;
 			corners = 0;
 			break;
 		}
@@ -203,13 +238,13 @@ Box::Box(Pixels* pixels, const Coord& point, BoxData* data)
 		possibly_valid = true;
 	}
 	
-	if (Square(*img, 144, 2677, 5).in(point))
+	if (test)
 	{
 		img->mark(topleft);
 		img->mark(topright);
 		img->mark(bottomleft);
 		img->mark(bottomright);
-		std::cout << corners << " " << (int)dir << " " <<
+		std::cout << corners << " " << dir << " " <<
 			distance(point,position) << " " << data->diag+DIAG_ERROR << std::endl;
 	}
 }
@@ -347,92 +382,121 @@ double Box::boxColor() const
 		return 0;
 }
 
-// Generate movement preferences depending on the direction we wish to go
-Coord Box::matrix(const Coord& p, int index, Direction dir) const
+// Find the next white pixel to go to by looping through the matrix.
+// Look through the matrix starting from index 0 until we hit a black
+// pixel. Then, go to the previous pixel if it's not black, otherwise
+// continue looking back until we hit a white pixel. If we've gone
+// through all of them, return -1.
+
+// Find a white pixel by going around the matrix positions. Then look for
+// a black pixel. Go to the white pixel before. Return -1 if there are no
+// white pixels.
+int Box::findEdge(const Coord& p, int label, const Blobs& blobs) const
 {
-	// 2 1 0
-	// 4   3
-	// 7 6 5
-	static const std::array<Coord, 8> matrixTL = {{
-		Coord( 1, -1),
-		Coord( 0, -1),
-		Coord(-1, -1),
-		Coord( 1,  0),
-		Coord(-1,  0),
-		Coord( 1,  1),
-		Coord( 0,  1),
-		Coord(-1,  1)
-	}};
+	typedef std::array<Coord, 8>::size_type size_type;
+	
+	int index = -1;
+	int result = -1;
 
-	// 7 4 2
-	// 6   1
-	// 5 3 0
-	static const std::array<Coord, 8> matrixTR = {{
-		Coord( 1,  1),
-		Coord( 1,  0),
-		Coord( 1, -1),
-		Coord( 0,  1),
-		Coord( 0, -1),
-		Coord(-1,  1),
-		Coord(-1,  0),
-		Coord(-1, -1)
-	}};
-			
-	// 5 6 7
-	// 3   4
-	// 0 1 2
-	static const std::array<Coord, 8> matrixBR = {{
-		Coord(-1,  1),
-		Coord( 0,  1),
-		Coord( 1,  1),
-		Coord(-1,  0),
-		Coord( 1,  0),
-		Coord(-1, -1),
-		Coord( 0, -1),
-		Coord( 1, -1)
-	}};
+	// Find first white pixel, if there is one
+	for (size_type i = 0; i < matrix.size(); ++i)
+	{
+		if (blobs.label(p+matrix[i]) != label)
+		{
+			index = i;
+			break;
+		}
+	}
 
-	// 0 3 5
-	// 1   6
-	// 2 4 7
-	static const std::array<Coord, 8> matrixBL = {{
-		Coord(-1, -1),
-		Coord(-1,  0),
-		Coord(-1,  1),
-		Coord( 0, -1),
-		Coord( 0,  1),
-		Coord( 1, -1),
-		Coord( 1,  0),
-		Coord( 1,  1)
-	}};
+	// If we found one, now search for a black pixel. Go back one and go there.
+	if (index != -1)
+	{
+		size_type checked = 0;
 
+		while (checked < matrix.size())
+		{
+			if (blobs.label(p+matrix[index]) == label)
+			{
+				// Loop around (0-1 = 7)
+				int previous = (index==0)?(matrix.size()-1):(index-1);
+
+				if (blobs.label(p+matrix[previous]) != label)
+				{
+					result = previous;
+					break;
+				}
+
+				index = previous;
+			}
+			else
+			{
+				++index;
+			}
+
+			++checked;
+		}
+	}
+
+	return result;
+}
+
+// Count how many times out of the last PIXEL_RECALL movements we have been going
+// up, right, down, or left (up as in matrix indexes 0-2, right 2-4, ...). Whichever
+// one has been most common of the last PIXEL_RECALL movements is the general direction.
+Direction Box::findDirection(const Forget<int>& previous) const
+{
+	std::map<Direction, int> sums;
+	sums[Direction::TL] = 0;
+	sums[Direction::TR] = 0;
+	sums[Direction::BL] = 0;
+	sums[Direction::BR] = 0;
+
+	// Note that the corner positions will be counted as two directions
+	for (int index : previous)
+	{
+		if (index == 0 || index == 1 || index == 2)
+			++sums[Direction::TL];
+		if (index == 2 || index == 3 || index == 4)
+			++sums[Direction::TR];
+		if (index == 4 || index == 5 || index == 6)
+			++sums[Direction::BR];
+		if (index == 0 || index == 6 || index == 7)
+			++sums[Direction::BL];
+	}
+
+	// Return key (direction) of max value
+	Direction max = mapMaxValueKey<Direction, std::pair<Direction, int>>(sums.begin(), sums.end());
+	
+	//std::cout << sums[Direction::TL] << " " << sums[Direction::TR] << " "
+	//	  << sums[Direction::BR] << " " << sums[Direction::BL] << std::endl;
+
+	// If there's two tied for max, we're changing direction.
+	if (mapCountValue(sums, sums[max]) > 1)
+		return Direction::Unknown;
+	else
+		return max;
+}
+
+// See if our next movement will take us in the opposite direction, thus
+// putting us into an infinite loop.
+bool Box::turnedAround(Direction dir, int index) const
+{
 	switch (dir)
 	{
-		case Direction::TL: return p+matrixTL[index];
-		case Direction::TR: return p+matrixTR[index];
-		case Direction::BR: return p+matrixBR[index];
-		case Direction::BL: return p+matrixBL[index];
-		default: throw std::runtime_error("genMatrix called without valid direction");
+		case Direction::TL:
+			return index == 5;
+		case Direction::TR:
+			return index == 7;
+		case Direction::BR:
+			return index == 1;
+		case Direction::BL:
+			return index == 3;
+		default:
+			return false;
 	}
 }
 
-Direction Box::findDirection(const Coord& p) const
-{
-	// Matrix indexes are based on TR (arbitrary choice, any would work)
-	Direction tr = Direction::TR;
-
-	if (img->black(matrix(p, 1, tr)))
-		return Direction::TL;
-	if (img->black(matrix(p, 3, tr)))
-		return Direction::TR;
-	if (img->black(matrix(p, 6, tr)))
-		return Direction::BR;
-	if (img->black(matrix(p, 4, tr)))
-		return Direction::BL;
-
-	return Direction::Unknown;
-}
-
+// Useful for debugging
 std::ostream& operator<<(std::ostream& os, const Direction& d)
 {
 	switch (d)
