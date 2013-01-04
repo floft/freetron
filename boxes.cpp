@@ -1,7 +1,7 @@
 #include "boxes.h"
 
 // Find all the boxes in the image	TODO: add const
-std::vector<Coord> findBoxes(Pixels& img, BoxData* data)
+std::vector<Coord> findBoxes(Pixels& img, BoxData& data)
 {
 	std::vector<Coord> boxes;
 
@@ -16,13 +16,13 @@ std::vector<Coord> findBoxes(Pixels& img, BoxData* data)
 		// Get rid of most the really big or really small objects
 		if (dist > MIN_HEIGHT && dist < MAX_DIAG)
 		{
-			Box box(&img, blobs, pair.first, data);
+			Box box(img, blobs, pair.first, data);
 
 			if (box.valid())
 			{
 				// TODO: what if this isn't quite exact?
 				if (boxes.size() == 0)
-					data->width = box.width();
+					data.width = box.width();
 				
 				boxes.push_back(box.midpoint());
 

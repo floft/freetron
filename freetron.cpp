@@ -64,7 +64,7 @@ Info parseImage(Pixels* image)
 		BoxData data;
 		
 		// Find all the boxes
-		std::vector<Coord> boxes = findBoxes(*image, &data);
+		std::vector<Coord> boxes = findBoxes(*image, data);
 
 		if (boxes.size() != TOTAL_BOXES)
 		{
@@ -94,7 +94,7 @@ Info parseImage(Pixels* image)
 		}
 
 		// Find ID number
-		int id = findID(*image, boxes, &data);
+		int id = findID(*image, boxes, data);
 
 		// Debug information
 		if (DEBUG)

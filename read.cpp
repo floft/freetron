@@ -79,7 +79,7 @@ std::vector<int> findFilled(Pixels& img,
 }
 
 // Find ID number from card
-int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData* data)
+int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData& data)
 {
 	typedef std::vector<Coord>::size_type size_type;
 
@@ -109,13 +109,13 @@ int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData* data)
 
 	// Calculate value needed to be considered black from values
 	const double answer_black = answerBlack(img, boxes, start_box, end_box, start_x, stop_x,
-		data->width, bubble_jump);
+		data.width, bubble_jump);
 
 	// ID is boxes 2 - 11
 	for (size_type i = start_box-1; i < end_box && i < boxes.size(); ++i)
 	{
 		std::vector<int> position = findFilled(img, start_x, boxes[i].y, stop_x, 
-			data->width, bubble_jump, answer_black);
+			data.width, bubble_jump, answer_black);
 
 		// at x = position, the value is box # - 1 (0 = box 2);
 		for (const int pos : position)

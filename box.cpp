@@ -81,18 +81,15 @@ double averageColor(const Pixels& img,
 }
 
 // Find box properties (corners, width, height, aspect ratio, mid point, etc.)
-Box::Box(Pixels* pixels, const Blobs& blobs, const Coord& point, BoxData* data)
-	:img(pixels), data(data)
+Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
+	:img(img), blobs(blobs), data(data)
 {
-	if (!img)
-		throw std::runtime_error("img passed to Box was null");
-
 	// Current label so we only walk around this object
 	const int label = blobs.label(point);
 
 	if (label == Blobs::default_label)
 	{
-		std::cerr << blobs.size() << " " << label << " " << point << " " << img->width() << " " << img->height() << std::endl;
+		std::cerr << blobs.size() << " " << label << " " << point << " " << img.width() << " " << img.height() << std::endl;
 		throw std::runtime_error("box can't be created from default label");
 	}
 	
@@ -119,7 +116,7 @@ Box::Box(Pixels* pixels, const Blobs& blobs, const Coord& point, BoxData* data)
 	int iterations = 0;
 
 	bool test = false;
-	//if (Square(*img, 150, 552, 5).in(point))
+	//if (Square(img, 150, 552, 5).in(point))
 	//	test = true;
 	
 	// Walk the edge of the box keeping track of the corners to use later. Corners
@@ -134,7 +131,7 @@ Box::Box(Pixels* pixels, const Blobs& blobs, const Coord& point, BoxData* data)
 			std::cout << position << " " << dir << std::endl;
 
 		// Find next pixel to go to
-		int index = findEdge(position, label, blobs);
+		int index = findEdge(position, label, path);
 
 		// All black, should never happen since we already analyzed the image (Blobs)
 		if (index == -1)
@@ -165,7 +162,7 @@ Box::Box(Pixels* pixels, const Blobs& blobs, const Coord& point, BoxData* data)
 		
 		// New direction
 		dir_prev = dir;
-		dir = findDirection(previous, position, label, blobs);
+		dir = findDirection(previous, position, label, path);
 
 		if (dir == Direction::Unknown)
 			dir = dir_prev;
@@ -181,7 +178,7 @@ Box::Box(Pixels* pixels, const Blobs& blobs, const Coord& point, BoxData* data)
 			bottomleft = position;
 
 		// If we've gone more than the diagonal, we're definitely not in a box
-		if (data->diag != 0 && distance(point, position) > data->diag+DIAG_ERROR)
+		if (data.diag != 0 && distance(point, position) > data.diag+DIAG_ERROR)
 			return;
 	}
 
@@ -194,20 +191,16 @@ Box::Box(Pixels* pixels, const Blobs& blobs, const Coord& point, BoxData* data)
 	// If we haven't returned already, we might be a box
 	possibly_valid = true;
 
-	/*img->mark(topleft);
-	img->mark(topright);
-	img->mark(bottomleft);
-	img->mark(bottomright);*/
+	/*img.mark(topleft);
+	img.mark(topright);
+	img.mark(bottomleft);
+	img.mark(bottomright);*/
 
 	if (test) std::cout << "MP: " << mp << std::endl;
 }
 
 bool Box::valid()
 {
-	// Verify we actually have a reference to something
-	if (!img)
-		return false;
-	
 	// If something when wrong while finding corners, nothing below applies
 	if (!possibly_valid)
 		return false;
@@ -216,9 +209,9 @@ bool Box::valid()
 	const double approx_height = w/ASPECT;
 	const int real_diag = std::ceil(std::sqrt(w*w+h*h));
 
-	/*if (Square(*img, 165, 558, 5).in(mp))
+	/*if (Square(img, 165, 558, 5).in(mp))
 	{
-		std::cout << w << " " << h << " " << approx_height << " " << real_diag << " " << data->diag << std::endl;
+		std::cout << w << " " << h << " " << approx_height << " " << real_diag << " " << data.diag << std::endl;
 		std::cout << (h >= approx_height-HEIGHT_ERROR && h <= approx_height+HEIGHT_ERROR) << " "
 			  << (std::abs(distance(topleft, bottomright) - distance(topright, bottomleft)) < DIAG_ERROR) << " "
 			  << (real_diag >= MIN_DIAG && real_diag <= MAX_DIAG) << " "
@@ -235,35 +228,35 @@ bool Box::valid()
 		std::abs(slopeYX(topleft, topright) - slopeYX(bottomleft, bottomright)) < SLOPE_ERROR_WIDTH  && // Width slope
 		real_diag >= MIN_DIAG && real_diag <= MAX_DIAG && // Get rid of 1-5px boxes
 		(
-			data->diag == 0 ||
-			(real_diag >= data->diag-DIAG_ERROR && real_diag <= data->diag+DIAG_ERROR) // Use found valid diagonal
+			data.diag == 0 ||
+			(real_diag >= data.diag-DIAG_ERROR && real_diag <= data.diag+DIAG_ERROR) // Use found valid diagonal
 		) &&
 		boxColor() > MIN_BLACK)	// A black box
 	{
-		img->mark(topleft);
-		img->mark(topright);
-		img->mark(bottomleft);
-		img->mark(bottomright);
+		img.mark(topleft);
+		img.mark(topright);
+		img.mark(bottomleft);
+		img.mark(bottomright);
 
 		// This is a valid box, so use this diagonal to speed up calculations on next box
 		// But, nothing worse than incorrect values, better to not use this than
 		// stop searching for the corners early. Thus, make sure there's DIAG_COUNT similar
 		// boxes before using the diagonal value.
-		if (data->diag == 0)
+		if (data.diag == 0)
 		{
 			// Get test diagonals
-			if (data->diags.size() < DIAG_COUNT)
+			if (data.diags.size() < DIAG_COUNT)
 			{
-				data->diags.push_back(real_diag);
+				data.diags.push_back(real_diag);
 			}
 			// See if they're valid, and use it if they are; otherwise, try again
 			else
 			{
 				// TODO: throw out only bad diags instead of starting over?
 				if (absurdDiagonal())
-					data->diags.clear();
+					data.diags.clear();
 				else
-					data->diag = real_diag;
+					data.diag = real_diag;
 			}
 		}
 
@@ -278,13 +271,13 @@ bool Box::absurdDiagonal() const
 	typedef std::vector<int>::size_type size_type;
 
 	// Need at least two to have something beyond error of the previous one
-	if (data->diags.size() < 2)
+	if (data.diags.size() < 2)
 		return true;
 	
 	// TODO: sort the diags?
 
-	for (size_type i = 1; i < data->diags.size(); ++i)
-		if (data->diags[i] > data->diags[i-1]+DIAG_ERROR || data->diags[i] < data->diags[i-1]-DIAG_ERROR)
+	for (size_type i = 1; i < data.diags.size(); ++i)
+		if (data.diags[i] > data.diags[i-1]+DIAG_ERROR || data.diags[i] < data.diags[i-1]-DIAG_ERROR)
 			return true;
 	
 	return false;
@@ -301,7 +294,7 @@ double Box::boxColor() const
 {
 	int black = 0;
 	int total = 0;
-	Square bounds(*img, mp.x, mp.y, (bottomright.x - topleft.x)/2);
+	Square bounds(img, mp.x, mp.y, (bottomright.x - topleft.x)/2);
 
 	for (int y = bounds.topLeft().y; y <= bounds.bottomRight().y; ++y)
 	{
@@ -312,7 +305,7 @@ double Box::boxColor() const
 			    x >= lineFunctionX(topleft,    bottomleft,  y) &&
 			    x <= lineFunctionX(topright,   bottomright, y))
 			{
-				if (img->black(Coord(x,y)))
+				if (img.black(Coord(x,y)))
 					++black;
 
 				++total;
@@ -331,7 +324,10 @@ double Box::boxColor() const
 // pixel. Then, go to the previous pixel if it's not black, otherwise
 // continue looking back until we hit a white pixel. If we've gone
 // through all of them, return -1.
-int Box::findEdge(const Coord& p, int label, const Blobs& blobs) const
+//
+// If we've been to pixel before, go back till we can go some place new.
+int Box::findEdge(const Coord& p, int label,
+	const std::vector<Coord>& path) const
 {
 	typedef std::array<Coord, 8>::size_type size_type;
 	
@@ -371,7 +367,7 @@ int Box::findEdge(const Coord& p, int label, const Blobs& blobs) const
 // direction) we have been going up, right, down, or left (up as in matrix indexes
 // 0-2, right 2-4, ...). Whichever one has been most common is the general direction.
 Direction Box::findDirection(const Forget<int>& f, const Coord& p,
-	int label, const Blobs& blobs) const
+	int label, const std::vector<Coord>& path) const
 {
 	Coord lookahead = p;
 	std::vector<int> movements(std::ceil(1.0*PIXEL_RECALL/2));
@@ -379,7 +375,7 @@ Direction Box::findDirection(const Forget<int>& f, const Coord& p,
 	// Look ahead
 	for (int& m : movements)
 	{
-		m = findEdge(lookahead, label, blobs);
+		m = findEdge(lookahead, label, path);
 
 		if (m == -1)
 			break;

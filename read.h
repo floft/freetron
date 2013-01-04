@@ -21,7 +21,7 @@ bool vertical(const std::vector<Coord>& boxes,
 	const int start_box, const int end_box);
 
 // Determine ID number from boxes 2-11
-int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData* data);
+int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData& data);
 
 // Determine answer black from max colors
 double answerBlack(const Pixels& img, const std::vector<Coord>& boxes,

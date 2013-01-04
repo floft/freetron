@@ -68,30 +68,32 @@ double averageColor(const Pixels& img,
 // Determine if it's a box and calculate midpoint, width, and height
 class Box
 {
-	// Dimensions of image
-	int max_x = 0;
-	int max_y = 0;
 	// Width/height of box
 	int w = 0;
 	int h = 0;
+
 	// Aspect ratio of this "box"
 	double ar = 0;
+
 	// Whether or not we have discovered the corners
 	bool possibly_valid = false;
-	// The image	TODO: add const
-	Pixels* img = nullptr;
+
 	// The calculated points
 	Coord mp, topleft, topright, bottomleft, bottomright;
+	
+	// TODO: const
+	Pixels& img;
+	const Blobs& blobs;
+
 	// Store diagonal information
-	BoxData* data = nullptr;
+	BoxData& data;
 
 	// Used to walk the edge of a box. Relative coordinates
 	// around the current position.
 	static const std::array<Coord, 8> matrix;
 
 public:
-	Box() { } // Only used as a placeholder, then copy another box to it
-	Box(Pixels* pixels, const Blobs& blobs, const Coord& point, BoxData* data);
+	Box(Pixels& pixels, const Blobs& blobs, const Coord& point, BoxData& data);
 
 	bool valid();
 	inline int width() const  { return w; }
@@ -111,12 +113,13 @@ private:
 
 	// Find next pixel to go to when walking edge, returns index of matrix
 	// or -1 if all are black
-	int findEdge(const Coord& p, int label, const Blobs& blobs) const;
+	int findEdge(const Coord& p, int label,
+		const std::vector<Coord>& path) const;
 
 	// Determine what direction we're going from the previous movements
 	// and the next few
 	Direction findDirection(const Forget<int>& f, const Coord& p,
-		int label, const Blobs& blobs) const;
+		int label, const std::vector<Coord>& path) const;
 };
 
 #endif
