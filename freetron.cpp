@@ -28,6 +28,7 @@
 #include "boxes.h"
 #include "box.h"
 #include "threading.h"
+#include "log.h"
 
 void help()
 {
@@ -117,7 +118,9 @@ Info parseImage(Pixels* image)
 			image->save(s.str());
 		}
 
-		std::cerr << "Error on thread #" << thread_id << ": " << error.what() << std::endl;
+		std::ostringstream msg;
+		msg << "thread #" << thread_id << " - " << error.what();
+		log(msg.str());
 	}
 
 	return Info(thread_id);
@@ -145,12 +148,16 @@ int main(int argc, char* argv[])
 	}
 	catch (const std::runtime_error& error)
 	{
-		std::cerr << "Error: " << error.what() << std::endl;
+		log(error.what());
 		return 1;
 	}
 	catch (const PoDoFo::PdfError& error)
 	{
 		error.PrintErrorMsg();
+
+		if (!DEBUG)
+			log(error.what());
+
 		return error.GetError();
 	}
 	

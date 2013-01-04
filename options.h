@@ -5,8 +5,9 @@
 #ifndef H_OPTIONS
 #define H_OPTIONS
 
-// Both are for size_type
+#include <string>
 #include <vector>
+
 #include "data.h"
 
 typedef std::vector<int>::size_type   vsize_int;
@@ -14,9 +15,13 @@ typedef std::vector<Coord>::size_type vsize_coord;
 
 // Allow easy debugging. When true we will save debug0.png, debug1.png, etc. for the
 // PDF pages processed with marks of size MARK_SIZE and color MARK_COLOR.
-static const bool DEBUG = true;
+static const bool DEBUG = false;
 static const int MARK_SIZE = 10;
 static const unsigned char MARK_COLOR = 127;
+
+// When in debug mode, we'll write all messages to the screen. When not, we'll write
+// to this log file.
+static std::string LOG_FILE = "freetron.log";
 
 // The aspect ratio of the black boxes calculated from 49/18, width/height.
 // This is used to verify that we have a valid box.

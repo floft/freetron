@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <algorithm>
 
+#include "log.h"
 #include "data.h"
 #include "blobs.h"
 #include "math.h"
@@ -139,6 +140,9 @@ private:
 	// and the next few
 	Direction findDirection(const Forget<int>& f, const Coord& p,
 		const std::vector<Coord>& path) const;
+	
+	// Update corners with this point if this is a change in direction
+	void updateCorners(Direction prev, Direction current, const Coord& p);
 };
 
 #endif

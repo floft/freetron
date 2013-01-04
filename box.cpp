@@ -89,8 +89,8 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
 
 	if (label == Blobs::default_label)
 	{
-		std::cerr << blobs.size() << " " << label << " " << point << " " << img.width() << " " << img.height() << std::endl;
-		throw std::runtime_error("box can't be created from default label");
+		log("box can't be created from default label");
+		return;
 	}
 	
 	// Keep track of previous points. If we go to one again, give up. Otherwise
@@ -133,9 +133,10 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
 
 		// Ran out of options (shouldn't happen?)
 		if (edge.index == -1)
-			throw std::runtime_error("ran out of options on edge");
-
-		// TODO: make that throw a "return"
+		{
+			log("ran out of options on edge");
+			return;
+		}
 
 		// Go to new position (note that edge.point will be position unless
 		// we had to retrace our steps a ways)
@@ -145,52 +146,26 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
 
 		// We've walked around the entire object now
 		if (position == end)
+		{
+			// Check for last turn, see if first direction was different
+			updateCorners(dir, Direction::TR, position);
+
 			break;
-		
-		// Walk until this point since we want to make sure we get the final corner
-		if (iterations == PIXEL_RECALL)
-			end = position;
+		}
 		
 		// New direction
 		dir_prev = dir;
 		dir = findDirection(previous, position, path);
+		updateCorners(dir_prev, dir, position);
 
 		if (dir == Direction::Unknown)
 			dir = dir_prev;
-
-		// Save this point as a corner
-		if (dir_prev == Direction::TL && dir == Direction::TR)
-			topleft = position;
-		else if (dir_prev == Direction::TR && dir == Direction::BR)
-			topright = position;
-		else if (dir_prev == Direction::BR && dir == Direction::BL)
-			bottomright = position;
-		else if (dir_prev == Direction::BL && dir == Direction::TL)
-			bottomleft = position;
 
 		// If we've gone more than the diagonal, we're definitely not in a box
 		if (data.diag != 0 && distance(point, position) > data.diag+DIAG_ERROR)
 			return;
 		
 		++iterations;
-	}
-
-	// Check for last turn
-	if (path.size() > 0)
-	{
-		dir_prev = dir;
-		dir = findDirection(previous, path[0], path);
-
-		// Save this point as a corner
-		if (dir_prev == Direction::TL && dir == Direction::TR)
-			topleft = position;
-		else if (dir_prev == Direction::TR && dir == Direction::BR)
-			topright = position;
-		else if (dir_prev == Direction::BR && dir == Direction::BL)
-			bottomright = position;
-		else if (dir_prev == Direction::BL && dir == Direction::TL)
-			bottomleft = position;
-
 	}
 
 	// Looks like we have a quadrilateral, it might be a box
@@ -208,6 +183,19 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
 	img.mark(bottomright);*/
 
 	if (test) std::cout << "MP: " << mp << std::endl;
+}
+
+// Save this point as a corner
+void Box::updateCorners(Direction prev, Direction current, const Coord& p)
+{
+	if (prev == Direction::TL && current == Direction::TR)
+		topleft = p;
+	else if (prev == Direction::TR && current == Direction::BR)
+		topright = p;
+	else if (prev == Direction::BR && current == Direction::BL)
+		bottomright = p;
+	else if (prev == Direction::BL && current == Direction::TL)
+		bottomleft = p;
 }
 
 bool Box::valid()
@@ -336,7 +324,6 @@ EdgePair Box::findEdge(const Coord& p, const std::vector<Coord>& path) const
 	typedef std::vector<Coord>::size_type size_type;
 	
 	int index = -1;
-	int loops = 0;
 
 	// Start at this point
 	Coord position = p;
@@ -347,11 +334,6 @@ EdgePair Box::findEdge(const Coord& p, const std::vector<Coord>& path) const
 	// Keep going backwards until we find one with another option
 	while (true)
 	{
-		if (loops > 0)
-			std::cout << position << " " << path_index << " " << path.back() << std::endl;
-
-		++loops;
-
 		index = findIndex(position, path);
 
 		// We found an option!

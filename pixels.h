@@ -7,7 +7,7 @@
 #ifndef H_PIXELS
 #define H_PIXELS
 
-#include <mutex> // Lock needed for Pixels.save()
+#include <mutex>
 #include <cmath>
 #include <vector>
 #include <string>
