@@ -41,6 +41,17 @@ enum class Direction
 	Unknown, TL, TR, BL, BR
 };
 
+// Used to return both point to jump to (if we had to go back a ways
+// at a dead end) and the next direction to go
+struct EdgePair
+{
+	Coord point;
+	int index;
+
+	EdgePair(const Coord& p, int i)
+		:point(p), index(i) { }
+};
+
 // For debugging...
 std::ostream& operator<<(std::ostream& os, const Direction& d);
 
@@ -85,6 +96,9 @@ class Box
 	Pixels& img;
 	const Blobs& blobs;
 
+	// Label of this pixel
+	int label = Blobs::default_label;
+
 	// Store diagonal information
 	BoxData& data;
 
@@ -111,15 +125,20 @@ private:
 	// Determine average color of all pixels within corners of box
 	double boxColor() const;
 
+	// Find the next pixel on edge by finding index of matrix used to move, or
+	// if no available locations, moving back through our history till we can move
+	// and returning that point and the index of the matrix to use to move.
+	EdgePair findEdge(const Coord& p, const std::vector<Coord>& path) const;
+	
 	// Find next pixel to go to when walking edge, returns index of matrix
 	// or -1 if all are black
-	int findEdge(const Coord& p, int label,
-		const std::vector<Coord>& path) const;
+	int findIndex(const Coord& p, const std::vector<Coord>& path,
+		bool check_path = true) const;
 
 	// Determine what direction we're going from the previous movements
 	// and the next few
 	Direction findDirection(const Forget<int>& f, const Coord& p,
-		int label, const std::vector<Coord>& path) const;
+		const std::vector<Coord>& path) const;
 };
 
 #endif

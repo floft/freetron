@@ -2,7 +2,7 @@
 
 // Find top left and bottom right box. Then, determine slope of these two
 // and return the amount to rotate.
-double findRotation(Pixels& img, const std::vector<Coord>& boxes, Coord& ret_coord)
+double findRotation(const Pixels& img, const std::vector<Coord>& boxes, Coord& ret_coord)
 {
 	if (boxes.size() < ROTATE_TOP || boxes.size() < ROTATE_BOTTOM)
 		return 0;

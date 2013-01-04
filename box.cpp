@@ -85,7 +85,7 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
 	:img(img), blobs(blobs), data(data)
 {
 	// Current label so we only walk around this object
-	const int label = blobs.label(point);
+	label = blobs.label(point);
 
 	if (label == Blobs::default_label)
 	{
@@ -105,8 +105,8 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
 	// point if the pixel above it was black)
 	Coord position(point.x, point.y-1);
 	
-	// End PIXEL_RECALL pixels in
-	Coord end;
+	// End where we started
+	Coord end = position;
 
 	// Direction we're walking
 	Direction dir = Direction::TR;
@@ -125,44 +125,35 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
 	// Note: "break" gets out of the loop, "return" gives up since this isn't a box
 	while (iterations < MAX_ITERATIONS)
 	{
-		++iterations;
-
 		if (test)
 			std::cout << position << " " << dir << std::endl;
 
 		// Find next pixel to go to
-		int index = findEdge(position, label, path);
+		EdgePair edge = findEdge(position, path);
 
-		// All black, should never happen since we already analyzed the image (Blobs)
-		if (index == -1)
-			throw std::runtime_error("all surrounding pixels are black");
+		// Ran out of options (shouldn't happen?)
+		if (edge.index == -1)
+			throw std::runtime_error("ran out of options on edge");
 
-		// Go to new position
-		position += matrix[index];
-		previous.remember(index);
+		// TODO: make that throw a "return"
+
+		// Go to new position (note that edge.point will be position unless
+		// we had to retrace our steps a ways)
+		position = edge.point+matrix[edge.index];
+		previous.remember(edge.index);
+		path.push_back(position);
+
+		// We've walked around the entire object now
+		if (position == end)
+			break;
 		
-		// Really start after a few pixels
+		// Walk until this point since we want to make sure we get the final corner
 		if (iterations == PIXEL_RECALL)
-		{
 			end = position;
-		}
-		else if (iterations > PIXEL_RECALL)
-		{
-			// We've walked around the entire object now
-			if (position == end)
-				break;
-
-			// Check if we're going in circles (reversed since most likely we're
-			// going back to recent pixels)
-			if (std::find(path.rbegin(), path.rend(), position) != path.rend())
-				return;
-		
-			path.push_back(position);
-		}
 		
 		// New direction
 		dir_prev = dir;
-		dir = findDirection(previous, position, label, path);
+		dir = findDirection(previous, position, path);
 
 		if (dir == Direction::Unknown)
 			dir = dir_prev;
@@ -180,6 +171,26 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
 		// If we've gone more than the diagonal, we're definitely not in a box
 		if (data.diag != 0 && distance(point, position) > data.diag+DIAG_ERROR)
 			return;
+		
+		++iterations;
+	}
+
+	// Check for last turn
+	if (path.size() > 0)
+	{
+		dir_prev = dir;
+		dir = findDirection(previous, path[0], path);
+
+		// Save this point as a corner
+		if (dir_prev == Direction::TL && dir == Direction::TR)
+			topleft = position;
+		else if (dir_prev == Direction::TR && dir == Direction::BR)
+			topright = position;
+		else if (dir_prev == Direction::BR && dir == Direction::BL)
+			bottomright = position;
+		else if (dir_prev == Direction::BL && dir == Direction::TL)
+			bottomleft = position;
+
 	}
 
 	// Looks like we have a quadrilateral, it might be a box
@@ -319,44 +330,69 @@ double Box::boxColor() const
 		return 0;
 }
 
-// Find the next white pixel to go to by looping through the matrix.
-// Look through the matrix starting from index 0 until we hit a black
-// pixel. Then, go to the previous pixel if it's not black, otherwise
-// continue looking back until we hit a white pixel. If we've gone
-// through all of them, return -1.
-//
 // If we've been to pixel before, go back till we can go some place new.
-int Box::findEdge(const Coord& p, int label,
-	const std::vector<Coord>& path) const
+EdgePair Box::findEdge(const Coord& p, const std::vector<Coord>& path) const
+{
+	typedef std::vector<Coord>::size_type size_type;
+	
+	int index = -1;
+	int loops = 0;
+
+	// Start at this point
+	Coord position = p;
+
+	// If that doesn't work, start at the last pixel
+	size_type path_index = (path.size()>0)?(path.size()-1):0;
+
+	// Keep going backwards until we find one with another option
+	while (true)
+	{
+		if (loops > 0)
+			std::cout << position << " " << path_index << " " << path.back() << std::endl;
+
+		++loops;
+
+		index = findIndex(position, path);
+
+		// We found an option!
+		if (index != -1)
+			break;
+
+		// We ran out of options
+		if (path_index == 0)
+			break;
+		
+		// Go back one pixel
+		position = path[path_index];
+		--path_index;
+	}
+
+	return EdgePair(position, index);
+}
+
+// Loop through the matrix looking for the first black pixel with a white (not
+// part of this object) pixel previous to it that we haven't been to. Return -1
+// if there's no options (e.g. white pixel in middle of black ring).
+int Box::findIndex(const Coord& p, const std::vector<Coord>& path, bool check_path) const
 {
 	typedef std::array<Coord, 8>::size_type size_type;
 	
-	int index = 0;
 	int result = -1;
-	size_type checked = 0;
 
-	// If we've checked them all, give up
-	while (checked < matrix.size())
+	for (size_type i = 0; i < matrix.size(); ++i)
 	{
-		if (blobs.label(p+matrix[index]) == label)
+		// Back one pixel with looping, i.e. 0-1 = 7
+		const int back = (i==0)?(matrix.size()-1):(i-1);
+
+		const Coord current  = p+matrix[i];
+		const Coord previous = p+matrix[back];
+
+		if (blobs.label(current) == label && blobs.label(previous) != label &&
+			(!check_path || std::find(path.rbegin(), path.rend(), previous) == path.rend()))
 		{
-			// Loop around (0-1 = 7)
-			int previous = (index==0)?(matrix.size()-1):(index-1);
-
-			if (blobs.label(p+matrix[previous]) != label)
-			{
-				result = previous;
-				break;
-			}
-
-			index = previous;
+			result = back;
+			break;
 		}
-		else
-		{
-			++index;
-		}
-
-		++checked;
 	}
 
 	return result;
@@ -367,7 +403,7 @@ int Box::findEdge(const Coord& p, int label,
 // direction) we have been going up, right, down, or left (up as in matrix indexes
 // 0-2, right 2-4, ...). Whichever one has been most common is the general direction.
 Direction Box::findDirection(const Forget<int>& f, const Coord& p,
-	int label, const std::vector<Coord>& path) const
+	const std::vector<Coord>& path) const
 {
 	Coord lookahead = p;
 	std::vector<int> movements(std::ceil(1.0*PIXEL_RECALL/2));
@@ -375,7 +411,9 @@ Direction Box::findDirection(const Forget<int>& f, const Coord& p,
 	// Look ahead
 	for (int& m : movements)
 	{
-		m = findEdge(lookahead, label, path);
+		// false because we don't care if we've been there before, when we get
+		// back to the beginning we will have gone there
+		m = findIndex(lookahead, path, false);
 
 		if (m == -1)
 			break;

@@ -3,7 +3,6 @@
  *
  * Todo:
  *   - Decrease memory usage (take into consideration when creating threads?)
- *   - Fix algorithm to walk edge on box with stray pixel in cat1.pdf
  *   - Use bottom boxes to find bubbles
  *   - Pass in const Pixels& wherever possible
  *   - Develop better algorithm for finding if bubble is filled in
