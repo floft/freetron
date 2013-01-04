@@ -230,7 +230,7 @@ bool Box::valid()
 			data.diag == 0 ||
 			(real_diag >= data.diag-DIAG_ERROR && real_diag <= data.diag+DIAG_ERROR) // Use found valid diagonal
 		) &&
-		boxColor() > MIN_BLACK)	// A black box
+		validBoxColor()) // Black enough in box and white enough around box
 	{
 		img.mark(topleft);
 		img.mark(topright);
@@ -288,34 +288,61 @@ Coord Box::midPoint(const Coord& p1, const Coord& p2) const
 	return Coord((p1.x+p2.x)/2, (p1.y+p2.y)/2);
 }
 
-// Get average color of pixels within the corners of the box
-double Box::boxColor() const
+// Get average color of pixels within the corners of the box and also the average
+// color of the pixels WHITE_SEARCH outside of the box.
+bool Box::validBoxColor() const
 {
-	int black = 0;
-	int total = 0;
-	Square bounds(img, mp.x, mp.y, (bottomright.x - topleft.x)/2);
+	int inside_black  = 0;
+	int inside_total  = 0;
+	int around_black = 0;
+	int around_total = 0;
+
+	// Points of box WHITE_SEARCH larger this box
+	const Coord tl = Coord(topleft.x-WHITE_SEARCH,
+		lineFunctionY(topleft, mp, topleft.x-WHITE_SEARCH));
+	const Coord bl = Coord(bottomleft.x-WHITE_SEARCH,
+		lineFunctionY(bottomleft, mp, bottomleft.x-WHITE_SEARCH));
+	const Coord tr = Coord(topright.x+WHITE_SEARCH,
+		lineFunctionY(topright, mp, topright.x+WHITE_SEARCH));
+	const Coord br = Coord(bottomright.x+WHITE_SEARCH,
+		lineFunctionY(bottomright, mp, bottomright.x+WHITE_SEARCH));
+
+	Square bounds(img, mp.x, mp.y, (br.x - tl.x)/2);
 
 	for (int y = bounds.topLeft().y; y <= bounds.bottomRight().y; ++y)
 	{
 		for (int x = bounds.topLeft().x; x <= bounds.bottomRight().x; ++x)
 		{
+			// Inside box
 			if (y >= lineFunctionY(topleft,    topright,    x) &&
 			    y <= lineFunctionY(bottomleft, bottomright, x) &&
 			    x >= lineFunctionX(topleft,    bottomleft,  y) &&
 			    x <= lineFunctionX(topright,   bottomright, y))
 			{
 				if (img.black(Coord(x,y)))
-					++black;
+					++inside_black;
 
-				++total;
+				++inside_total;
+			}
+			// In area around box
+			else if (y >= lineFunctionY(tl, tr, x) &&
+				 y <= lineFunctionY(bl, br, x) &&
+				 x >= lineFunctionX(tl, bl, y) &&
+				 x <= lineFunctionX(tr, br, y))
+			{
+				if (img.black(Coord(x,y)))
+					++around_black;
+
+				++around_total;
 			}
 		}
 	}
 
-	if (total > 0)
-		return 1.0*black/total;
-	else
-		return 0;
+	// Percentage black inside box and around box
+	const double inside = (inside_total>0)?(1.0*inside_black/inside_total):0;
+	const double around = (around_total>0)?(1.0*around_black/around_total):0;
+
+	return (inside > MIN_BLACK && around < MAX_BLACK);
 }
 
 // If we've been to pixel before, go back till we can go some place new.

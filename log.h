@@ -21,6 +21,8 @@ enum class LogType
 
 std::ostream& operator<<(std::ostream& os, const LogType& t);
 
-void log(const std::string& msg, const LogType prefix =  LogType::Error);
+// err will write to std::cerr when debugging is enabled
+void log(const std::string& msg, const LogType prefix = LogType::Error,
+	const bool err = true);
 
 #endif

@@ -26,6 +26,7 @@ class Pixels
 	int w;
 	int h;
 	bool loaded;
+	std::string fn;
 
 	// Lock this so that only one thread can read an image or save()
 	// OpenIL/DevIL is not multithreaded
@@ -33,11 +34,12 @@ class Pixels
 
 public:
 	Pixels(); // Useful for placeholder
-	Pixels(ILenum type, const char* lump, const int size);
+	Pixels(ILenum type, const char* lump, const int size, const std::string& fn = "");
 
 	inline bool valid()  const { return loaded; }
 	inline int  width()  const { return w; }
 	inline int  height() const { return h; }
+	inline const std::string& filename() const { return fn; }
 
 	// This doesn't extend the image at all. If rotation and points
 	// are determined correctly, it won't rotate out of the image.

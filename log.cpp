@@ -3,13 +3,14 @@
 // std::localtime not thread safe
 static std::mutex localtime_lock;
 
-void log(const std::string& msg, const LogType prefix)
+void log(const std::string& msg, const LogType prefix, const bool err)
 {
-	if (DEBUG)
+	if (DEBUG && err)
 	{
 		std::cerr << prefix << ": " << msg << std::endl;
 	}
-	else
+
+	if (LOGGING)
 	{
 		// std::localtime isn't thread safe
 		std::unique_lock<std::mutex> lck(localtime_lock);

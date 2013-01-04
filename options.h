@@ -19,8 +19,9 @@ static const bool DEBUG = true;
 static const int MARK_SIZE = 10;
 static const unsigned char MARK_COLOR = 127;
 
-// When in debug mode, we'll write all messages to the screen. When not, we'll write
-// to this log file.
+// Whether to write to a log file, and the file we will write to if true. If enabled,
+// the log messages written to the screen in debug mode will be written to this file.
+static const bool LOGGING = true;
 static std::string LOG_FILE = "freetron.log";
 
 // The aspect ratio of the black boxes calculated from 49/18, width/height.
@@ -30,6 +31,11 @@ static const double ASPECT = 2.722;
 // Minimum percent of pixels in a supposed box needing to be black to be
 // considered a box. This is between 0 and 1.
 static const double MIN_BLACK = 0.75;
+
+// Maximum percent of pixels that can be black in the region around a box, and
+// what sized region around box to check in pixels.
+static const double MAX_BLACK = 1-MIN_BLACK;
+static const int WHITE_SEARCH = 5;
 
 // Average RGB considered black. Currently the colors are stored in a vector
 // of chars, so 128 is 50% of 256. (Then -1 since it's zero-based.)

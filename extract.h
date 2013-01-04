@@ -43,9 +43,9 @@ enum class ColorSpace
 	RGB	// PNM6
 };
 
-std::vector<Pixels> extract(std::string filename);
+std::vector<Pixels> extract(const std::string& filename);
 Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
-	const ColorSpace colorspace);
+	const ColorSpace colorspace, const std::string& filename);
 
 // Debugging
 std::ostream& operator<<(std::ostream& os, const PixelType& t);

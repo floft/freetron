@@ -3,9 +3,10 @@
  *
  * Todo:
  *   - Decrease memory usage (take into consideration when creating threads?)
+ *   - Develop better algorithm for finding if bubble is filled in
+ *
  *   - Use bottom boxes to find bubbles
  *   - Pass in const Pixels& wherever possible
- *   - Develop better algorithm for finding if bubble is filled in
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe
  *      start processing other pages after key has been processed while reading
  *      other images
@@ -119,7 +120,7 @@ Info parseImage(Pixels* image)
 		}
 
 		std::ostringstream msg;
-		msg << "thread #" << thread_id << " - " << error.what();
+		msg << "thread #" << thread_id << ", " << image->filename() << " - " << error.what();
 		log(msg.str());
 	}
 
@@ -140,22 +141,24 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	std::string filename = argv[1];
+
 	try
 	{
 		// Get the images from the PDF
-		images = extract(argv[1]);
+		images = extract(filename);
 	}
 	catch (const std::runtime_error& error)
 	{
-		log(error.what());
+		log(filename + ", " + error.what());
 		return 1;
 	}
 	catch (const PoDoFo::PdfError& error)
 	{
 		error.PrintErrorMsg();
 
-		if (!DEBUG)
-			log(error.what());
+		// Don't write this to screen
+		log(filename + ", " + error.what(), LogType::Error, false);
 
 		return error.GetError();
 	}

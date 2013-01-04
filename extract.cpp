@@ -1,6 +1,6 @@
 #include "extract.h"
 
-std::vector<Pixels> extract(std::string filename)
+std::vector<Pixels> extract(const std::string& filename)
 {
 	std::vector<Pixels> images;
 	ColorSpace colorspace;
@@ -50,18 +50,18 @@ std::vector<Pixels> extract(std::string filename)
 					std::string name = obj->GetName().GetName();
 
 					if(name == "DCTDecode")
-						images.push_back(readPDFImage(*it, PixelType::JPG, colorspace));
+						images.push_back(readPDFImage(*it, PixelType::JPG, colorspace, filename));
 					else if (name == "CCITTFaxDecode")
-						images.push_back(readPDFImage(*it, PixelType::TIF, colorspace));
+						images.push_back(readPDFImage(*it, PixelType::TIF, colorspace, filename));
 					// PNM is the default
 					//else if (name == "FlateDecode")
 					//	images.push_back(readPDFImage(*it, PixelType::PNM, colorspace));
 					else
-						images.push_back(readPDFImage(*it, PixelType::PNM, colorspace));
+						images.push_back(readPDFImage(*it, PixelType::PNM, colorspace, filename));
 				}
 				else
 				{
-					images.push_back(readPDFImage(*it, PixelType::PNM, colorspace));
+					images.push_back(readPDFImage(*it, PixelType::PNM, colorspace, filename));
 				}
 
 				document.FreeObjectMemory(*it);
@@ -75,7 +75,7 @@ std::vector<Pixels> extract(std::string filename)
 	return images;
 }
 
-Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type, const ColorSpace colorspace)
+Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type, const ColorSpace colorspace, const std::string& filename)
 {
 	Pixels pixels;
 	const unsigned int width  = object->GetDictionary().GetKey(PoDoFo::PdfName("Width"))->GetNumber();
@@ -84,7 +84,7 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type, const Color
 	if (type == PixelType::JPG)
 	{
 		PoDoFo::PdfMemStream* stream = dynamic_cast<PoDoFo::PdfMemStream*>(object->GetStream());
-		pixels = Pixels(IL_JPG, stream->Get(), stream->GetLength());
+		pixels = Pixels(IL_JPG, stream->Get(), stream->GetLength(), filename);
 	}
 	else if (type == PixelType::TIF)
 	{
@@ -122,7 +122,7 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type, const Color
 
 		delete[] buffer;
 
-		pixels = Pixels(IL_TIF, os.str().c_str(), os.tellp());
+		pixels = Pixels(IL_TIF, os.str().c_str(), os.tellp(), filename);
 	}
 	else
 	{
@@ -150,7 +150,7 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type, const Color
 		std::memcpy(stream, header, s.size());
 		std::memcpy(stream+s.size(), buffer, len);
 
-		pixels = Pixels(IL_PNM, stream, len+s.size());
+		pixels = Pixels(IL_PNM, stream, len+s.size(), filename);
 
 		std::free(buffer);
 		delete[] stream;

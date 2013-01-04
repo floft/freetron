@@ -9,8 +9,8 @@ Pixels::Pixels()
 }
 
 // type is either IL_JPG or IL_PNM in this case
-Pixels::Pixels(ILenum type, const char* lump, const int size)
-	:w(0), h(0), loaded(false)
+Pixels::Pixels(ILenum type, const char* lump, const int size, const std::string& fn)
+	:w(0), h(0), loaded(false), fn(fn)
 {
 	// Only execute in one thread since DevIL/OpenIL doesn't support multithreading
 	std::unique_lock<std::mutex> lck(lock);

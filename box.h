@@ -123,8 +123,10 @@ private:
 	// Find the midpoint between two points
 	Coord midPoint(const Coord& p1, const Coord& p2) const;
 
-	// Determine average color of all pixels within corners of box
-	double boxColor() const;
+	// Determine if average colors of pixels inside the box are greater
+	// than MIN_BLACK and average color of pixels around the box are less
+	// than MAX_BLACK.
+	bool validBoxColor() const;
 
 	// Find the next pixel on edge by finding index of matrix used to move, or
 	// if no available locations, moving back through our history till we can move
