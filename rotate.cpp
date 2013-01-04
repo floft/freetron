@@ -4,11 +4,35 @@
 // and return the amount to rotate.
 double findRotation(const Pixels& img, const std::vector<Coord>& boxes, Coord& ret_coord)
 {
-	if (boxes.size() < ROTATE_TOP || boxes.size() < ROTATE_BOTTOM)
-		return 0;
+	Coord top;
+	Coord bottom;
 
-	Coord top = boxes[ROTATE_TOP];
-	Coord bottom = boxes[ROTATE_BOTTOM];
+	// Set to max large values
+	double min_top_dist    = img.height();
+	double min_bottom_dist = img.height();
+
+	// Top and bottom points
+	const Coord topleft(0, 0);
+	const Coord bottomleft(0, img.height() - 1);
+
+	// Find closest box to top and bottom left
+	for (const Coord& c : boxes)
+	{
+		double dist_top    = distance(c, topleft);
+		double dist_bottom = distance(c, bottomleft);
+
+		if (dist_top < min_top_dist)
+		{
+			top = c;
+			min_top_dist = dist_top;
+		}
+
+		if (dist_bottom < min_bottom_dist)
+		{
+			bottom = c;
+			min_bottom_dist = dist_bottom;
+		}
+	}
 
 	// Determine angle from slope of line going through those two boxes
 	double angle = 0;
