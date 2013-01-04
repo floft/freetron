@@ -2,14 +2,13 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Redo findRotation
- *   - Pass in const Pixels& wherever possible
+ *   - Fix Box::valid bug adding invalid diagonal
  *   - Develop better algorithm for finding if bubble is filled in
  *   - Use dynamic_bitset for storing bools in Pixels
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe
  *      start processing other pages after key has been processed while reading
  *      other images
- *   - Use neural network? Genetic quadrilateral-finding algorithm?
+ *   - Use neural network?
  */
 
 #include <vector>
@@ -54,34 +53,42 @@ Info parseImage(Pixels* image)
 	const int thread_id = static_thread_id++;
 
 	// Box information for this image
-	BoxData data;
+	/*BoxData data;
 
 	// Rotate the image
 	Coord rotate_point;
 	double rotation = findRotation(*image, rotate_point, &data);
 
 	// Negative since the origin is the top-left point
-	if (rotation != 0)
-		image->rotate(-rotation, rotate_point);
+	//if (rotation != 0)
+	//	image->rotate(-rotation, rotate_point);
 
 	// Find all the boxes on the left
 	std::vector<Coord> boxes = findBoxes(*image, &data);
 
 	// Find ID number
-	int id = findID(*image, boxes, &data);
+	int id = findID(*image, boxes, &data);*/
+	
+	// Find a line long enough to rotate using
+	Coord rotate_point;
+	double rotation = findRotation(*image, rotate_point);
+	std::cout << rotation << std::endl;
+
+	//if (rotation != 0)
+	//	img->rotate(-rotation, rotate_point);
 
 	// Debug information
 	if (DEBUG)
 	{
-		for (const Coord& box : boxes)
-			image->mark(box);
+		//for (const Coord& box : boxes)
+		//	image->mark(box);
 		
 		std::ostringstream s;
 		s << "debug" << thread_id << ".png";
 		image->save(s.str());
 	}
 
-	return Info(thread_id, id);
+	return Info(thread_id, 0);
 }
 
 int main(int argc, char* argv[])

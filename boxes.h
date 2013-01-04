@@ -19,6 +19,7 @@
 bool box_sort(const Coord& v1, const Coord& v2);
 
 // Find boxes in the image returns { { midpoint_x, midpoint_y }, ... }
+// TODO: add const
 std::vector<Coord> findBoxes(Pixels& img, BoxData* data);
 
 #endif

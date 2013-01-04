@@ -12,9 +12,19 @@
 #include "options.h"
 #include "pixels.h"
 #include "math.h"
-#include "box.h"
 
-// Find top-left and bottom-left boxes and give rotation to make them vertical TODO: add const
-double findRotation(Pixels& img, Coord& ret_coord, BoxData* data);
+// Find top-left and bottom-left boxes and give rotation to make them vertical
+// TODO: make this const
+//double findRotation(Pixels& img, Coord& ret_coord, BoxData* data);
+
+// Rotate the image by finding a line at least ROTATE_LEN pixels long
+double findRotation(Pixels& img, Coord& ret_coord);
+
+int goUp(const Pixels& img, const Coord& p, const Coord& orig);
+int goLeft(const Pixels& img, const Coord& p, const Coord& orig);
+int goDown(const Pixels& img, const Coord& p, const Coord& orig);
+int goRight(const Pixels& img, const Coord& p, const Coord& orig);
+
+Coord findBottom(const Pixels& img, const Coord& point);
 
 #endif

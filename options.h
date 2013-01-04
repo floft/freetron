@@ -14,6 +14,7 @@ const bool DEBUG = true;		// Output test image
 const int  MARK_SIZE = 10;		// Size of lines output in debug image
 const unsigned char MARK_COLOR = 127;	// Grey color
 
+const int    ROTATE_LEN  = 300;		// Minimum length of the line in pixels that will be used to rotate the image
 const double ASPECT      = 2.722;	// Aspect ratio of black boxes Width/Height (calculated with 49/18)
 const double MIN_BLACK   = 0.75;	// Minimum percent (0-1) of pixels black in circle to be considered a box
 const int    GRAY_SHADE  = 127;		// Average RGB considered black

@@ -6,7 +6,7 @@ bool box_sort(const Coord& v1, const Coord& v2)
 	return (v1.y < v2.y);
 }
 
-// Find all the boxes in the image	TODO: add const
+// Find all the boxes in the image
 std::vector<Coord> findBoxes(Pixels& img, BoxData* data)
 {
 	typedef std::vector<Coord>::size_type size_type;

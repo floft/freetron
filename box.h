@@ -57,15 +57,20 @@ class Box
 	int h = 0;
 	// Aspect ratio of this "box"
 	double ar = 0;
-	// The image, but don't ever delete this... TODO: add const
+	// The image, but don't ever delete this...
+	// TODO: add const
 	Pixels* img = nullptr;
-	// The calculated points
-	Coord mp, topleft, topright, bottomleft, bottomright;
+	// The calculated midpoint
+	Coord mp;
 	// Store diagonal information
 	BoxData* data;
 
+	// TODO: remove this
+	std::vector<Coord> coords;
+
 public:
 	Box() { } // Only used as a placeholder, then copy another box to it
+	// TODO: add const
 	Box(Pixels* pixels, const Coord& point, BoxData* data);
 
 	bool valid();
@@ -83,9 +88,6 @@ private:
 
 	// Find most dense region of black around a point, i.e. get into the box
 	Coord findDark(const Coord& p) const;
-
-	// Determine average color of all pixels within corners of box
-	double boxColor() const;
 
 	// Go a direction until MAX_ERROR white pixels, return last black point
 	int goUp(const Coord& p, const Coord& orig) const;
