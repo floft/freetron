@@ -66,7 +66,7 @@ Info parseImage(Pixels* image)
 		// Find all the boxes
 		std::vector<Coord> boxes = findBoxes(*image, data);
 
-		if (boxes.size() != TOTAL_BOXES)
+		if (DEBUG && boxes.size() != TOTAL_BOXES)
 		{
 			for (const Coord& box : boxes)
 				image->mark(box);
@@ -130,7 +130,6 @@ int main(int argc, char* argv[])
 {
 	ilInit();
 	std::vector<Pixels> images;
-	std::vector<Info> results;
 
 	// Simple help message
 	if (argc != 2 || (argc >= 2 &&
@@ -162,7 +161,7 @@ int main(int argc, char* argv[])
 	}
 	
 	// Find ID of each page in separate thread
-	results = threadForEach(images, parseImage);
+	std::vector<Info> results = threadForEach(images, parseImage);
 
 	// Parse results
 	for (const Info& i : results)

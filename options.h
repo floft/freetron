@@ -15,7 +15,7 @@ typedef std::vector<Coord>::size_type vsize_coord;
 
 // Allow easy debugging. When true we will save debug0.png, debug1.png, etc. for the
 // PDF pages processed with marks of size MARK_SIZE and color MARK_COLOR.
-static const bool DEBUG = false;
+static const bool DEBUG = true;
 static const int MARK_SIZE = 10;
 static const unsigned char MARK_COLOR = 127;
 
@@ -87,11 +87,6 @@ static const int PIXEL_RECALL = 5;
 
 // Total number of boxes, to verify we found the right ones
 static const vsize_coord TOTAL_BOXES = 54;
-
-// When finding rotation, use these two boxes. Rotating will make these two boxes perfectly vertical.
-// We won't use the bottom row since they are in the wrong order. TODO: fix this
-static const vsize_coord ROTATE_TOP    = 1;
-static const vsize_coord ROTATE_BOTTOM = 44;
 
 // When determining the student ID, we need to know which boxes correspond to the ID.
 static const int ID_START = 2;
