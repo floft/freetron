@@ -20,6 +20,7 @@
 #include <sstream>
 #include <fstream>
 #include <cstring>
+#include <iostream>
 #include <IL/il.h>
 #include <tiffio.h>
 #include <tiffio.hxx>
@@ -27,15 +28,27 @@
 
 #include "pixels.h"
 
-enum PixelTypes
+enum class PixelType
 {
-	PIXEL_PNM6,	// Default
-	PIXEL_JPG,	// DCTDecode
-	PIXEL_TIF,	// CCITTFaxDecode
-	PIXEL_PNM5	// FlateDecode
+	Unknown,
+	PNM,	// Default
+	JPG,	// DCTDecode
+	TIF,	// CCITTFaxDecode
+};
+
+enum class ColorSpace
+{
+	Unknown,
+	Gray,	// PNM5
+	RGB	// PNM6
 };
 
 std::vector<Pixels> extract(std::string filename);
-Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelTypes type = PixelTypes());
+Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
+	const ColorSpace colorspace);
+
+// Debugging
+std::ostream& operator<<(std::ostream& os, const PixelType& t);
+std::ostream& operator<<(std::ostream& os, const ColorSpace& c);
 
 #endif

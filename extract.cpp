@@ -3,7 +3,9 @@
 std::vector<Pixels> extract(std::string filename)
 {
 	std::vector<Pixels> images;
+	ColorSpace colorspace;
 	PoDoFo::PdfObject* obj = nullptr;
+	PoDoFo::PdfObject* color = nullptr;
 	PoDoFo::PdfMemDocument document(filename.c_str());
 	PoDoFo::TCIVecObjects it = document.GetObjects().begin();
 
@@ -13,10 +15,28 @@ std::vector<Pixels> extract(std::string filename)
 		{
 			PoDoFo::PdfObject* objType = (*it)->GetDictionary().GetKey(PoDoFo::PdfName::KeyType);
 			PoDoFo::PdfObject* objSubType = (*it)->GetDictionary().GetKey(PoDoFo::PdfName::KeySubtype);
-
+			
 			if ((objType    && objType->IsName()    && objType->GetName().GetName() == "XObject") ||
 			    (objSubType && objSubType->IsName() && objSubType->GetName().GetName() == "Image" ))
 			{
+				// Colorspace
+				color = (*it)->GetDictionary().GetKey(PoDoFo::PdfName("ColorSpace"));
+				colorspace = ColorSpace::Unknown;
+
+				if (color->IsReference())
+					color = document.GetObjects().GetObject(color->GetReference());
+
+				if (color && color->IsName())
+				{
+					std::string col = color->GetName().GetName();
+
+					if (col == "DeviceRGB")
+						colorspace = ColorSpace::RGB;
+					else if (col == "DeviceGray")
+						colorspace = ColorSpace::Gray;
+				}
+				
+				// Stream
 				obj = (*it)->GetDictionary().GetKey(PoDoFo::PdfName::KeyFilter);
 
 				// JPEG and Flate are in another array
@@ -24,23 +44,24 @@ std::vector<Pixels> extract(std::string filename)
 				    ((obj->GetArray()[0].IsName() && obj->GetArray()[0].GetName().GetName() == "DCTDecode") ||
 				     (obj->GetArray()[0].IsName() && obj->GetArray()[0].GetName().GetName() == "FlateDecode")))
 					obj = &obj->GetArray()[0];
-				
+
 				if (obj && obj->IsName())
 				{
 					std::string name = obj->GetName().GetName();
 
 					if(name == "DCTDecode")
-						images.push_back(readPDFImage(*it, PIXEL_JPG));
+						images.push_back(readPDFImage(*it, PixelType::JPG, colorspace));
 					else if (name == "CCITTFaxDecode")
-						images.push_back(readPDFImage(*it, PIXEL_TIF));
-					else if (name == "FlateDecode")
-						images.push_back(readPDFImage(*it, PIXEL_PNM5));
+						images.push_back(readPDFImage(*it, PixelType::TIF, colorspace));
+					// PNM is the default
+					//else if (name == "FlateDecode")
+					//	images.push_back(readPDFImage(*it, PixelType::PNM, colorspace));
 					else
-						images.push_back(readPDFImage(*it));
+						images.push_back(readPDFImage(*it, PixelType::PNM, colorspace));
 				}
 				else
 				{
-					images.push_back(readPDFImage(*it));
+					images.push_back(readPDFImage(*it, PixelType::PNM, colorspace));
 				}
 
 				document.FreeObjectMemory(*it);
@@ -54,18 +75,18 @@ std::vector<Pixels> extract(std::string filename)
 	return images;
 }
 
-Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelTypes type)
+Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type, const ColorSpace colorspace)
 {
 	Pixels pixels;
 	const unsigned int width  = object->GetDictionary().GetKey(PoDoFo::PdfName("Width"))->GetNumber();
 	const unsigned int height = object->GetDictionary().GetKey(PoDoFo::PdfName("Height"))->GetNumber();
 
-	if (type == PIXEL_JPG)
+	if (type == PixelType::JPG)
 	{
 		PoDoFo::PdfMemStream* stream = dynamic_cast<PoDoFo::PdfMemStream*>(object->GetStream());
 		pixels = Pixels(IL_JPG, stream->Get(), stream->GetLength());
 	}
-	else if (type == PIXEL_TIF)
+	else if (type == PixelType::TIF)
 	{
 		// Monochrome, otherwise wouldn't have used CCITT
 		const unsigned int bits = 1;
@@ -107,8 +128,9 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelTypes type)
 	{
 		std::ostringstream os;
 
-		// It works. Don't know why GetFilteredCopy outputs a different version.
-		if (type == PIXEL_PNM5)
+		// P5 is graymap (8 bit), P6 is pixmap (24 bit). See: 
+		// http://en.wikipedia.org/wiki/Portable_anymap#File_format_description
+		if (colorspace == ColorSpace::Gray)
 			os << "P5\n";
 		else
 			os << "P6\n";
@@ -129,9 +151,34 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelTypes type)
 		std::memcpy(stream+s.size(), buffer, len);
 
 		pixels = Pixels(IL_PNM, stream, len+s.size());
+
 		std::free(buffer);
 		delete[] stream;
 	}
 
 	return pixels;
+}
+
+// Debugging
+std::ostream& operator<<(std::ostream& os, const PixelType& t)
+{
+	switch (t)
+	{
+		case PixelType::Unknown: return os << "Unknown";
+		case PixelType::PNM: return os << "PNM";
+		case PixelType::JPG: return os << "JPG";
+		case PixelType::TIF: return os << "TIF";
+		default: return os << "Unknown?";
+	}
+}
+
+std::ostream& operator<<(std::ostream& os, const ColorSpace& c)
+{
+	switch (c)
+	{
+		case ColorSpace::Unknown: return os << "Unknown";
+		case ColorSpace::Gray: return os << "Gray";
+		case ColorSpace::RGB: return os << "RGB";
+		default: return os << "Unknown?";
+	}
 }
