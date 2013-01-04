@@ -69,19 +69,10 @@ Pixels::Pixels(ILenum type, const char* lump, const int size)
 	ilDeleteImages(1, &name);
 }
 
-bool Pixels::black(const Coord& c, const bool default_value) const
-{
-	if (c.x >= w || c.y >= h ||
-	    c.x < 0 || c.y < 0)
-		return default_value;
-	
-	return p[c.y][c.x] < GRAY_SHADE;
-}
-
 void Pixels::mark(const Coord& c)
 {
-	if (c.x > 0 && c.y > 0 &&
-	    c.x < w && c.y < h)
+	if (c.x >= 0 && c.y >= 0 &&
+	    c.x < w  && c.y < h)
 		marks.push_back(c);
 }
 
@@ -97,13 +88,13 @@ void Pixels::save(const std::string& filename, bool show_marks) const
 			if (MARK_SIZE > 1)
 			{
 				// Left
-				for (int i = c.x; i > c.x-MARK_SIZE && i > 0; --i)
+				for (int i = c.x; i > c.x-MARK_SIZE && i >= 0; --i)
 					copy[c.y][i] = MARK_COLOR;
 				// Right
 				for (int i = c.x; i < c.x+MARK_SIZE && i < w; ++i)
 					copy[c.y][i] = MARK_COLOR;
 				// Up
-				for (int i = c.y; i > c.y-MARK_SIZE && i > 0; --i)
+				for (int i = c.y; i > c.y-MARK_SIZE && i >= 0; --i)
 					copy[i][c.x] = MARK_COLOR;
 				// Down
 				for (int i = c.y; i < c.y+MARK_SIZE && i < h; ++i)
@@ -184,8 +175,8 @@ void Pixels::rotate(double rad, const Coord& point)
 			const int old_y = smartFloor(trans_y*cos_rad - trans_x*sin_rad) + point.y;
 
 			// Get rid of invalid points
-			if (old_x > 0 && old_y > 0 &&
-			    old_x < w && old_y < h)
+			if (old_x >= 0 && old_y >= 0 &&
+			    old_x < w  && old_y < h)
 				copy[y][x] = p[old_y][old_x];
 		}
 	}
@@ -193,11 +184,12 @@ void Pixels::rotate(double rad, const Coord& point)
 	p = copy;
 
 	// Rotate marks as well
-	marks = rotateVector(marks, point, rad);
+	rotateVector(marks, point, rad);
 }
 
 // Rotate all points in a vector (more or less the same as rotating the image)
-std::vector<Coord> Pixels::rotateVector(std::vector<Coord> v, const Coord& point, double rad) const
+// This is in Pixels since it uses the width and height of an image
+void Pixels::rotateVector(std::vector<Coord>& v, const Coord& point, double rad) const
 {
 	const double sin_rad = std::sin(rad);
 	const double cos_rad = std::cos(rad);
@@ -213,10 +205,8 @@ std::vector<Coord> Pixels::rotateVector(std::vector<Coord> v, const Coord& point
 		const int new_x = std::round(trans_x*cos_rad + trans_y*sin_rad) + point.x;
 		const int new_y = std::round(trans_y*cos_rad - trans_x*sin_rad) + point.y;
 
-		if (new_x > 0 && new_y > 0 &&
+		if (new_x >= 0 && new_y >= 0 &&
 		    new_x < w && new_y < h)
 			m = Coord(new_x, new_y);
 	}
-
-	return v;
 }

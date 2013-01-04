@@ -29,7 +29,8 @@ private:
 	std::vector<Type> items;
 
 public:
-	Forget(int sz) :sz(sz), items(sz) { }
+	Forget(int sz, Type default_value = Type())
+		:sz(sz), items(sz, default_value) { }
 
 	// Standard functions
 	size_type size() const { return sz; }
@@ -38,6 +39,9 @@ public:
 
 	// Number of times we've remembered something
 	int count() const { return ct; }
+
+	// If we want to do anything with these
+	std::vector<Type> dump() const { return items; }
 
 	// Remember new item and forget oldest item
 	void remember(const Type& item)

@@ -114,11 +114,9 @@ private:
 	int findEdge(const Coord& p, int label, const Blobs& blobs) const;
 
 	// Determine what direction we're going from the previous movements
-	Direction findDirection(const Forget<int>& previous) const;
-
-	// See if we are moving in the opposite direction, thus getting into
-	// an infinite loop.
-	bool turnedAround(Direction dir, int index) const;
+	// and the next few
+	Direction findDirection(const Forget<int>& f, const Coord& p,
+		int label, const Blobs& blobs) const;
 };
 
 #endif

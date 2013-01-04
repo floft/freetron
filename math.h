@@ -22,6 +22,8 @@ inline int round(const int x, const int r);
 inline int smartFloor(const double value, const double epsilon = 0.00001);
 inline int lineFunctionX(const Coord& a, const Coord& b, int y);
 inline int lineFunctionY(const Coord& a, const Coord& b, int x);
+inline double slopeYX(const Coord& a, const Coord& b);
+inline double slopeXY(const Coord& a, const Coord& b);
 
 // Standard Deviation:
 //   sqrt(1/n*((x1 - avg)^2 + (x2 - avg)^2 + ... (xn - avg)^2))
@@ -108,19 +110,31 @@ inline int smartFloor(const double value, const double epsilon)
 // y = m(x-x1)+y1
 inline int lineFunctionY(const Coord& a, const Coord& b, int x)
 {
-	if (b.x - a.x == 0)
-		return 0;
-	else    
-		return smartFloor(1.0*(b.y - a.y)/(b.x - a.x)*(x - a.x) + a.y);
+	return smartFloor(slopeYX(a,b)*(x - a.x) + a.y);
 }
 
 // x = (y-y1)/m+x1
 inline int lineFunctionX(const Coord& a, const Coord& b, int y)
 {
+	return smartFloor(slopeXY(a,b)*(y - a.y) + a.x);
+}
+
+// Rise over run
+inline double slopeYX(const Coord& a, const Coord& b)
+{
+	if (b.x - a.x == 0)
+		return 0;
+	else
+		return 1.0*(b.y - a.y)/(b.x - a.x);
+}
+
+// Run over rise
+inline double slopeXY(const Coord& a, const Coord& b)
+{
 	if (b.y - a.y == 0)
 		return 0;
 	else
-		return smartFloor(1.0*(b.x - a.x)/(b.y - a.y)*(y - a.y) + a.x);
+		return 1.0*(b.x - a.x)/(b.y - a.y);
 }
 
 #endif

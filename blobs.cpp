@@ -53,9 +53,7 @@ Blobs::Blobs(const Pixels& img)
 					{
 						// If they are not, make all of the previous object this object
 						if (img.black(p) && labels[y][x] != labels[p.y][p.x])
-						{
 							switchLabel(img, labels[p.y][p.x], labels[y][x]);
-						}
 					}
 				}
 				else
@@ -81,13 +79,9 @@ void Blobs::switchLabel(const Pixels& img, const int old_label, const int new_la
 	// Go between y values of first and last
 	for (int y = old_first.y; y <= old_last.y; ++y)
 	{
+		// This'll be so fast we don't need to check x coordinates
 		for (int x = 0; x < w; ++x)
 		{
-			// On first and last rows, skip beyond first and last x coordinates
-			if ((y == old_first.y && x < old_first.x) ||
-			    (y == old_last.y  && x > old_last.x))
-				continue;
-
 			// Update label
 			if (labels[y][x] == old_label)
 				labels[y][x] = new_label;
@@ -110,8 +104,8 @@ void Blobs::switchLabel(const Pixels& img, const int old_label, const int new_la
 
 int Blobs::label(const Coord& p) const
 {
-	if (p.x > 0 && p.x < w &&
-	    p.y > 0 && p.y < h)
+	if (p.x >= 0 && p.x < w &&
+	    p.y >= 0 && p.y < h)
 		return labels[p.y][p.x];
 	else
 		return default_label;

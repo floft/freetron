@@ -12,9 +12,11 @@ freetron
 *.la
 *.a
 
+# make will regenerate this
+.depends
+
 # Temporary
 *~
 *.png
 *.tif
 images
-

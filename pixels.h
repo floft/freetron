@@ -46,15 +46,24 @@ public:
 
 	// Default is used if coord doesn't exist (which should never happen)
 	// Default to white to assume that this isn't a useful pixel
-	bool black(const Coord& c, const bool default_value = false) const;
+	inline bool black(const Coord& c, const bool default_value = false) const;
 
 	// Used for debugging, marks are written to a copy of the image when saved
 	void mark(const Coord& m);
 	void save(const std::string& filename, const bool show_marks = true) const;
 
 	// Rotate all points in a vector
-	std::vector<Coord> rotateVector(std::vector<Coord> v,
-		const Coord& point, double rad) const;
+	void rotateVector(std::vector<Coord>& v, const Coord& point, double rad) const;
 };
+
+// Used so frequently and so small, so make this inline
+inline bool Pixels::black(const Coord& c, const bool default_value) const
+{
+	if (c.x >= 0 && c.y >= 0 &&
+	    c.x < w  && c.y < h)
+		return p[c.y][c.x] < GRAY_SHADE;
+
+	return default_value;
+}
 
 #endif
