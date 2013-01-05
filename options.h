@@ -16,7 +16,7 @@ typedef std::vector<Coord>::size_type vsize_coord;
 // Allow easy debugging. When true we will save debug0.png, debug1.png, etc. for the
 // PDF pages processed with marks of size MARK_SIZE and color MARK_COLOR.
 static const bool DEBUG = true;
-static const int MARK_SIZE = 10;
+static const int MARK_SIZE = 1;
 static const unsigned char MARK_COLOR = 127;
 
 // Whether to write to a log file, and the file we will write to if true. If enabled,
@@ -40,6 +40,12 @@ static const int WHITE_SEARCH = 5;
 // Average RGB considered black. Currently the colors are stored in a vector
 // of chars, so 128 is 50% of 256. (Then -1 since it's zero-based.)
 static const int GRAY_SHADE = 127;
+
+// When finding the filled in bubbles, look for something as wide as a box with a height
+// calculated from the below aspect ratio. The curve of the bubble is generated from a
+// quarter-circle with it's center BUBBLE_CURVE*width pixels in on each side. Note that
+// searching for the bubbles also uses WHITE_SEARCH to look at the surrounding region.
+static const double BUBBLE_ASPECT = 1.566; // From 47/30
 
 // The error margin in pixels for still considering this form as potentially valid.
 // After we find all boxes, we'll look for the filled in bubbles. If the boxes are

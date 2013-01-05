@@ -20,6 +20,7 @@ inline double max_value(const std::vector<double>& v);
 inline double min_value(const std::vector<double>& v);
 inline int round(const int x, const int r);
 inline int smartFloor(const double value, const double epsilon = 0.00001);
+inline int smartCeil(const double value,  const double epsilon = 0.00001);
 inline int lineFunctionX(const Coord& a, const Coord& b, int y);
 inline int lineFunctionY(const Coord& a, const Coord& b, int x);
 inline double slopeYX(const Coord& a, const Coord& b);
@@ -105,6 +106,12 @@ inline int round(const int x, const int r)
 inline int smartFloor(const double value, const double epsilon)
 {
 	return std::floor(value + epsilon);
+}
+
+// Ceil but after subtracting a bit
+inline int smartCeil(const double value, const double epsilon)
+{
+	return std::ceil(value - epsilon);
 }
 
 // y = m(x-x1)+y1

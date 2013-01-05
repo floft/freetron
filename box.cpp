@@ -116,7 +116,7 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
 	int iterations = 0;
 
 	bool test = false;
-	//if (Square(img, 150, 552, 5).in(point))
+	//if (Square(img, 13, 1963, 5).in(point))
 	//	test = true;
 	
 	// Walk the edge of the box keeping track of the corners to use later. Corners
@@ -177,12 +177,15 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
 	// If we haven't returned already, we might be a box
 	possibly_valid = true;
 
-	/*img.mark(topleft);
-	img.mark(topright);
-	img.mark(bottomleft);
-	img.mark(bottomright);*/
+	if (test)
+	{
+		img.mark(topleft);
+		img.mark(topright);
+		img.mark(bottomleft);
+		img.mark(bottomright);
 
-	if (test) std::cout << "MP: " << mp << std::endl;
+		std::cout << "MP: " << mp << std::endl;
+	}
 }
 
 // Save this point as a corner
@@ -208,13 +211,13 @@ bool Box::valid()
 	const double approx_height = w/ASPECT;
 	const int real_diag = std::ceil(std::sqrt(w*w+h*h));
 
-	/*if (Square(img, 165, 558, 5).in(mp))
+	/*if (Square(img, 22, 1972, 5).in(mp))
 	{
 		std::cout << w << " " << h << " " << approx_height << " " << real_diag << " " << data.diag << std::endl;
 		std::cout << (h >= approx_height-HEIGHT_ERROR && h <= approx_height+HEIGHT_ERROR) << " "
 			  << (std::abs(distance(topleft, bottomright) - distance(topright, bottomleft)) < DIAG_ERROR) << " "
 			  << (real_diag >= MIN_DIAG && real_diag <= MAX_DIAG) << " "
-			  << boxColor() << std::endl;
+			  << validBoxColor() << std::endl;
 	}*/
 
 	// See if the diag is about the right length, if the width and height are about right,

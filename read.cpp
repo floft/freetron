@@ -1,5 +1,35 @@
 #include "read.h"
 
+// Generate bubble from width, BUBBLE_CURVE, BUBBLE_ASPECT, and WHITE_SEARCH
+std::vector<std::vector<bool>> genBubble(int box_width, int box_height)
+{
+	int width  = box_width;
+	int height = smartCeil(box_width/BUBBLE_ASPECT);
+
+	int real_width  = width  + WHITE_SEARCH*2;
+	int real_height = height + WHITE_SEARCH*2;
+
+	std::vector<std::vector<bool>> bubble(real_height, std::vector<bool>(real_width, false));
+
+	// Make box in middle of bubble black
+	const int curve_height = (height - box_height)/2;
+	const int box_start_y = WHITE_SEARCH + curve_height;
+	const int box_end_y   = real_height - box_start_y;
+	const int box_start_x = WHITE_SEARCH;
+	const int box_end_x   = real_width - WHITE_SEARCH;
+
+	for (int y = box_start_y; y < box_end_y; ++y)
+		for (int x = box_start_x; x < box_end_x; ++x)
+			bubble[y][x] = true;
+
+	// Add box sections in between two curved corners
+	//const int curve_width =
+
+	// TODO: finish this
+
+	return bubble;
+}
+
 // See if the boxes are skewed
 bool vertical(const std::vector<Coord>& boxes,
 	const int start_box, const std::vector<Coord>::size_type end_box)

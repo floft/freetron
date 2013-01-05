@@ -25,12 +25,21 @@ std::vector<Coord> findBoxes(Pixels& img, BoxData& data)
 					data.width = box.width();
 				
 				boxes.push_back(box.midpoint());
-
-				// We will still scan boxes multiple times, once for each leftmost point
-				// on a scanline
-				//if (std::find(boxes.begin(), boxes.end(), box.midpoint()) == boxes.end())
 			}
 		}
+	}
+
+	// If we're missing some, estimate their location and see if there's an
+	// object there.
+	if (boxes.size() < TOTAL_BOXES)
+	{
+		// TODO
+	}
+
+	// If we have too many, throw the ones not in line or on the bottom line out
+	if (boxes.size() > TOTAL_BOXES)
+	{
+		// TODO
 	}
 
 	return boxes;

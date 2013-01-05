@@ -2,10 +2,11 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Decrease memory usage (take into consideration when creating threads?)
+ *   - When a box is missing (box #26 on cat22.pdf), calculate supposed position
  *   - Develop better algorithm for finding if bubble is filled in
+ *   - Decrease memory usage (take into consideration when creating threads?)
  *
- *   - Use bottom boxes to find bubbles
+ *   - Use bottom boxes to help find bubbles
  *   - Pass in const Pixels& wherever possible
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe
  *      start processing other pages after key has been processed while reading
