@@ -22,7 +22,7 @@ static const unsigned char MARK_COLOR = 127;
 // Whether to write to a log file, and the file we will write to if true. If enabled,
 // the log messages written to the screen in debug mode will be written to this file.
 static const bool LOGGING = true;
-static std::string LOG_FILE = "freetron.log";
+static const std::string LOG_FILE = "freetron.log";
 
 // The aspect ratio of the black boxes calculated from 49/18, width/height.
 // This is used to verify that we have a valid box.
