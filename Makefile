@@ -4,8 +4,8 @@ OBJ		= ${SRC:.cpp=.o}
 DEPENDS		= .depends
 
 CC		= g++
-CFLAGS		:= -g -funroll-loops -O3 -std=c++11 -Wall ${CFLAGS}
-LDFLAGS		:= -lpodofo -lIL -ltiff -ltiffxx -pthread
+CFLAGS		:= -ffast-math -funroll-loops -O2 -std=c++11 -Wall ${CFLAGS}
+LDFLAGS		:= -lpodofo -lIL -ltiff -ltiffxx -pthread ${LDFLAGS}
 
 PREFIX		?= /usr/local
 MANPREFIX	?= ${PREFIX}/share/man
