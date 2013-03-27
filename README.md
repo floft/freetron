@@ -9,8 +9,8 @@ followed by all of the students' sheets, grade, email (via a database
 lookup) the students their grade and a copy of their sheet, and then display
 statistics about the exam.
 
-For an example of the type of form this works with, you can look at this one from
-[Apperson](https://ssl1.appersonsecure.com/pdfs/common/29240.PDF)
+For an example of the type of form this works with, you can look at this
+one from [Apperson](https://ssl1.appersonsecure.com/pdfs/common/29240.PDF).
 
 **Dependencies**  
 *a C++11 compiler*  
