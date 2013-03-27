@@ -1,14 +1,14 @@
-OUT		= freetron
-SRC		= ${wildcard *.cpp}
-OBJ		= ${SRC:.cpp=.o}
-DEPENDS		= .depends
+OUT		   = freetron
+SRC		   = ${wildcard *.cpp}
+OBJ		   = ${SRC:.cpp=.o}
+DEPENDS	   = .depends
 
-CC		= g++
-CFLAGS		:= -ffast-math -funroll-loops -O2 -std=c++11 -Wall ${CFLAGS}
-LDFLAGS		:= -lpodofo -lIL -ltiff -ltiffxx -pthread ${LDFLAGS}
+CC		   = g++
+CFLAGS	  := ${CFLAGS}  -ffast-math -funroll-loops -O2 -std=c++11 -Wall
+LDFLAGS	  := ${LDFLAGS} -lpodofo -lIL -ltiff -ltiffxx -pthread
 
-PREFIX		?= /usr/local
-MANPREFIX	?= ${PREFIX}/share/man
+PREFIX	  ?= /usr/local
+MANPREFIX ?= ${PREFIX}/share/man
 
 all: ${OUT}
 

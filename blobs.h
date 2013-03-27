@@ -21,39 +21,39 @@
 // of the image when updating a label.
 struct CoordPair
 {
-	Coord first;
-	Coord last;
+    Coord first;
+    Coord last;
 
-	CoordPair() { }
-	CoordPair(const Coord& f, const Coord& l)
-		:first(f), last(l) { }
+    CoordPair() { }
+    CoordPair(const Coord& f, const Coord& l)
+        :first(f), last(l) { }
 };
 
 class Blobs
 {
 public:
-	static const int default_label;
-	typedef std::map<int, CoordPair>::size_type size_type;
-	typedef MapValueIterator<std::map<int, CoordPair>> const_iterator;
+    static const int default_label;
+    typedef std::map<int, CoordPair>::size_type size_type;
+    typedef MapValueIterator<std::map<int, CoordPair>> const_iterator;
 
 private:
-	int w = 0;
-	int h = 0;
-	std::map<int, CoordPair> objs;
-	std::vector<std::vector<int>> labels;
+    int w = 0;
+    int h = 0;
+    std::map<int, CoordPair> objs;
+    std::vector<std::vector<int>> labels;
 
 public:
-	Blobs(const Pixels& img);
-	int label(const Coord& p) const;
+    Blobs(const Pixels& img);
+    int label(const Coord& p) const;
 
-	// Standard functions
-	const_iterator begin() const { return objs.begin(); }
-	const_iterator end() const { return objs.end(); }
-	size_type size() const { return objs.size(); }
+    // Standard functions
+    const_iterator begin() const { return objs.begin(); }
+    const_iterator end() const { return objs.end(); }
+    size_type size() const { return objs.size(); }
 
 private:
-	// Merge object o into object n by changing labels and updating object
-	void switchLabel(const Pixels& img, int old_label, int new_label);
+    // Merge object o into object n by changing labels and updating object
+    void switchLabel(const Pixels& img, int old_label, int new_label);
 };
 
 #endif

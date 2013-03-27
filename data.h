@@ -9,14 +9,14 @@
 
 struct Coord
 {
-	int x = 0;
-	int y = 0;
+    int x = 0;
+    int y = 0;
 
-	Coord() { }
-	Coord(const int x, const int y) :x(x), y(y) { }
+    Coord() { }
+    Coord(const int x, const int y) :x(x), y(y) { }
 
-	Coord& operator+=(const Coord& c);
-	Coord operator+(const Coord& c) const;
+    Coord& operator+=(const Coord& c);
+    Coord operator+(const Coord& c) const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Coord& c);

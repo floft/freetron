@@ -30,22 +30,22 @@
 
 enum class PixelType
 {
-	Unknown,
-	PNM,	// Default
-	JPG,	// DCTDecode
-	TIF,	// CCITTFaxDecode
+    Unknown,
+    PNM,    // Default
+    JPG,    // DCTDecode
+    TIF,    // CCITTFaxDecode
 };
 
 enum class ColorSpace
 {
-	Unknown,
-	Gray,	// PNM5
-	RGB	// PNM6
+    Unknown,
+    Gray,   // PNM5
+    RGB // PNM6
 };
 
 std::vector<Pixels> extract(const std::string& filename);
 Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
-	const ColorSpace colorspace, const std::string& filename);
+    const ColorSpace colorspace, const std::string& filename);
 
 // Debugging
 std::ostream& operator<<(std::ostream& os, const PixelType& t);

@@ -65,8 +65,8 @@ static const int DIAG_ERROR = 10;
 
 // The error margin for the diffence in slope for the width and height. This is to make sure
 // that it is more of a parallelogram instead of just a quadrilateral.
-static const double SLOPE_ERROR_WIDTH  = 0.1;	// 5/50 is 0.1
-static const double SLOPE_ERROR_HEIGHT = 0.25;	// 5/20 is 0.25
+static const double SLOPE_ERROR_WIDTH  = 0.1;   // 5/50 is 0.1
+static const double SLOPE_ERROR_HEIGHT = 0.25;  // 5/20 is 0.25
 
 // These values are used to make sure we'll get decent sized boxes. Since we're using the aspect
 // ratio and rounding, if we're dealing with a 1px wide box, the height will be rounded to 1px

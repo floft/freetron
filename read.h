@@ -18,22 +18,22 @@
 
 // See if the boxes are vertical
 bool vertical(const std::vector<Coord>& boxes,
-	const int start_box, const int end_box);
+    const int start_box, const int end_box);
 
 // Determine ID number from boxes 2-11
 int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData& data);
 
 // Determine answer black from max colors
 double answerBlack(const Pixels& img, const std::vector<Coord>& boxes,
-	const int start_box, const int end_box,
-	const int start_x, const int stop_x,
-	const int box_width, const int bubble_jump);
+    const int start_box, const int end_box,
+    const int start_x, const int stop_x,
+    const int box_width, const int bubble_jump);
 
 // Find which bubbles are filled, return x value
 std::vector<int> findFilled(Pixels& img,
-	const int x, const int y,
+    const int x, const int y,
         const int stop_x,
-	const int box_width, const int bubble_jump,
-	const double answer_black);
+    const int box_width, const int bubble_jump,
+    const double answer_black);
 
 #endif

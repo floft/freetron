@@ -16,13 +16,13 @@
 
 enum class LogType
 {
-	Error, Warning, Notice
+    Error, Warning, Notice
 };
 
 std::ostream& operator<<(std::ostream& os, const LogType& t);
 
 // err will write to std::cerr when debugging is enabled
 void log(const std::string& msg, const LogType prefix = LogType::Error,
-	const bool err = true);
+    const bool err = true);
 
 #endif
