@@ -10,6 +10,7 @@
 
 #include "data.h"
 
+// Avoid compiler warnings
 typedef std::vector<int>::size_type   vsize_int;
 typedef std::vector<Coord>::size_type vsize_coord;
 
@@ -55,7 +56,7 @@ static const int MAX_ERROR = 5;
 
 // The error margin in pixels for difference in height from the estimated height from
 // the aspect ratio and width. If it's beyond this it won't be considered a box.
-static const int HEIGHT_ERROR = 7;
+static const int HEIGHT_ERROR = 10;
 
 // The max distance in pixels a point on the rectangle's side can be from the straight
 // line connecting the two corners
@@ -63,11 +64,6 @@ static const int RECT_ERROR = 5;
 
 // The error margin in pixels for the difference in diagonal from the diagonals of other
 // valid boxes.
-//
-// TODO: not anymore...
-// Also used for error beyond diagonal to see if we've definitely gone farther
-// than we could go in a box (if displacement from original point is greater than this, it
-// won't be a box, so save time and give up).
 static const int DIAG_ERROR = 10;
 
 // The error margin for the difference in slope for the width and height. This is to make sure
@@ -92,24 +88,16 @@ static const int MIN_HEIGHT = 5;
 // the diagonal around, so this should be a safe value.
 static const int MAX_ITERATIONS = MAX_DIAG*4;
 
-// To speed up calculations, we save the approximate diagonal of valid boxes so we known when we've
-// gone way farther than a real box and give up on large objects. But, we need to verify we have
-// good boxes to find the diagonal using. We must have this many close box diagonals to set the
-// approximate diagonal.
-//static const vsize_int DIAG_COUNT = 5;
+// What defines a huge jump in pixels
+static const int HUGE_JUMP = 200;
 
-// Look at this many pixel movements when determining if we've changed direction when walking
-// around the edge of an object. We'll keep track of the last floor(PIXEL_RECALL/2) and look ahead
-// at the next ceil(PIXEL_RECALL/2) so that we detect the change at the current pixel instead of
-// a few early or late. We detect the corners so we can verify this is a quadrilateral.
-//static const int PIXEL_RECALL = 5;
-
-// Total number of boxes, to verify we found the right ones
-static const vsize_coord TOTAL_BOXES = 54;
+// Total number of boxes, to verify we found the right ones. This is the number after
+// we throw out the one or two above the huge jump to the first fill in section.
+static const vsize_coord TOTAL_BOXES = 53;
 
 // When determining the student ID, we need to know which boxes correspond to the ID.
-static const int ID_START = 2;
-static const int ID_END   = 11;
+static const int ID_START = 1;
+static const int ID_END   = 10;
 
 // In the threading header file, we create a certain number of threads depending on the number
 // of CPUs. After we create as many threads as cores, we wait this many milliseconds till we check

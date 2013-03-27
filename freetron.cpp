@@ -2,7 +2,7 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Determine corner by how long we've been going in a direction
+ *   - Start boxes after huge jump to get rid of the possible box 0
  *   - Develop better algorithm for finding if bubble is filled in
  *   - Decrease memory usage (take into consideration when creating threads?)
  *

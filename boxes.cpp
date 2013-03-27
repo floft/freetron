@@ -1,8 +1,10 @@
 #include "boxes.h"
 
-// Find all the boxes in the image  TODO: add const
+// Find all the boxes in the image
 std::vector<Coord> findBoxes(Pixels& img, BoxData& data)
 {
+    typedef std::vector<Coord>::size_type size_type;
+
     std::vector<Coord> boxes;
 
     // Find all objects in image
@@ -29,18 +31,20 @@ std::vector<Coord> findBoxes(Pixels& img, BoxData& data)
         }
     }
 
-    // If we're missing some, estimate their location and see if there's an
-    // object there.
-    if (boxes.size() < TOTAL_BOXES)
+    size_type jump = 0;
+
+    // Now find the first box after the jump
+    for (size_type i = 1; i < boxes.size(); ++i)
     {
-        // TODO
+        if (boxes[i].y - boxes[i-1].y > HUGE_JUMP)
+        {
+            jump = i;
+            break;
+        }
     }
 
-    // If we have too many, throw the ones not in line or on the bottom line out
-    if (boxes.size() > TOTAL_BOXES)
-    {
-        // TODO
-    }
+    // We won't use the first one or two above the jump
+    boxes.erase(boxes.begin(), boxes.begin()+jump);
 
     return boxes;
 }

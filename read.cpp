@@ -25,7 +25,7 @@ std::vector<std::vector<bool>> genBubble(int box_width, int box_height)
     // Add box sections in between two curved corners
     //const int curve_width =
 
-    // TODO: finish this
+    // TODO: finish this; actually, we should probably do something with Outline
 
     return bubble;
 }
@@ -98,8 +98,6 @@ std::vector<int> findFilled(Pixels& img,
         {
             position.push_back(search_x);
 
-            //std::cout << averageColor(img, search_x, y, box_height, stop_x, max_y) << " > " << answer_black << std::endl;
-
             if (DEBUG)
                 img.mark(Coord(search_x, y));
         }
@@ -116,7 +114,6 @@ int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData& data)
     int id = 0;
     std::map<int, int> filled;
     
-    // ID is boxes 2-11 (counting from 1)
     const size_type& start_box = ID_START;
     const size_type& end_box   = ID_END;
 
@@ -128,7 +125,7 @@ int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData& data)
     if (!vertical(boxes, start_box, end_box))
         return 0;
 
-    // Calculate relative values, use ID height to be more acurate
+    // Calculate relative values, use ID height to be more accurate
     const int id_height   = boxes[end_box-1].y - boxes[start_box-1].y;
     const int first_jump  = 1.0*FIRST_JUMP/ID_HEIGHT*id_height;
     const int bubble_jump = 1.0*BUBBLE_JUMP/ID_HEIGHT*id_height;
@@ -141,15 +138,14 @@ int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData& data)
     const double answer_black = answerBlack(img, boxes, start_box, end_box, start_x, stop_x,
         data.width, bubble_jump);
 
-    // ID is boxes 2 - 11
     for (size_type i = start_box-1; i < end_box && i < boxes.size(); ++i)
     {
         std::vector<int> position = findFilled(img, start_x, boxes[i].y, stop_x, 
             data.width, bubble_jump, answer_black);
 
-        // at x = position, the value is box # - 1 (0 = box 2);
+        // at x = position, the value is box # - start_box + 1 (0 = start_box);
         for (const int pos : position)
-            filled[pos] = i-1;
+            filled[pos] = i - start_box + 1;
     }
 
     // Get ID number from map
