@@ -2,9 +2,8 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Start boxes after huge jump to get rid of the possible box 0
  *   - Develop better algorithm for finding if bubble is filled in
- *   - Decrease memory usage (take into consideration when creating threads?)
+ *   - Take amount of memory into consideration when creating threads
  *
  *   - When a box is missing (box #26 on cat22.pdf), calculate supposed position
  *   - Use bottom boxes to help find bubbles
@@ -43,12 +42,11 @@ struct Info
 {
     int thread_id = 0;
     int id = 0;
-    double rotation = 0;
 
     Info() { }
     Info(int t) :thread_id(t) { }
-    Info(int t, int i, double r)
-        :thread_id(t), id(i), rotation(r) { }
+    Info(int t, int i)
+        :thread_id(t), id(i) { }
 };
 
 // Called in a new thread for each image
@@ -100,7 +98,7 @@ Info parseImage(Pixels* image)
             image->save(s.str());
         }
     
-        return Info(thread_id, id, rotation*180/pi);
+        return Info(thread_id, id);
     }
     catch (const std::runtime_error& error)
     {
@@ -161,9 +159,9 @@ int main(int argc, char* argv[])
     // Parse results
     for (const Info& i : results)
         if (i.id > 0)
-            std::cout << i.thread_id << ": " << i.id << " " << i.rotation << std::endl;
+            std::cout << i.thread_id << ": " << i.id << std::endl;
         else
-            std::cout << i.thread_id << ": error " << i.rotation << std::endl;
+            std::cout << i.thread_id << ": error" << std::endl;
     
     return 0;
 }
