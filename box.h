@@ -3,9 +3,6 @@
  *
  * Useful links on edge detection:
  *  http://www.m-hikari.com/ams/ams-password-2008/ams-password29-32-2008/nadernejadAMS29-32-2008.pdf
- *
- * Simplification of array of points using the Ramer-Douglas-Peucker algorithm:
- *  http://karthaus.nl/rdp/js/rdp.js
  */
 
 #ifndef H_BOX

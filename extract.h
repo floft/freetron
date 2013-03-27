@@ -40,7 +40,7 @@ enum class ColorSpace
 {
     Unknown,
     Gray,   // PNM5
-    RGB // PNM6
+    RGB     // PNM6
 };
 
 std::vector<Pixels> extract(const std::string& filename);
