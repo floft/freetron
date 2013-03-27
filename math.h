@@ -15,6 +15,8 @@ static const double pi = 3.14159265358979323846264338327950;
 
 inline double distance(const double x1, const double y1, const double x2, const double y2);
 inline double distance(const Coord& p1, const Coord& p2);
+// Perpendicular distance between p3 and the line from p1 to p2
+inline double distance(const Coord& p1, const Coord& p2, const Coord& p3);
 inline double average(const std::vector<double>& v);
 inline double max_value(const std::vector<double>& v);
 inline double min_value(const std::vector<double>& v);
@@ -61,6 +63,23 @@ inline double distance(const double x1, const double y1, const double x2, const 
 inline double distance(const Coord& p1, const Coord& p2)
 {
     return std::sqrt(std::pow((1.0*p2.x-p1.x), 2) + std::pow((1.0*p2.y-p1.y), 2));
+}
+
+// Perpendicular distance
+inline double distance(const Coord& p1, const Coord& p2, const Coord& p3)
+{
+    // Only look at horizontal distance if line is vertical
+    if (p2.x == p1.x)
+    {
+        return std::abs(p1.x - p3.x);
+    }
+    else
+    {
+        // Find the equation for the line in the form y = mx + b
+        double m = 1.0*(p2.y - p1.y)/(p2.x - p1.x);
+        double b = p1.y - m*p1.x;
+        return std::abs(m*p3.x - p3.y + b)/std::sqrt(m*m + 1);
+    }
 }
 
 // Calculate mean

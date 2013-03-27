@@ -1,21 +1,5 @@
 #include "box.h"
 
-// The priority for which pixels to go to, search forward if no black yet
-// or backward for white if first is black (see Box::findEdge)
-//  0 1 2
-//  7   3
-//  6 5 4
-const std::array<Coord, 8> Box::matrix = {{
-    Coord(-1, -1),
-    Coord( 0, -1),
-    Coord( 1, -1),
-    Coord( 1,  0),
-    Coord( 1,  1),
-    Coord( 0,  1),
-    Coord(-1,  1),
-    Coord(-1,  0)
-}};
-
 // Find square around point
 Square::Square(const Pixels& img, const int x, const int y, const int r)
 {
@@ -42,7 +26,8 @@ bool Square::in(const Coord& c) const
 // Average color of all pixels within radius r of (x,y)
 // 0 = complete white, 1 = complete black
 //
-// TODO: make this use the label?
+// TODO: make this use the label? Actually, we can just delete this if we end up not
+// using it in read.cpp
 double averageColor(const Pixels& img,
     const int x, const int y,
     const int r)
@@ -82,11 +67,11 @@ double averageColor(const Pixels& img,
         return 0;
 }
 
+//  TODO: get rid of BoxData?
 // Find box properties (corners, width, height, aspect ratio, mid point, etc.)
 Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
     :img(img), blobs(blobs), data(data)
 {
-    // Current label so we only walk around this object
     label = blobs.label(point);
 
     if (label == Blobs::default_label)
@@ -95,158 +80,79 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point, BoxData& data)
         return;
     }
     
-    // Keep track of previous points. If we go to one again, give up. Otherwise
-    // we'll get into an infinite loop.
-    std::vector<Coord> path;
+    const Outline shape(img, blobs, point, MAX_ITERATIONS);
 
-    // Start one pixel above this first point (we wouldn't have been given this
-    // point if the pixel above it was black)
-    Coord position(point.x, point.y-1);
-    
-    // End where we started
-    Coord end = position;
-    
-    // Top left and top right coordinates used to find corners
-    const Coord origin(0, 0);
-    const Coord right(img.width() - 1, 0);
+    // Not a valid box if it was beyond max length
+    if (!shape.good())
+        return;
 
-    // The distances from (0,0) and (width-1, 0) used to find corners
-    double TL_dist = img.height();
-    double TR_dist = img.height();
-    double BR_dist = 0;
-    double BL_dist = 0;
+    const std::vector<Coord> outline = shape.points();
 
-    // A fail-safe
-    int iterations = 0;
+    // Find the four corners by finding the four farthest points from each other
+    const Coord p1 = farthestFromPoint(point, outline);
+    const Coord p2 = farthestFromPoint(p1,    outline);
+    const Coord p3 = farthestFromLine(p1, p2, outline);
+    const Coord p4 = farthestFromPoint(p3,    outline);
 
-    bool test = false;
-    if (Square(img, 32, 990, 25).in(point))
-        test = true;
-    
-    // Walk the edge of the box and find the corners using the distances to image corners
-    // Note: "break" when we're done, "return" gives up since this isn't a box
-    while (true)
+    // We know p1 and p2 are on opposite corners, so we can use this as a diagonal
+    // to find the approximate center
+    const Coord center = Coord((p1.x + p2.x)/2, (p1.y + p2.y)/2);
+    const Coord* const points[] = { &p1, &p2, &p3, &p4 };
+
+    // Top left is up and left, ...
+    for (const Coord* const point : points)
     {
-        // From the distance to the top left and right points determine if this
-        // is a corner of the quadrilateral
-        double left_dist  = distance(position, origin);
-        double right_dist = distance(position, right);
+        // Bet you never saw this style of formatting before =)
+             if (point->x < center.x && point->y < center.y)
+            topleft     = *point;
+        else if (point->x > center.x && point->y < center.y)
+            topright    = *point;
+        else if (point->x < center.x && point->y > center.y)
+            bottomleft  = *point;
+        else
+            bottomright = *point;
+    }
 
-        if (left_dist < TL_dist)
-        {
-            topleft = position;
-            TL_dist = left_dist;
-        }
-
-        if (left_dist > BR_dist)
-        {
-            bottomright = position;
-            BR_dist = left_dist;
-        }
-
-        if (right_dist < TR_dist)
-        {
-            topright = position;
-            TR_dist = right_dist;
-        }
-
-        if (right_dist > BL_dist)
-        {
-            bottomleft = position;
-            BL_dist = right_dist;
-        }
-
-        // Find next pixel to go to
-        EdgePair edge = findEdge(position, path);
-
-        // Ran out of options (shouldn't happen?)
-        if (edge.index == -1)
-        {
-            log("ran out of options on edge");
-            return;
-        }
-
-        // Go to new position (note that edge.point will be position unless
-        // we had to retrace our steps a ways)
-        position = edge.point+matrix[edge.index];
-        path.push_back(position);
-
-        // We've walked around the entire object now
-        if (position == end)
-            break;
-        
-        // We're not in a box if we're beyond this
-        ++iterations;
-
-        if (iterations > MAX_ITERATIONS)
+    // Check if all the points are on the lines between TL-TR, TR-BR, etc.
+    for (const Coord& point : outline)
+    {
+        if (distance(topleft,    topright,    point) > RECT_ERROR &&
+            distance(topright,   bottomright, point) > RECT_ERROR &&
+            distance(bottomleft, bottomright, point) > RECT_ERROR &&
+            distance(topleft,    bottomleft,  point) > RECT_ERROR)
             return;
     }
 
-    // We've traced some shape now, so using the four "corners," calculate some
-    // values we'll later use to see if this is really a box
+    // We've traced some shape now, so using the four supposed "corners" calculate the
+    // box's properties
     w  = distance(topleft, topright);
     h  = distance(topleft, bottomleft);
     mp = Coord((topleft.x + bottomright.x)/2, (topleft.y + bottomright.y)/2);
     ar = (h>0)?1.0*w/h:0;
 
-    // If we haven't returned already, we might be a box
-    possibly_valid = true;
-
-    if (test)
-    {
-        img.mark(topleft);
-        img.mark(topright);
-        img.mark(bottomleft);
-        img.mark(bottomright);
-
-        std::cout << "MP: " << mp << std::endl;
-    }
-}
-
-bool Box::valid()
-{
-    // If something when wrong while finding corners, nothing below applies
-    if (!possibly_valid)
-        return false;
-    
     // What should the width be approximately given the aspect ratio (width/height)
     const double approx_height = w/ASPECT;
     const int real_diag = std::ceil(std::sqrt(w*w+h*h));
 
-    if (Square(img, 32, 990, 25).in(mp))
-    {
-        std::cout << w << " " << h << " " << approx_height << " " << real_diag << " " << data.diag << std::endl;
-        std::cout << (h >= approx_height-HEIGHT_ERROR) << " " << (h <= approx_height+HEIGHT_ERROR) << " "
-                  << (std::abs(distance(topleft, bottomright) - distance(topright, bottomleft)) < DIAG_ERROR) << " "
-                  << (std::abs(distance(topleft, bottomleft) - distance(topright, bottomright)) < DIAG_ERROR) << " "
-                  << (std::abs(distance(topleft, topright) - distance(bottomleft, bottomright)) < DIAG_ERROR) << " "
-                  << (std::abs(slopeXY(topleft, bottomleft) - slopeXY(topright, bottomright)) < SLOPE_ERROR_HEIGHT) << " "
-                  << (std::abs(slopeYX(topleft, topright) - slopeYX(bottomleft, bottomright)) < SLOPE_ERROR_WIDTH) << " "
-                  << (real_diag >= MIN_DIAG) << " "
-                  << (real_diag <= MAX_DIAG) << " "
-                  << validBoxColor() << std::endl;
-    }
-
-    // See if the diag is about the right length, if the width and height are about right,
-    // and if a circle in the center of the possible box is almost entirely black.
-    if (h >= approx_height-HEIGHT_ERROR && h <= approx_height+HEIGHT_ERROR &&
+    if (h >= approx_height-HEIGHT_ERROR && h <= approx_height+HEIGHT_ERROR && // Correct height
         std::abs(distance(topleft, bottomright) - distance(topright, bottomleft)) < DIAG_ERROR && // Diagonals same
         std::abs(distance(topleft, bottomleft) - distance(topright, bottomright)) < DIAG_ERROR && // Height same
         std::abs(distance(topleft, topright) - distance(bottomleft, bottomright)) < DIAG_ERROR && // Width same
         std::abs(slopeXY(topleft, bottomleft) - slopeXY(topright, bottomright)) < SLOPE_ERROR_HEIGHT && // Height slope
         std::abs(slopeYX(topleft, topright) - slopeYX(bottomleft, bottomright)) < SLOPE_ERROR_WIDTH  && // Width slope
-        real_diag >= MIN_DIAG && real_diag <= MAX_DIAG && // Get rid of 1-5px boxes
+        real_diag >= MIN_DIAG && real_diag <= MAX_DIAG && // Get rid of 1-5px "boxes"
         validBoxColor()) // Black enough in box and white enough around box
     {
-        img.mark(topleft);
-        img.mark(topright);
-        img.mark(bottomleft);
-        img.mark(bottomright);
+        if (DEBUG)
+        {
+            img.mark(topleft);
+            img.mark(topright);
+            img.mark(bottomleft);
+            img.mark(bottomright);
+        }
 
-        return true;
+        valid_box = true;
     }
-
-    return false;   
 }
 
 // Find mid point
@@ -286,9 +192,7 @@ bool Box::validBoxColor() const
                 x >= lineFunctionX(topleft,    bottomleft,  y) &&
                 x <= lineFunctionX(topright,   bottomright, y))
             {
-                if (img.black(Coord(x,y)))
-                // TODO: which of these is better?
-                //if (blobs.label(Coord(x,y)) == label)
+                if (blobs.label(Coord(x,y)) == label)
                     ++inside_black;
 
                 ++inside_total;
@@ -299,8 +203,7 @@ bool Box::validBoxColor() const
                  x >= lineFunctionX(tl, bl, y) &&
                  x <= lineFunctionX(tr, br, y))
             {
-                if (img.black(Coord(x,y)))
-                //if (blobs.label(Coord(x,y)) == label)
+                if (blobs.label(Coord(x,y)) == label)
                     ++around_black;
 
                 ++around_total;
@@ -315,64 +218,65 @@ bool Box::validBoxColor() const
     return (inside > MIN_BLACK && around < MAX_BLACK);
 }
 
-// If we've been to pixel before, go back till we can go some place new.
-EdgePair Box::findEdge(const Coord& p, const std::vector<Coord>& path) const
+Coord Box::farthestFromPoint(const Coord& p, const std::vector<Coord>& points) const
 {
-    typedef std::vector<Coord>::size_type size_type;
-    
-    int index = -1;
+    double dist = 0;
+    Coord farthest;
 
-    // Start at this point
-    Coord position = p;
-
-    // If that doesn't work, start at the last pixel
-    size_type path_index = (path.size()>0)?(path.size()-1):0;
-
-    // Keep going backwards until we find one with another option
-    while (true)
+    for (const Coord& point : points)
     {
-        index = findIndex(position, path);
+        double cdist = distance(p, point);
 
-        // We found an option!
-        if (index != -1)
-            break;
-
-        // We ran out of options
-        if (path_index == 0)
-            break;
-        
-        // Go back one pixel
-        position = path[path_index];
-        --path_index;
-    }
-
-    return EdgePair(position, index);
-}
-
-// Loop through the matrix looking for the first black pixel with a white (not
-// part of this object) pixel previous to it that we haven't been to. Return -1
-// if there's no options (e.g. white pixel in middle of black ring).
-int Box::findIndex(const Coord& p, const std::vector<Coord>& path, bool check_path) const
-{
-    typedef std::array<Coord, 8>::size_type size_type;
-    
-    int result = -1;
-
-    for (size_type i = 0; i < matrix.size(); ++i)
-    {
-        // Back one pixel with looping, i.e. 0-1 = 7
-        const int back = (i==0)?(matrix.size()-1):(i-1);
-
-        const Coord current  = p+matrix[i];
-        const Coord previous = p+matrix[back];
-
-        if (blobs.label(current) == label && blobs.label(previous) != label &&
-            (!check_path || std::find(path.rbegin(), path.rend(), previous) == path.rend()))
+        if (cdist > dist)
         {
-            result = back;
-            break;
+            dist = cdist;
+            farthest = point;
         }
     }
 
-    return result;
+    return farthest;
+}
+
+Coord Box::farthestFromLine(const Coord& p1, const Coord& p2,
+    const std::vector<Coord>& points) const
+{
+    double dist = 0;
+    Coord farthest;
+
+    // Only look at the distance in x if the line is vertical
+    if (p2.x == p1.x)
+    {
+        for (const Coord& point : points)
+        {
+            double cdist = std::abs(point.x - p1.x);
+
+            if (cdist > dist)
+            {
+                dist = cdist;
+                farthest = point;
+            }
+        }
+    }
+    else
+    {
+        // We'll redefine this here instead of using distance(p1, p2, p3) since
+        // we only need to calculate m, b, and sq once
+        double m = 1.0*(p2.y - p1.y)/(p2.x - p1.x);
+        double b = p1.y - m*p1.x;
+        double sq = std::sqrt(m*m + 1);
+
+        for (const Coord& point : points)
+        {
+            // Perpendicular distance: abs(mx-y+b)/sqrt(m^2+1)
+            double cdist = std::abs(m*point.x - point.y + b)/sq;
+
+            if (cdist > dist)
+            {
+                dist = cdist;
+                farthest = point;
+            }
+        }
+    }
+
+    return farthest;
 }

@@ -92,14 +92,14 @@ void Pixels::save(const std::string& filename, bool show_marks, bool dim, bool b
 
         for (int y = 0; y < h; ++y)
             for (int x = 0; x < w; ++x)
-                copy[y][x] = (copy[y][x]>127)?255:170; // 255-255/3 = 170
+                copy[y][x] = (copy[y][x]>GRAY_SHADE)?255:170; // 255-255/3 = 170
     }
     // Convert to black and white
     else if (bw)
     {
         for (int y = 0; y < h; ++y)
             for (int x = 0; x < w; ++x)
-                copy[y][x] = (copy[y][x]>127)?255:0;
+                copy[y][x] = (copy[y][x]>GRAY_SHADE)?255:0;
     }
     // Dim the image
     else if (dim)

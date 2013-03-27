@@ -69,19 +69,6 @@ Info parseImage(Pixels* image)
         // Find all the boxes
         std::vector<Coord> boxes = findBoxes(*image, data);
 
-        if (DEBUG && boxes.size() != TOTAL_BOXES)
-        {
-            for (const Coord& box : boxes)
-                image->mark(box);
-            
-            std::ostringstream s;
-            std::ostringstream s2;
-            s  << "debug" << thread_id << ".png";
-            s2 << "debug" << thread_id << "_orig.png";
-            image->save(s.str());
-            image->save(s2.str(), false, false, false);
-        }
-
         if (boxes.size() > TOTAL_BOXES)
             throw std::runtime_error("too many boxes detected");
 

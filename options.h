@@ -30,7 +30,7 @@ static const double ASPECT = 2.722;
 
 // Minimum percent of pixels in a supposed box needing to be black to be
 // considered a box. This is between 0 and 1.
-static const double MIN_BLACK = 0.75;
+static const double MIN_BLACK = 0.60;
 
 // Maximum percent of pixels that can be black in the region around a box, and
 // what sized region around box to check in pixels.
@@ -49,24 +49,31 @@ static const double BUBBLE_ASPECT = 1.566; // From 47/30
 
 // The error margin in pixels for still considering this form as potentially valid.
 // After we find all boxes, we'll look for the filled in bubbles. If the boxes are
-// beyond this far from vertical, we'll give up and say an error occured while processing
+// beyond this far from vertical, we'll give up and say an error occurred while processing
 // this form.
 static const int MAX_ERROR = 5;
 
 // The error margin in pixels for difference in height from the estimated height from
 // the aspect ratio and width. If it's beyond this it won't be considered a box.
-static const int HEIGHT_ERROR = 5;
+static const int HEIGHT_ERROR = 7;
+
+// The max distance in pixels a point on the rectangle's side can be from the straight
+// line connecting the two corners
+static const int RECT_ERROR = 5;
 
 // The error margin in pixels for the difference in diagonal from the diagonals of other
-// valid boxes. Also used for error beyond diagonal to see if we've definitely gone farther
+// valid boxes.
+//
+// TODO: not anymore...
+// Also used for error beyond diagonal to see if we've definitely gone farther
 // than we could go in a box (if displacement from original point is greater than this, it
 // won't be a box, so save time and give up).
 static const int DIAG_ERROR = 10;
 
-// The error margin for the diffence in slope for the width and height. This is to make sure
+// The error margin for the difference in slope for the width and height. This is to make sure
 // that it is more of a parallelogram instead of just a quadrilateral.
-static const double SLOPE_ERROR_WIDTH  = 0.1;   // 5/50 is 0.1
-static const double SLOPE_ERROR_HEIGHT = 0.25;  // 5/20 is 0.25
+static const double SLOPE_ERROR_WIDTH  = 0.2;  // 10/50 is 0.2
+static const double SLOPE_ERROR_HEIGHT = 0.5;  // 10/20 is 0.5
 
 // These values are used to make sure we'll get decent sized boxes. Since we're using the aspect
 // ratio and rounding, if we're dealing with a 1px wide box, the height will be rounded to 1px
@@ -89,13 +96,13 @@ static const int MAX_ITERATIONS = MAX_DIAG*4;
 // gone way farther than a real box and give up on large objects. But, we need to verify we have
 // good boxes to find the diagonal using. We must have this many close box diagonals to set the
 // approximate diagonal.
-static const vsize_int DIAG_COUNT = 5;
+//static const vsize_int DIAG_COUNT = 5;
 
 // Look at this many pixel movements when determining if we've changed direction when walking
 // around the edge of an object. We'll keep track of the last floor(PIXEL_RECALL/2) and look ahead
 // at the next ceil(PIXEL_RECALL/2) so that we detect the change at the current pixel instead of
 // a few early or late. We detect the corners so we can verify this is a quadrilateral.
-static const int PIXEL_RECALL = 5;
+//static const int PIXEL_RECALL = 5;
 
 // Total number of boxes, to verify we found the right ones
 static const vsize_coord TOTAL_BOXES = 54;
