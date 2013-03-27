@@ -1,37 +1,37 @@
-OUT		   = freetron
-SRC		   = ${wildcard *.cpp}
-OBJ		   = ${SRC:.cpp=.o}
-DEPENDS	   = .depends
+OUT        = freetron
+SRC        = ${wildcard *.cpp}
+OBJ        = ${SRC:.cpp=.o}
+DEPENDS    = .depends
 
-CC		   = g++
-CFLAGS	  := ${CFLAGS}  -ffast-math -funroll-loops -O2 -std=c++11 -Wall
-LDFLAGS	  := ${LDFLAGS} -lpodofo -lIL -ltiff -ltiffxx -pthread
+CC         = g++
+CFLAGS    := ${CFLAGS}  -ffast-math -funroll-loops -O2 -std=c++11 -Wall
+LDFLAGS   := ${LDFLAGS} -lpodofo -lIL -ltiff -ltiffxx -pthread
 
-PREFIX	  ?= /usr/local
+PREFIX    ?= /usr/local
 MANPREFIX ?= ${PREFIX}/share/man
 
 all: ${OUT}
 
 ${OUT}: ${OBJ}
-	${CC} -o $@ ${OBJ} ${LDFLAGS}
+    ${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 .cpp.o:
-	${CC} -c -o $@ $< ${CFLAGS}
+    ${CC} -c -o $@ $< ${CFLAGS}
 
 ${DEPENDS}: ${SRC}
-	rm -f ./${DEPENDS}
-	${CC} ${CFLAGS} -MM $^ >> ./${DEPENDS}
+    rm -f ./${DEPENDS}
+    ${CC} ${CFLAGS} -MM $^ >> ./${DEPENDS}
 
 depends: ${DEPENDS}
 
 install:
-	install -Dm755 ${OUT} ${DESTDIR}${PREFIX}/bin/freetron
-	
+    install -Dm755 ${OUT} ${DESTDIR}${PREFIX}/bin/freetron
+    
 uninstall:
-	rm -f ${DESTDIR}${PREFIX}/bin/freetron
+    rm -f ${DESTDIR}${PREFIX}/bin/freetron
 
 clean:
-	${RM} ${OUT} ${OBJ}
+    ${RM} ${OUT} ${OBJ}
 
 include ${DEPENDS}
 .PHONY: all depends install uninstall clean
