@@ -2,7 +2,10 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Skips boxes starting with a pixel and one down and to the left
+ *   - Fix skipping boxes that start with a pixel and one down and to the left
+ *   - Rewrite student ID detection code to check columns and use auto-
+ *     decreasing sensitivity
+ *   - Detect "answer black" before doing any of the detection algorithms
  *
  *   - Take amount of memory into consideration when creating threads
  *   - When a box is missing (box #26 on cat22.pdf), calculate supposed position
@@ -184,7 +187,11 @@ int main(int argc, char* argv[])
     std::vector<Info> results = threadForEach(images, parseImage);
 
     // Find the key based on the teacher's ID
-    std::cout << "Exam Results (key first)" << std::endl;
+    std::cout << std::left
+              << std::setw(5)  << "#"
+              << std::setw(10) << "ID"
+              << "\tAnswers (key first)"
+              << std::endl;
 
     int total = 0;
     bool found = false;
@@ -200,7 +207,8 @@ int main(int argc, char* argv[])
             }
             else
             {
-                std::cout << i.thread_id << ": " << std::setw(10) << i.id << " -- ";
+                std::cout << std::setw(5) << i.thread_id
+                          << std::setw(10) << i.id << "\t";
 
                 for (const Answer b : i.answers)
                 {
@@ -232,7 +240,8 @@ int main(int argc, char* argv[])
             }
             else if (i.id != teacher)
             {
-                std::cout << i.thread_id << ": " << std::setw(10) << i.id << " -- ";
+                std::cout << std::left << std::setw(5) << i.thread_id
+                          << std::left << std::setw(10) << i.id << "\t";
 
                 int same = 0;
 
@@ -255,13 +264,14 @@ int main(int argc, char* argv[])
 
         for (const std::pair<int, double>& score: scores)
         {
-            std::cout << std::setw(10) << score.first << ": "
+            std::cout << "  " << std::left << std::setw(10) << score.first << " "
+                      << std::fixed << std::setprecision(2) << std::right << std::setw(6)
                       << score.second*100 << "%" << std::endl;
         }
     }
     else
     {
-        std::cout << std::endl << "Key not found." << std::endl;
+        log("key not found");
     }
     
     return 0;

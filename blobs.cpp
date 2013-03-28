@@ -52,7 +52,7 @@ Blobs::Blobs(const Pixels& img)
                     for (const Coord& p : points)
                     {
                         // If they are not, make all of the previous object this object
-                        if (img.black(p) && labels[y][x] != labels[p.y][p.x]) 
+                        if (img.black(p) && labels[y][x] != labels[p.y][p.x])
                             switchLabel(img, labels[p.y][p.x], labels[y][x]);
                     }
                 }
