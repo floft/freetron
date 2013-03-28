@@ -52,7 +52,7 @@ Blobs::Blobs(const Pixels& img)
                     for (const Coord& p : points)
                     {
                         // If they are not, make all of the previous object this object
-                        if (img.black(p) && labels[y][x] != labels[p.y][p.x])
+                        if (img.black(p) && labels[y][x] != labels[p.y][p.x]) 
                             switchLabel(img, labels[p.y][p.x], labels[y][x]);
                     }
                 }
@@ -113,6 +113,41 @@ int Blobs::label(const Coord& p) const
 
 std::vector<Coord> Blobs::in(const Coord& p1, const Coord& p2) const
 {
+    std::vector<int> used_labels;
+    std::vector<Coord> subset;
+
+    for (int y = p1.y; y < p2.y; ++y)
+    {
+        for (int x = p1.x; x < p2.x; ++x)
+        {
+            if (labels[y][x] != default_label && std::find(used_labels.begin(),
+                used_labels.end(), labels[y][x]) == used_labels.end())
+            //if (labels[y][x] != default_label && !std::binary_search(used_labels.begin(),
+            //    used_labels.end(), labels[y][x]))
+            {
+                // This fancy thing because this function is constant and accessing
+                // with a map may create it if it doesn't exist... It does, but the
+                // compiler doesn't know that.
+                const std::map<int, CoordPair>::const_iterator obj = objs.find(labels[y][x]);
+
+                if (obj != objs.end())
+                {
+                    subset.push_back(obj->second.first);
+                    used_labels.push_back(labels[y][x]);
+                }
+                else
+                {
+                    log("couldn't find object with label");
+                }
+            }
+        }
+    }
+
+    return subset;
+}
+
+std::vector<Coord> Blobs::startIn(const Coord& p1, const Coord& p2) const
+{
     std::vector<Coord> subset;
 
     for (const std::pair<int, CoordPair>& p : objs)
@@ -120,10 +155,21 @@ std::vector<Coord> Blobs::in(const Coord& p1, const Coord& p2) const
         if (p.second.first.y >= p1.y && p.second.first.y <= p2.y &&
             p.second.first.x >= p1.x && p.second.first.x <= p2.x)
             subset.push_back(p.second.first);
+
         // Break early when we've gone past it
         else if (p.second.first.y > p2.y)
             break;
     }
 
     return subset;
+}
+
+CoordPair Blobs::object(int label) const
+{
+    const std::map<int, CoordPair>::const_iterator obj = objs.find(label);
+
+    if (obj != objs.end())
+        return obj->second;
+    else
+        return CoordPair();
 }

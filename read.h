@@ -18,6 +18,9 @@
 #include "outline.h"
 #include "options.h"
 
+// Set this to something that can't be detected on the form
+const int DefaultID = -1;
+
 // Data to keep about a bubble
 struct Bubble 
 {
@@ -37,12 +40,6 @@ bool vertical(const std::vector<Coord>& boxes,
 int findID(Pixels& img, const Blobs& blobs,
     const std::vector<Coord>& boxes, const Data& data);
 
-// Determine answer black from max colors
-double answerBlack(const Pixels& img, const std::vector<Coord>& boxes,
-    const int start_box, const int end_box,
-    const int start_x, const int stop_x,
-    const int box_width, const int bubble_jump);
-
 // Find which of the answers is filled
 std::vector<Answer> findAnswers(Pixels& img, const Blobs& blobs,
     const std::vector<Coord>& boxes, const Data& data);
@@ -52,7 +49,7 @@ std::vector<Answer> findAnswers(Pixels& img, const Blobs& blobs,
 double percentageLabel(const Pixels& img, const Blobs& blobs, const Bubble& b);
 
 // Find all bubbles within the rectangle from p1 to p2
-std::vector<Bubble> findBubbles(const Pixels& img, const Blobs& blobs, const int diag,
-    const Coord& p1, const Coord& p2);
+std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
+    const Coord& a, const Coord& b);
 
 #endif

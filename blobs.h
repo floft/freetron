@@ -12,9 +12,11 @@
 #include <map>
 #include <array>
 #include <vector>
+#include <algorithm>
 
-#include "pixels.h"
+#include "log.h"
 #include "data.h"
+#include "pixels.h"
 #include "maputils.h"
 
 // Remember the first and last times we saw a label so we can search just part
@@ -45,11 +47,16 @@ private:
 public:
     Blobs(const Pixels& img);
     int label(const Coord& p) const;
+    CoordPair object(int label) const;
+
+    // Get all first points that have part of the object in the rectangle
+    // around p1 and p2 (with p1 to the left and above p2).
+    std::vector<Coord> in(const Coord& p1, const Coord& p2) const;
 
     // Get all the first points of the label within a rectangle around
     // the points p1 and p2. This assumes that p2 is down and to the right
     // of p1.
-    std::vector<Coord> in(const Coord& p1, const Coord& p2) const;
+    std::vector<Coord> startIn(const Coord& p1, const Coord& p2) const;
 
     // Standard functions
     const_iterator begin() const { return objs.begin(); }

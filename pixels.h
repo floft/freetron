@@ -62,8 +62,7 @@ public:
     // When saving, we'll display marks optionally
     void mark(const Coord& m, int size = MARK_SIZE);
 
-    // Mark every pixel on the line between p1 and p2. This assumes that p1 is to the
-    // left of p2.
+    // Mark every pixel on the line between p1 and p2
     void line(const Coord& p1, const Coord& p2);
     
     // Used for debugging, all processing (converting to black-and-white, adding

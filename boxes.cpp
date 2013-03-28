@@ -38,9 +38,7 @@ std::vector<Coord> findBoxes(Pixels& img, const Blobs& blobs, Data& data)
         
         // We'll return the midpoints to use later
         if (found)
-        {
             coords.push_back(boxes[i].midpoint());
-        }
     }
 
     // Save this information for the first box after the jump
@@ -49,11 +47,6 @@ std::vector<Coord> findBoxes(Pixels& img, const Blobs& blobs, Data& data)
         data.width = boxes[jump].width();
         data.diag  = boxes[jump].diagonal();
     }
-
-    // Sort the bottom row of boxes by increasing x coordinates. However, if we're
-    // missing some boxes, we'll just give up so no point in sorting anything.
-    if (coords.begin()+BOT_END <= coords.end())
-        std::sort(coords.begin()+BOT_START-1, coords.begin()+BOT_END, CoordXSort());
 
     return coords;
 }

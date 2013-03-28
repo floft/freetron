@@ -127,7 +127,7 @@ static const int THREAD_WAIT = 20;
 // Use distance from top box to bottom box next to ID box to determine
 // relative width and height of ID box
 static const int ID_HEIGHT = 452;
-static const int ID_WIDTH  = 760;
+static const int ID_WIDTH  = 680;
 
 // Just to make sure we get all the bubbles, extend the box we look at by this
 // many pixels

@@ -78,11 +78,18 @@ void Pixels::mark(const Coord& c, int size)
 
 void Pixels::line(const Coord& p1, const Coord& p2)
 {
-    for (int x = p1.x; x <= p2.x; ++x)
-    {
-        // Make this mark 1 pixel
-        mark(Coord(x, lineFunctionY(p1, p2, x)), 1);
-    }
+    const int min_x = std::min(p1.x, p2.x);
+    const int max_x = std::max(p1.x, p2.x);
+    const int min_y = std::min(p1.y, p2.y);
+    const int max_y = std::max(p1.y, p2.y);
+
+    // One for vertical, one for all other cases
+    if (min_x == max_x)
+        for (int y = min_y; y <= max_y; ++y)
+            mark(Coord(lineFunctionX(p1, p2, y), y), 1);
+    else
+        for (int x = min_x; x <= max_x; ++x)
+            mark(Coord(x, lineFunctionY(p1, p2, x)), 1);
 }
 
 void Pixels::save(const std::string& filename, bool show_marks, bool dim, bool bw) const

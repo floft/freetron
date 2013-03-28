@@ -76,19 +76,30 @@ template<class Type, class Value> int mapCountValue(Type m, Value val)
 //   for (const CoordPair& p : blobs) ...
 //
 // Based on: http://stackoverflow.com/a/7667618
-template<class Type> class MapValueIterator
+template<class Type> class MapValueIterator 
 {
     typedef typename Type::mapped_type Value;
     
     typename Type::const_iterator iter;
 
 public:
+    //typedef Value value_type;
+    //typedef Value* pointer;
+    //typedef Value& reference;
+    //typedef MapValueIterator<Type> difference_type;
+    //typedef std::forward_iterator_tag iterator_category;
+
     MapValueIterator(typename Type::const_iterator iter) :iter(iter) { }
-    MapValueIterator(const MapValueIterator& i) :iter(i.iter) { }
+    MapValueIterator(const MapValueIterator<Type>& i) :iter(i.iter) { }
 
     const Value& operator*() const
     {
         return iter->second;
+    }
+    
+    const Value* const operator->() const
+    {
+        return &iter->second;
     }
 
     MapValueIterator& operator++()

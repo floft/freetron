@@ -63,16 +63,23 @@ Coord farthestFromLine(const Coord& p1, const Coord& p2,
     return farthest;
 }
 
+// Find the center. We move the origin to the first point so that the total x and y
+// values will fit in an int even at the far edges of the image. Then, later
+// we move it back to the proper spot.
 Coord findCenter(const std::vector<Coord>& points)
 {
-    unsigned long long int x = 0;
-    unsigned long long int y = 0;
+    if (points.size() == 0)
+        return Coord();
+
+    int x = 0;
+    int y = 0;
 
     for (const Coord& p : points)
     {
-        x += p.x;
-        y += p.y;
+        x += p.x-points[0].x;
+        y += p.y-points[0].y;
     }
 
-    return Coord(1.0*x/points.size(), 1.0*y/points.size());
+    return Coord(1.0*x/points.size()+points[0].x,
+                 1.0*y/points.size()+points[0].y);
 }

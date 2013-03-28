@@ -2,6 +2,8 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
+ *   - Skips boxes starting with a pixel and one down and to the left
+ *
  *   - Take amount of memory into consideration when creating threads
  *   - When a box is missing (box #26 on cat22.pdf), calculate supposed position
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe
@@ -74,6 +76,13 @@ Info parseImage(Pixels* image)
         if (boxes.size() < TOTAL_BOXES)
             throw std::runtime_error("some boxes not detected");
 
+        if (DEBUG)
+        {
+            std::ostringstream s_orig;
+            s_orig << "debug" << thread_id << "_orig.png";
+            image->save(s_orig.str(), true, false, true);
+        }
+
         // Rotate the image
         Coord rotate_point;
         double rotation = findRotation(*image, boxes, rotate_point);
@@ -88,13 +97,20 @@ Info parseImage(Pixels* image)
             blobs = Blobs(*image);
         }
 
+        // Sort all boxes if with respect to y if we rotated counter-clockwise
+        if (rotation > 0)
+            std::sort(boxes.begin(), boxes.end());
+
+        // Sort the bottom row of boxes by increasing x coordinates.
+        std::sort(boxes.begin()+BOT_START-1, boxes.begin()+BOT_END, CoordXSort());
+
         // Find ID number
         int id = findID(*image, blobs, boxes, data);
 
         std::vector<Answer> answers;
 
         // Don't bother finding answers if we couldn't even get the student ID
-        if (id > 0)
+        if (id != DefaultID)
             answers = findAnswers(*image, blobs, boxes, data);
 
         // Debug information
@@ -104,7 +120,7 @@ Info parseImage(Pixels* image)
                 image->mark(box);
             
             std::ostringstream s;
-            s << "debug" << thread_id << ".png";
+            s      << "debug" << thread_id << ".png";
             image->save(s.str());
         }
     
@@ -143,12 +159,6 @@ int main(int argc, char* argv[])
 
     std::string filename = argv[1];
     int teacher = std::stoi(argv[2]);
-
-    if (teacher == 0)
-    {
-        log("teacher ID cannot be 0");
-        return 1;
-    }
 
     try
     {
@@ -216,11 +226,12 @@ int main(int argc, char* argv[])
         
         for (const Info& i : results)
         {
-            if (i.id > 0)
+            if (i.id == DefaultID)
             {
-                if (i.id == teacher)
-                    continue;
-
+                std::cout << i.thread_id << ": failed to determine student ID" << std::endl;
+            }
+            else if (i.id != teacher)
+            {
                 std::cout << i.thread_id << ": " << std::setw(10) << i.id << " -- ";
 
                 int same = 0;
@@ -235,11 +246,7 @@ int main(int argc, char* argv[])
 
                 std::cout << std::endl;
 
-                scores[i.id] = 1.0*same/total;
-            }
-            else
-            {
-                std::cout << i.thread_id << ": failed to determine student ID" << std::endl;
+                scores[i.id] = (total>0)?1.0*same/total:1;
             }
         }
         
