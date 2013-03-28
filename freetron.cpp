@@ -60,7 +60,7 @@ Info parseImage(Pixels* image)
     try
     {
         // Find all blobs in the image
-        const Blobs blobs(*image);
+        Blobs blobs(*image);
 
         // Box information for this image
         Data data;
@@ -83,6 +83,9 @@ Info parseImage(Pixels* image)
         {
             image->rotate(-rotation, rotate_point);
             image->rotateVector(boxes, rotate_point, -rotation);
+
+            // The blobs are constant, so just recalculate them all
+            blobs = Blobs(*image);
         }
 
         // Find ID number
