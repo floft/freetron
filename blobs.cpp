@@ -110,3 +110,20 @@ int Blobs::label(const Coord& p) const
     else
         return default_label;
 }
+
+std::vector<Coord> Blobs::in(const Coord& p1, const Coord& p2) const
+{
+    std::vector<Coord> subset;
+
+    for (const std::pair<int, CoordPair>& p : objs)
+    {
+        if (p.second.first.y >= p1.y && p.second.first.y <= p2.y &&
+            p.second.first.x >= p1.x && p.second.first.x <= p2.x)
+            subset.push_back(p.second.first);
+        // Break early when we've gone past it
+        else if (p.second.first.y > p2.y)
+            break;
+    }
+
+    return subset;
+}

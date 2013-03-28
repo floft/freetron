@@ -5,6 +5,20 @@ std::ostream& operator<<(std::ostream& os, const Coord& c)
     return os << "(" << c.x << "," << c.y << ")";
 }
 
+std::ostream& operator<<(std::ostream& os, const Answer& c)
+{
+    switch (c)
+    {
+        case Answer::Blank: return os << "_";
+        case Answer::A:     return os << "A";
+        case Answer::B:     return os << "B";
+        case Answer::C:     return os << "C";
+        case Answer::D:     return os << "D";
+        case Answer::E:     return os << "E";
+        default:            return os << "?";
+    }
+}
+
 std::istream& operator>>(std::istream& is, Coord& c)
 {
     is.exceptions(is.exceptions()|std::ios_base::badbit);

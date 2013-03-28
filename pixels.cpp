@@ -69,11 +69,20 @@ Pixels::Pixels(ILenum type, const char* lump, const int size, const std::string&
     ilDeleteImages(1, &name);
 }
 
-void Pixels::mark(const Coord& c)
+void Pixels::mark(const Coord& c, int size)
 {
     if (c.x >= 0 && c.y >= 0 &&
         c.x < w  && c.y < h)
-        marks.push_back(c);
+        marks.push_back(Mark(c, size));
+}
+
+void Pixels::line(const Coord& p1, const Coord& p2)
+{
+    for (int x = p1.x; x <= p2.x; ++x)
+    {
+        // Make this mark 1 pixel
+        mark(Coord(x, lineFunctionY(p1, p2, x)), 1);
+    }
 }
 
 void Pixels::save(const std::string& filename, bool show_marks, bool dim, bool bw) const
@@ -114,26 +123,26 @@ void Pixels::save(const std::string& filename, bool show_marks, bool dim, bool b
     // Draw the marks on a copy of the image
     if (show_marks)
     {
-        for (const Coord& c : marks)
+        for (const Mark& m : marks)
         {
-            if (MARK_SIZE > 1)
+            if (m.size > 1)
             {
                 // Left
-                for (int i = c.x; i > c.x-MARK_SIZE && i >= 0; --i)
-                    copy[c.y][i] = color;
+                for (int i = m.coord.x; i > m.coord.x-m.size && i >= 0; --i)
+                    copy[m.coord.y][i] = color;
                 // Right
-                for (int i = c.x; i < c.x+MARK_SIZE && i < w; ++i)
-                    copy[c.y][i] = color;
+                for (int i = m.coord.x; i < m.coord.x+m.size && i < w; ++i)
+                    copy[m.coord.y][i] = color;
                 // Up
-                for (int i = c.y; i > c.y-MARK_SIZE && i >= 0; --i)
-                    copy[i][c.x] = color;
+                for (int i = m.coord.y; i > m.coord.y-m.size && i >= 0; --i)
+                    copy[i][m.coord.x] = color;
                 // Down
-                for (int i = c.y; i < c.y+MARK_SIZE && i < h; ++i)
-                    copy[i][c.x] = color;
+                for (int i = m.coord.y; i < m.coord.y+m.size && i < h; ++i)
+                    copy[i][m.coord.x] = color;
             }
             else
             {
-                copy[c.y][c.x] = color;
+                copy[m.coord.y][m.coord.x] = color;
             }
         }
     }
@@ -179,6 +188,11 @@ void Pixels::save(const std::string& filename, bool show_marks, bool dim, bool b
     ilDeleteImages(1, &name);
 }
 
+// TODO:
+//   We have the same sort of rotation code three times below. Somehow we should
+//   simplify that.
+//
+
 // In the future, it may be a good idea to implement something like the "Rotation by
 // Area Mapping" talked about on http://www.leptonica.com/rotation.html
 void Pixels::rotate(double rad, const Coord& point)
@@ -214,8 +228,26 @@ void Pixels::rotate(double rad, const Coord& point)
 
     p = copy;
 
-    // Rotate marks as well
-    rotateVector(marks, point, rad);
+    // Rotate marks as well. This is the same code as rotateVector,
+    // but it has to be a bit different since marks also include a size
+    const double mark_sin_rad = std::sin(rad);
+    const double mark_cos_rad = std::cos(rad);
+
+    for (Mark& m : marks)
+    {
+        // Translate to origin
+        const int trans_x = m.coord.x - point.x;
+        const int trans_y = m.coord.y - point.y;
+
+        // Rotate + translate back
+        // Using std::round seems to make them closer to what is expected
+        const int new_x = std::round(trans_x*mark_cos_rad + trans_y*mark_sin_rad) + point.x;
+        const int new_y = std::round(trans_y*mark_cos_rad - trans_x*mark_sin_rad) + point.y;
+
+        if (new_x >= 0 && new_y >= 0 &&
+            new_x < w && new_y < h)
+            m = Mark(Coord(new_x, new_y), m.size);
+    }
 }
 
 // Rotate all points in a vector (more or less the same as rotating the image)

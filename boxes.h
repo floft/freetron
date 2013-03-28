@@ -17,6 +17,6 @@
 #include "box.h"
 
 // Find boxes in the image returns { Coord(midpoint_x, midpoint_y), ... }
-std::vector<Coord> findBoxes(Pixels& img, BoxData& data);
+std::vector<Coord> findBoxes(Pixels& img, const Blobs& blobs, Data& data);
 
 #endif

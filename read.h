@@ -10,18 +10,32 @@
 #include <vector>
 #include <string>
 
-#include "options.h"
-#include "pixels.h"
-#include "data.h"
-#include "math.h"
 #include "box.h"
+#include "math.h"
+#include "data.h"
+#include "blobs.h"
+#include "pixels.h"
+#include "outline.h"
+#include "options.h"
+
+// Data to keep about a bubble
+struct Bubble 
+{
+    int radius;
+    int label;
+    Coord coord;
+
+    Bubble(int r, int l, Coord c)
+        : radius(r), label(l), coord(c) { }
+};
 
 // See if the boxes are vertical
 bool vertical(const std::vector<Coord>& boxes,
     const int start_box, const int end_box);
 
 // Determine ID number from boxes 2-11
-int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData& data);
+int findID(Pixels& img, const Blobs& blobs,
+    const std::vector<Coord>& boxes, const Data& data);
 
 // Determine answer black from max colors
 double answerBlack(const Pixels& img, const std::vector<Coord>& boxes,
@@ -29,11 +43,16 @@ double answerBlack(const Pixels& img, const std::vector<Coord>& boxes,
     const int start_x, const int stop_x,
     const int box_width, const int bubble_jump);
 
-// Find which bubbles are filled, return x value
-std::vector<int> findFilled(Pixels& img,
-    const int x, const int y,
-        const int stop_x,
-    const int box_width, const int bubble_jump,
-    const double answer_black);
+// Find which of the answers is filled
+std::vector<Answer> findAnswers(Pixels& img, const Blobs& blobs,
+    const std::vector<Coord>& boxes, const Data& data);
+
+// Percentage of pixels that are marked with a certain label in a circle
+// centered at c of radius r. Range: 0 to 1
+double percentageLabel(const Pixels& img, const Blobs& blobs, const Bubble& b);
+
+// Find all bubbles within the rectangle from p1 to p2
+std::vector<Bubble> findBubbles(const Pixels& img, const Blobs& blobs, const int diag,
+    const Coord& p1, const Coord& p2);
 
 #endif

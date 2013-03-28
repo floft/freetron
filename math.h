@@ -27,6 +27,16 @@ inline int lineFunctionX(const Coord& a, const Coord& b, int y);
 inline int lineFunctionY(const Coord& a, const Coord& b, int x);
 inline double slopeYX(const Coord& a, const Coord& b);
 inline double slopeXY(const Coord& a, const Coord& b);
+inline Coord findMidpoint(const Coord& a, const Coord& b);
+
+// Used to find corners of boxes and bubbles
+Coord farthestFromPoint(const Coord& p,
+     const std::vector<Coord>& points);
+Coord farthestFromLine(const Coord& p1, const Coord& p2,
+     const std::vector<Coord>& points);
+
+// Determine "center" by averaging all points
+Coord findCenter(const std::vector<Coord>& points);
 
 // Standard Deviation:
 //   sqrt(1/n*((x1 - avg)^2 + (x2 - avg)^2 + ... (xn - avg)^2))
@@ -161,6 +171,11 @@ inline double slopeXY(const Coord& a, const Coord& b)
         return 0;
     else
         return 1.0*(b.x - a.x)/(b.y - a.y);
+}
+
+Coord findMidpoint(const Coord& a, const Coord& b)
+{
+    return Coord((a.x+b.x)/2, (a.y+b.y)/2);
 }
 
 #endif

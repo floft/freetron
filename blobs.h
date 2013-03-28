@@ -46,6 +46,11 @@ public:
     Blobs(const Pixels& img);
     int label(const Coord& p) const;
 
+    // Get all the first points of the label within a rectangle around
+    // the points p1 and p2. This assumes that p2 is down and to the right
+    // of p1.
+    std::vector<Coord> in(const Coord& p1, const Coord& p2) const;
+
     // Standard functions
     const_iterator begin() const { return objs.begin(); }
     const_iterator end() const { return objs.end(); }

@@ -1,34 +1,44 @@
 #include "read.h"
 
-// Generate bubble from width, BUBBLE_CURVE, BUBBLE_ASPECT, and WHITE_SEARCH
-std::vector<std::vector<bool>> genBubble(int box_width, int box_height)
+// Percentage of pixels in a circle that are a certain label
+// 0 = no label, 1 = all label
+double percentageLabel(const Pixels& img, const Blobs& blobs, const Bubble& b)
 {
-    int width  = box_width;
-    int height = smartCeil(box_width/BUBBLE_ASPECT);
+    // Find square around circle of radius r centered at (x,y)
+    Square s(img, b.coord.x, b.coord.y, b.radius);
+    const int x1    = s.topLeft().x;
+    const int y1    = s.topLeft().y;
+    const int x2    = s.bottomRight().x;
+    const int y2    = s.bottomRight().y;
+    const int mid_x = s.midPoint().x;
+    const int mid_y = s.midPoint().y;
 
-    int real_width  = width  + WHITE_SEARCH*2;
-    int real_height = height + WHITE_SEARCH*2;
+    // Maybe this makes it a bit faster
+    const int r2 = b.radius*b.radius;
 
-    std::vector<std::vector<bool>> bubble(real_height, std::vector<bool>(real_width, false));
+    int black  = 0;
+    int total  = 0;
 
-    // Make box in middle of bubble black
-    const int curve_height = (height - box_height)/2;
-    const int box_start_y = WHITE_SEARCH + curve_height;
-    const int box_end_y   = real_height - box_start_y;
-    const int box_start_x = WHITE_SEARCH;
-    const int box_end_x   = real_width - WHITE_SEARCH;
+    for (int search_y = y1; search_y < y2; ++search_y)
+    {
+        for (int search_x = x1; search_x < x2; ++search_x)
+        {
+            if (std::pow(std::abs(search_x-mid_x),2) + std::pow(std::abs(search_y-mid_y),2) <= r2)
+            {
+                if (blobs.label(Coord(search_x, search_y)) == b.label)
+                    ++black;
 
-    for (int y = box_start_y; y < box_end_y; ++y)
-        for (int x = box_start_x; x < box_end_x; ++x)
-            bubble[y][x] = true;
-
-    // Add box sections in between two curved corners
-    //const int curve_width =
-
-    // TODO: finish this; actually, we should probably do something with Outline
-
-    return bubble;
+                ++total;
+            }
+        }
+    }
+    
+    if (total > 0)
+        return 1.0*black/total;
+    else
+        return 0;
 }
+
 
 // See if the boxes are skewed
 bool vertical(const std::vector<Coord>& boxes,
@@ -44,70 +54,9 @@ bool vertical(const std::vector<Coord>& boxes,
     return true;
 }
 
-double answerBlack(const Pixels& img, const std::vector<Coord>& boxes,
-    const int start_box, const std::vector<Coord>::size_type end_box,
-    const int start_x, const int stop_x,
-    const int box_width, const int bubble_jump)
-{
-    typedef std::vector<Coord>::size_type size_type;
-
-    std::vector<double> colors;
-    const int box_height = box_width/ASPECT;
-
-    // For each row, find max value
-    for (size_type i = start_box-1; i < end_box && i < boxes.size(); ++i)
-    {
-        std::vector<double> row;
-
-        for (int search_x = start_x; search_x <= stop_x; search_x+=bubble_jump)
-            // box_height is approximately the radius of the bubble if it was a circle
-            row.push_back(averageColor(img, search_x, boxes[i].y, box_height));
-
-        const double row_max = max_value(row);
-        
-        colors.push_back(row_max);
-    }
-
-    const double max = max_value(colors);
-    const double min = min_value(colors);
-    const double avg = average(colors);
-    
-    // TODO: this works, but is completely luck. It works because there are blank
-    // rows. If somebody has the ID 0123456789, then this will error.
-    
-    // See if this is at least a certain multiple of the whitest circle
-    if (max/min < 1.5)
-        return GRAY_SHADE;
-    else
-        return avg;
-}
-
-// Go right from (x,y) looking for circle of color greater than answer_black
-std::vector<int> findFilled(Pixels& img,
-    const int x, const int y,
-    const int stop_x,
-    const int box_width, const int bubble_jump,
-    const double answer_black)
-{
-    std::vector<int> position;
-    const int box_height = box_width/ASPECT;
-
-    for (int search_x = x; search_x <= stop_x; search_x+=bubble_jump)
-    {
-        if (averageColor(img, search_x, y, box_height) > answer_black)
-        {
-            position.push_back(search_x);
-
-            if (DEBUG)
-                img.mark(Coord(search_x, y));
-        }
-    }
-
-    return position;
-}
-
 // Find ID number from card
-int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData& data)
+int findID(Pixels& img, const Blobs& blobs,
+    const std::vector<Coord>& boxes, const Data& data)
 {
     typedef std::vector<Coord>::size_type size_type;
 
@@ -117,35 +66,37 @@ int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData& data)
     const size_type& start_box = ID_START;
     const size_type& end_box   = ID_END;
 
-    // If the boxes don't exist, ...
-    if (boxes.size() < end_box)
-        return 0;
-
-    // Return 0 if the boxes are skewed
-    if (!vertical(boxes, start_box, end_box))
+    // If the boxes don't exist or the boxes are skewed give up
+    if (boxes.size() < end_box || !vertical(boxes, start_box, end_box))
         return 0;
 
     // Calculate relative values, use ID height to be more accurate
-    const int id_height   = boxes[end_box-1].y - boxes[start_box-1].y;
-    const int first_jump  = 1.0*FIRST_JUMP/ID_HEIGHT*id_height;
-    const int bubble_jump = 1.0*BUBBLE_JUMP/ID_HEIGHT*id_height;
+    const int box_height = data.width/ASPECT;
+    const int id_height  = boxes[end_box-1].y - boxes[start_box-1].y;
+    const int id_width   = 1.0*ID_WIDTH/ID_HEIGHT*id_height;
 
-    // Since it's vertical, just use the first box
-    const int start_x = boxes[start_box-1].x + first_jump;
-    const int stop_x  = start_x + bubble_jump*(end_box-start_box);
+    // Get all the bubbles (first point of an object) within this ID box. Extend
+    // it a bit just to make sure we get everything.
+    const std::vector<Bubble> bubbles = findBubbles(img, blobs, data.diag,
+         Coord(boxes[BOT_START].x - box_height, boxes[start_box-1].y - box_height),
+         Coord(boxes[BOT_START].x + id_width + box_height, boxes[end_box-1].y + box_height));
 
-    // Calculate value needed to be considered black from values
-    const double answer_black = answerBlack(img, boxes, start_box, end_box, start_x, stop_x,
-        data.width, bubble_jump);
-
+    // Determine which of these bubbles are filled
     for (size_type i = start_box-1; i < end_box && i < boxes.size(); ++i)
     {
-        std::vector<int> position = findFilled(img, start_x, boxes[i].y, stop_x, 
-            data.width, bubble_jump, answer_black);
+        for (const Bubble& b : bubbles)
+        {
+            // Look at bubbles in this row
+            if (std::abs(boxes[i].y - b.coord.y) < VERT_STRAY &&
+                percentageLabel(img, blobs, b) > MIN_BLACK)
+            {
+                if (DEBUG)
+                    img.mark(b.coord);
 
-        // at x = position, the value is box # - start_box + 1 (0 = start_box);
-        for (const int pos : position)
-            filled[pos] = i - start_box + 1;
+                // at x = position, the value is box # - start_box + 1 (0 = start_box)
+                filled[b.coord.x] = i - start_box + 1;
+            }
+        }
     }
 
     // Get ID number from map
@@ -159,4 +110,107 @@ int findID(Pixels& img, const std::vector<Coord>& boxes, BoxData& data)
     }
 
     return id;
+}
+
+std::vector<Answer> findAnswers(Pixels& img, const Blobs& blobs,
+    const std::vector<Coord>& boxes, const Data& data)
+{
+    std::vector<Answer> answers(Q_TOTAL);
+
+    int column = 0;
+    int box = Q_START - 1;
+
+    // The amount to jump is half the distance between second two boxes
+    // on the bottom row
+    const int jump = 0.5*(boxes[BOT_START+1].x - boxes[BOT_START].x);
+
+    // Same as before
+    const int box_height = data.width/ASPECT;
+
+    // The width of one column
+    const int question_width = boxes[BOT_START+2].x - boxes[BOT_START].x + 2*box_height;
+
+    for (int q = 0; q < Q_TOTAL; ++q)
+    {
+        // X coordinates
+        int start = 0;
+        int end   = 0;
+
+        // These are all relative to the bottom boxes. This would be different for every
+        // type of form, but for all from this manufacturer they are the same. (Or so their
+        // website seems to indicate.)
+        switch (column)
+        {
+            case 0:
+                start = boxes[BOT_START].x;
+                end   = boxes[BOT_START+2].x;
+                break;
+            case 1:
+                start = boxes[BOT_START+3].x - jump;
+                end   = boxes[BOT_START+4].x + jump;
+                break;
+            case 2:
+                start = boxes[BOT_START+5].x;
+                end   = boxes[BOT_START+7].x;
+                break;
+            default:
+                log("too many columns");
+                break;
+        }
+
+        // Get all the bubbles (first point of an object) within this ID box. Extend
+        // it a bit just to make sure we get everything.
+        const std::vector<Bubble> bubbles = findBubbles(img, blobs, data.diag,
+             Coord(start - box_height, boxes[box].y - box_height),
+             Coord(end   + box_height, boxes[box].y + box_height));
+
+        for (const Bubble& b : bubbles)
+        {
+            if (percentageLabel(img, blobs, b) > MIN_BLACK)
+            {
+                if (DEBUG)
+                    img.mark(b.coord);
+
+                // Note the integer division
+                // TODO: is this really the best way to do this?
+                answers[q] = (Answer)(5*(b.coord.x - start + box_height)/question_width + 1);
+            }
+        }
+
+        ++box;
+
+        // For the next question look at the next column
+        if (box == Q_END)
+        {
+            ++column;
+            box = Q_START - 1;
+        }
+    }
+
+    return answers;
+}
+
+std::vector<Bubble> findBubbles(const Pixels& img, const Blobs& blobs, const int diag,
+    const Coord& p1, const Coord& p2)
+{
+    std::vector<Bubble> bubbles;
+    const std::vector<Coord> local_blobs = blobs.in(p1, p2);
+
+    for (const Coord& object : local_blobs)
+    {
+        const Outline outline(img, blobs, object, MAX_ITERATIONS);
+        const Coord center = findCenter(outline.points());
+        const Coord p1 = farthestFromPoint(center, outline.points());
+        const Coord p2 = farthestFromPoint(p1,     outline.points());
+        const double d = distance(p1, p2);
+
+        if (d > MIN_DIAG && d < MAX_DIAG &&  // Decent size
+            d > diag - DIAG_ERROR) // Have a lower bound on the diagonal
+        {
+            // w / (w/h) = h, h/2 = "radius" of the bubble
+            bubbles.push_back(Bubble(d/BUBBLE_ASPECT/2, blobs.label(object), center));
+        }
+    }
+
+    return bubbles;
 }

@@ -19,9 +19,18 @@
 #include "data.h"
 #include "options.h"
 
+struct Mark
+{
+    Coord coord;
+    int size;
+
+    Mark(Coord c, int s)
+        :coord(c), size(s) { }
+};
+
 class Pixels
 {
-    std::vector<Coord> marks;
+    std::vector<Mark> marks;
     std::vector<std::vector<unsigned char>> p;
     int w;
     int h;
@@ -49,10 +58,16 @@ public:
     // Default is used if coord doesn't exist (which should never happen)
     // Default to white to assume that this isn't a useful pixel
     inline bool black(const Coord& c, const bool default_value = false) const;
+    
+    // When saving, we'll display marks optionally
+    void mark(const Coord& m, int size = MARK_SIZE);
 
+    // Mark every pixel on the line between p1 and p2. This assumes that p1 is to the
+    // left of p2.
+    void line(const Coord& p1, const Coord& p2);
+    
     // Used for debugging, all processing (converting to black-and-white, adding
     // the marks, dimming the image) is done on a copy of the image
-    void mark(const Coord& m);
     void save(const std::string& filename, const bool show_marks = true,
               const bool dim = true, const bool bw = true) const;
 
