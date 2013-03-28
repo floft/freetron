@@ -182,65 +182,76 @@ int main(int argc, char* argv[])
         if (i.id == teacher)
         {
             if (found)
-                log("found multiple keys, using last one");
-
-            std::cout << i.thread_id << ": " << std::setw(10) << i.id << " -- ";
-
-            for (const Answer b : i.answers)
             {
-                if (b != Answer::Blank)
+                log("key already found, skipping this one");
+            }
+            else
+            {
+                std::cout << i.thread_id << ": " << std::setw(10) << i.id << " -- ";
+
+                for (const Answer b : i.answers)
                 {
-                    std::cout << b << " ";
-                    ++total;
+                    if (b != Answer::Blank)
+                    {
+                        std::cout << b << " ";
+                        ++total;
+                    }
                 }
+
+                std::cout << std::endl;
+
+                key = i.answers;
+                found = true;
             }
-
-            std::cout << std::endl;
-
-            key = i.answers;
         }
     }
 
-    // Grade student's exams
-    std::map<int, double> scores;
-    
-    for (const Info& i : results)
+    if (found)
     {
-        if (i.id > 0)
+        // Grade student's exams
+        std::map<int, double> scores;
+        
+        for (const Info& i : results)
         {
-            if (i.id == teacher)
-                continue;
-
-            std::cout << i.thread_id << ": " << std::setw(10) << i.id << " -- ";
-
-            int same = 0;
-
-            for (int q = 0; q < total; ++q)
+            if (i.id > 0)
             {
-                std::cout << i.answers[q] << " ";
+                if (i.id == teacher)
+                    continue;
 
-                if (key[q] == i.answers[q])
-                    ++same;
+                std::cout << i.thread_id << ": " << std::setw(10) << i.id << " -- ";
+
+                int same = 0;
+
+                for (int q = 0; q < total; ++q)
+                {
+                    std::cout << i.answers[q] << " ";
+
+                    if (key[q] == i.answers[q])
+                        ++same;
+                }
+
+                std::cout << std::endl;
+
+                scores[i.id] = 1.0*same/total;
             }
-
-            std::cout << std::endl;
-
-            scores[i.id] = 1.0*same/total;
+            else
+            {
+                std::cout << i.thread_id << ": failed to determine student ID" << std::endl;
+            }
         }
-        else
+        
+        // Output scores
+        std::cout << std::endl << "Scores" << std::endl;
+
+        for (const std::pair<int, double>& score: scores)
         {
-            std::cout << i.thread_id << ": failed to determine student ID" << std::endl;
+            std::cout << std::setw(10) << score.first << ": "
+                      << score.second*100 << "%" << std::endl;
         }
     }
-    
-    std::cout << std::endl;
-
-    // Output scores
-    std::cout << "Scores" << std::endl;
-
-    for (const std::pair<int, double>& score: scores)
+    else
     {
-        std::cout << std::setw(10) << score.first << ": " << score.second*100 << "%" << std::endl;
+        std::cout << std::endl << "Key not found." << std::endl;
     }
     
     return 0;
