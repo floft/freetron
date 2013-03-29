@@ -194,6 +194,10 @@ std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
     {
         const Outline outline(img, blobs, object, MAX_ITERATIONS);
         const Coord center = findCenter(outline.points());
+
+        if (center == default_coord)
+            continue;
+
         const Coord p1 = farthestFromPoint(center, outline.points());
         const Coord p2 = farthestFromPoint(p1,     outline.points());
         const double d = distance(p1, p2);

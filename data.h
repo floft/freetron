@@ -19,6 +19,8 @@ struct Coord
     Coord operator+(const Coord& c) const;
 };
 
+static const Coord default_coord(-1, -1);
+
 // A function object (functor) for sorting points by X position
 struct CoordXSort
 {

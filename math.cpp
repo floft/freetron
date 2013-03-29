@@ -69,7 +69,7 @@ Coord farthestFromLine(const Coord& p1, const Coord& p2,
 Coord findCenter(const std::vector<Coord>& points)
 {
     if (points.size() == 0)
-        return Coord();
+        return default_coord;
 
     int x = 0;
     int y = 0;

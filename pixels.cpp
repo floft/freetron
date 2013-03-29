@@ -213,10 +213,23 @@ void Pixels::save(const std::string& filename, bool show_marks, bool dim, bool b
     ilDeleteImages(1, &name);
 }
 
-// TODO: simplify rotation
-//   We have the same sort of rotation code three times below. Somehow we should
-//   simplify that.
-//
+Coord Pixels::rotatePoint(const Coord& origin, const Coord& c, double sin_rad, double cos_rad) const
+{
+    // Translate to origin
+    const int trans_x = c.x - origin.x;
+    const int trans_y = c.y - origin.y;
+
+    // Rotate + translate back
+    // Using std::round seems to make them closer to what is expected
+    const int new_x = std::round(trans_x*cos_rad + trans_y*sin_rad) + origin.x;
+    const int new_y = std::round(trans_y*cos_rad - trans_x*sin_rad) + origin.y;
+
+    if (new_x >= 0 && new_y >= 0 &&
+        new_x < w && new_y < h)
+        return Coord(new_x, new_y);
+    
+    return default_coord;
+}
 
 // In the future, it may be a good idea to implement something like the "Rotation by
 // Area Mapping" talked about on http://www.leptonica.com/rotation.html
@@ -231,47 +244,30 @@ void Pixels::rotate(double rad, const Coord& point)
     const double sin_rad = std::sin(-rad);
     const double cos_rad = std::cos(-rad);
 
-    // Rotate image
     for (int y = 0; y < h; ++y)
     {
         for (int x = 0; x < w; ++x)
         {
-            // "Translate" it, and then add back in the point's x and y
-            const int trans_x = x - point.x;
-            const int trans_y = y - point.y;
+            const Coord c = rotatePoint(point, Coord(x,y), sin_rad, cos_rad);
 
-            // Find where to copy from
-            const int old_x = smartFloor(trans_x*cos_rad + trans_y*sin_rad) + point.x;
-            const int old_y = smartFloor(trans_y*cos_rad - trans_x*sin_rad) + point.y;
-
-            // Get rid of invalid points
-            if (old_x >= 0 && old_y >= 0 &&
-                old_x < w  && old_y < h)
-                copy[y][x] = p[old_y][old_x];
+            if (c != default_coord)
+                copy[y][x] = p[c.y][c.x];
         }
     }
 
     p = copy;
 
-    // Rotate marks as well. This is the same code as rotateVector,
-    // but it has to be a bit different since marks also include a size
+    // Rotate marks as well. This time we'll rotate to the new image, calculating the new
+    // point instead of looking for what goes at every pixel in the new image.
     const double mark_sin_rad = std::sin(rad);
     const double mark_cos_rad = std::cos(rad);
 
     for (Mark& m : marks)
     {
-        // Translate to origin
-        const int trans_x = m.coord.x - point.x;
-        const int trans_y = m.coord.y - point.y;
+        const Coord c = rotatePoint(point, m.coord, mark_sin_rad, mark_cos_rad);
 
-        // Rotate + translate back
-        // Using std::round seems to make them closer to what is expected
-        const int new_x = std::round(trans_x*mark_cos_rad + trans_y*mark_sin_rad) + point.x;
-        const int new_y = std::round(trans_y*mark_cos_rad - trans_x*mark_sin_rad) + point.y;
-
-        if (new_x >= 0 && new_y >= 0 &&
-            new_x < w && new_y < h)
-            m = Mark(Coord(new_x, new_y), m.size);
+        if (c != default_coord)
+            m.coord = c;
     }
 }
 
@@ -284,17 +280,9 @@ void Pixels::rotateVector(std::vector<Coord>& v, const Coord& point, double rad)
 
     for (Coord& m : v)
     {
-        // Translate to origin
-        const int trans_x = m.x - point.x;
-        const int trans_y = m.y - point.y;
+        const Coord c = rotatePoint(point, m, sin_rad, cos_rad);
 
-        // Rotate + translate back
-        // Using std::round seems to make them closer to what is expected
-        const int new_x = std::round(trans_x*cos_rad + trans_y*sin_rad) + point.x;
-        const int new_y = std::round(trans_y*cos_rad - trans_x*sin_rad) + point.y;
-
-        if (new_x >= 0 && new_y >= 0 &&
-            new_x < w && new_y < h)
-            m = Coord(new_x, new_y);
+        if (c != default_coord)
+            m = c;
     }
 }

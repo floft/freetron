@@ -72,6 +72,12 @@ public:
     void save(const std::string& filename, const bool show_marks = true,
               const bool dim = true, const bool bw = true) const;
 
+    // Rotate p around origin an amount in radians, sin_rad = sin(rad) and
+    // cos_rad = cos(rad). We pass in these values because otherwise we calculate
+    // them thousands of times.
+    Coord rotatePoint(const Coord& origin, const Coord& p,
+        double sin_rad, double cos_rad) const;
+
     // Rotate all points in a vector
     void rotateVector(std::vector<Coord>& v, const Coord& point, double rad) const;
 };

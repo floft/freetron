@@ -19,8 +19,8 @@
 #include "options.h"
 
 // Set this to something that can't be detected on the form
-const int DefaultID = -1;
-const int DefaultFilled = -1;
+static const int DefaultID = -1;
+static const int DefaultFilled = -1;
 
 // Data to keep about a bubble
 struct Bubble 
