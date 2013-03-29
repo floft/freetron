@@ -16,8 +16,7 @@ Currently this program will accept most multi-page PDFs (some such as the
 example PDF above will crash the program), find the black boxes, rotate the
 image, find the student ID number, find the filled in answers, and grade based
 on the form with the teacher's ID. What's left is all the fancy Web UI,
-database, and email stuff.  Although, the algorithm for figuring out what
-letter was filled in could be improved.
+database, and email stuff.
 
 **Dependencies**  
 *a C++11 compiler*  
