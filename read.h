@@ -20,6 +20,7 @@
 
 // Set this to something that can't be detected on the form
 const int DefaultID = -1;
+const int DefaultFilled = -1;
 
 // Data to keep about a bubble
 struct Bubble 
@@ -38,11 +39,11 @@ bool vertical(const std::vector<Coord>& boxes,
 
 // Determine ID number from boxes 2-11
 int findID(Pixels& img, const Blobs& blobs,
-    const std::vector<Coord>& boxes, const Data& data);
+    const std::vector<Coord>& boxes, const Data& data, const double min_black);
 
 // Find which of the answers is filled
 std::vector<Answer> findAnswers(Pixels& img, const Blobs& blobs,
-    const std::vector<Coord>& boxes, const Data& data);
+    const std::vector<Coord>& boxes, const Data& data, const double min_black);
 
 // Percentage of pixels that are marked with a certain label in a circle
 // centered at c of radius r. Range: 0 to 1
@@ -51,5 +52,17 @@ double percentageLabel(const Pixels& img, const Blobs& blobs, const Bubble& b);
 // Find all bubbles within the rectangle from p1 to p2
 std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
     const Coord& a, const Coord& b);
+
+// Find filled bubble out of a vector of possible bubbles either aligned
+// vertically or horizontally (use_x true is horizontal, otherwise vertical)
+int findFilled(Pixels& img, const Blobs& blobs, const std::vector<Bubble>& bubbles,
+    int start, double jump, int options, double black, bool use_x);
+
+// Determine answer black from the average of all bubbles in the student ID box.
+// Since at most ID_LENGTH should be filled in, we could use a black value halfway
+// between the average of the bubbles not filled in and the bubbles filled in. If
+// the student ID is really short (or blank), this may not work.
+double findBlack(Pixels& img, const Blobs& blobs, std::vector<Coord>& boxes,
+    const Data& data);
 
 #endif

@@ -17,7 +17,7 @@ typedef std::vector<Coord>::size_type vsize_coord;
 // Allow easy debugging. When true we will save debug0.png, debug1.png, etc.
 // for the PDF pages processed with marks of size MARK_SIZE and color
 // MARK_COLOR.
-static const bool DEBUG = true;
+static const bool DEBUG = false;
 static const int MARK_SIZE = 5;
 static const unsigned char MARK_COLOR = 127;
 
@@ -104,14 +104,16 @@ static const int HUGE_JUMP = 200;
 static const vsize_coord TOTAL_BOXES = 53;
 
 // When determining the student ID, we need to know which boxes correspond to
-// the ID.
-static const int ID_START = 1;
-static const int ID_END   = 10;
+// the ID. We also need to know how many digits the ID can be.
+static const int ID_START  = 1;
+static const int ID_END    = 10;
+static const int ID_LENGTH = 10;
 
 // What boxes are for the questions and how many
-static const int Q_START = 11;
-static const int Q_END   = 44;
-static const int Q_TOTAL = 100;
+static const int Q_START   = 11;
+static const int Q_END     = 44;
+static const int Q_TOTAL   = 100;
+static const int Q_OPTIONS = 5;
 
 // What boxes are the bottom row below all the questions (used for finding
 // filled bubbles)
@@ -123,18 +125,5 @@ static const int BOT_END   = TOTAL_BOXES;
 // we wait this many milliseconds till we check if any of the threads have
 // completed.
 static const int THREAD_WAIT = 20;
-
-// Use distance from top box to bottom box next to ID box to determine
-// relative width and height of ID box
-static const int ID_HEIGHT = 452;
-static const int ID_WIDTH  = 680;
-
-// Just to make sure we get all the bubbles, extend the box we look at by this
-// many pixels
-static const int EXTEND_BOX  = 20;
-
-// The amount the center of a bubble can be from the y value of the box to the
-// left, in pixels
-static const int VERT_STRAY = 5;
 
 #endif

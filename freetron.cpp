@@ -2,10 +2,6 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Rewrite student ID detection code to check columns and use auto-
- *     decreasing sensitivity
- *   - Detect "answer black" before doing any of the detection algorithms
- *
  *   - Take amount of memory into consideration when creating threads
  *   - When a box is missing (box #26 on cat22.pdf), calculate supposed position
  *   - Make image extraction multi-threaded for computing isBlack bool or maybe
@@ -22,20 +18,33 @@
 #include <IL/il.h>
 #include <podofo/podofo.h>
 
-#include "extract.h"
-#include "pixels.h"
-#include "options.h"
-#include "rotate.h"
-#include "data.h"
-#include "read.h"
-#include "boxes.h"
 #include "box.h"
-#include "threading.h"
 #include "log.h"
+#include "read.h"
+#include "data.h"
+#include "boxes.h"
+#include "rotate.h"
+#include "pixels.h"
+#include "extract.h"
+#include "options.h"
+#include "threading.h"
+
+enum class Args
+{
+    Unknown,
+    Help,
+    ID
+};
 
 void help()
 {
-    std::cout << "Usage: freetron in.pdf TeacherID" << std::endl;
+    std::cout << "Usage: freetron -i TeacherID in.pdf" << std::endl;
+}
+
+void invalid()
+{
+    std::cerr << "Invalid argument (see \"-h\" for usage)" << std::endl;
+    std::exit(1);
 }
 
 // Return type for threads
@@ -106,14 +115,17 @@ Info parseImage(Pixels* image)
         // Sort the bottom row of boxes by increasing x coordinates.
         std::sort(boxes.begin()+BOT_START-1, boxes.begin()+BOT_END, CoordXSort());
 
+        // Determine what is black (changes in BW, color, and grayscale)
+        double black = findBlack(*image, blobs, boxes, data);
+
         // Find ID number
-        int id = findID(*image, blobs, boxes, data);
+        int id = findID(*image, blobs, boxes, data, black);
 
         std::vector<Answer> answers;
 
         // Don't bother finding answers if we couldn't even get the student ID
         if (id != DefaultID)
-            answers = findAnswers(*image, blobs, boxes, data);
+            answers = findAnswers(*image, blobs, boxes, data, black);
 
         // Debug information
         if (DEBUG)
@@ -150,17 +162,46 @@ int main(int argc, char* argv[])
     ilInit();
     std::vector<Pixels> images;
 
-    // Simple help message
-    if (argc != 3 || (argc >= 2 &&
-       (std::strcmp(argv[1], "-h") == 0 ||
-        std::strcmp(argv[1], "--help") == 0)))
+    // Argument parsing
+    std::string filename;
+    int teacher = DefaultID;
+
+    std::map<std::string, Args> options = {{
+        { "-h",      Args::Help },
+        { "--help",  Args::Help },
+        { "-i",      Args::ID },
+        { "--id",    Args::ID }
+    }};
+
+    for (int i = 1; i < argc; ++i)
     {
-        help();
-        return 1;
+        switch (options[argv[i]])
+        {
+            case Args::Help:
+                help();
+                return 1;
+            case Args::ID:
+                ++i;
+
+                if (i == argc)
+                    invalid();
+
+                teacher = std::stoi(argv[i]);
+                break;
+            default:
+                if (!filename.empty())
+                    invalid();
+
+                filename = argv[i];
+                break;
+        }
     }
 
-    std::string filename = argv[1];
-    int teacher = std::stoi(argv[2]);
+    if (teacher == DefaultID)
+    {
+        log("teacher ID cannot be the default ID");
+        return 1;
+    }
 
     try
     {
@@ -270,7 +311,11 @@ int main(int argc, char* argv[])
     }
     else
     {
-        log("key not found");
+        std::cout << "Key not found. Given IDs:" << std::endl;
+
+        for (const Info& i : results)
+            if (i.id != DefaultID)
+                std::cout << "  " << i.id << std::endl;
     }
     
     return 0;
