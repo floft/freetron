@@ -2,7 +2,6 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Fix skipping boxes that start with a pixel and one down and to the left
  *   - Rewrite student ID detection code to check columns and use auto-
  *     decreasing sensitivity
  *   - Detect "answer black" before doing any of the detection algorithms

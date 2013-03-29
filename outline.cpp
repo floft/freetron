@@ -5,15 +5,21 @@
 //  0 1 2
 //  7   3
 //  6 5 4
+//
+//  Now we use the following since the above version caused problems when
+//  the first pixel was alone with the next pixel down and to the left.
+//  6 7 0
+//  5   1
+//  4 3 2
 const std::array<Coord, 8> Outline::matrix = {{
-    Coord(-1, -1),
-    Coord( 0, -1),
     Coord( 1, -1),
     Coord( 1,  0),
     Coord( 1,  1),
     Coord( 0,  1),
     Coord(-1,  1),
-    Coord(-1,  0)
+    Coord(-1,  0),
+    Coord(-1, -1),
+    Coord( 0, -1)
 }};
 
 Outline::Outline(const Pixels& img, const Blobs& blobs, const Coord& point,
