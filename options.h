@@ -33,11 +33,11 @@ static const double ASPECT = 2.722;
 
 // Minimum percent of pixels in a supposed box needing to be black to be
 // considered a box. This is between 0 and 1.
-static const double MIN_BLACK = 0.65;
+static const double MIN_BLACK = 0.8;
 
 // Maximum percent of pixels that can be black in the region around a box, and
 // what sized region around box to check in pixels.
-static const double MAX_BLACK = 1-MIN_BLACK;
+static const double MAX_BLACK = 0.5;
 static const int WHITE_SEARCH = 5;
 
 // Average RGB considered black. Currently the colors are stored in a vector of
@@ -63,9 +63,9 @@ static const int MAX_ERROR = 5;
 // considered a box.
 static const int HEIGHT_ERROR = 10;
 
-// The max distance in pixels a point on the rectangle's side can be from the
-// straight line connecting the two corners
-static const int RECT_ERROR = 5;
+// The max distance a point on the rectangle's side can be from the straight
+// line connecting the two corners. This is relative to the width.
+static const double RECT_ERROR = 0.125; // 4/32 = 0.125
 
 // The error margin in pixels for the difference in diagonal from the diagonals
 // of other valid boxes.
@@ -74,8 +74,8 @@ static const int DIAG_ERROR = 10;
 // The error margin for the difference in slope for the width and height. This
 // is to make sure that it is more of a parallelogram instead of just a
 // quadrilateral.
-static const double SLOPE_ERROR_WIDTH  = 0.2;  // 10/50 is 0.2
-static const double SLOPE_ERROR_HEIGHT = 0.5;  // 10/20 is 0.5
+static const double SLOPE_ERROR_WIDTH  = 0.2;  // 5/50 is 0.1,  10/50 is 0.2
+static const double SLOPE_ERROR_HEIGHT = 0.5;  // 5/20 is 0.25, 10/20 is 0.5
 
 // These values are used to make sure we'll get decent sized boxes. Since we're
 // using the aspect ratio and rounding, if we're dealing with a 1px wide box,
@@ -96,7 +96,7 @@ static const int MIN_HEIGHT = 5;
 // this should be a safe value.
 static const int MAX_ITERATIONS = MAX_DIAG*4;
 
-// What defines a huge jump in pixels
+// What defines the huge jump in pixels
 static const int HUGE_JUMP = 200;
 
 // Total number of boxes, to verify we found the right ones. This is the number
@@ -125,6 +125,6 @@ static const int BOT_END   = TOTAL_BOXES;
 // depending on the number of CPUs. After we create as many threads as cores,
 // we wait this many milliseconds till we check if any of the threads have
 // completed.
-static const int THREAD_WAIT = 20;
+static const int THREAD_WAIT = 50;
 
 #endif

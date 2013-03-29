@@ -6,6 +6,9 @@
 //  7   3
 //  6 5 4
 //
+//  TODO: fix it so that either way would work. This new way has problems
+//  with a pixel diamond with a hole in the center.
+//  
 //  Now we use the following since the above version caused problems when
 //  the first pixel was alone with the next pixel down and to the left.
 //  6 7 0
@@ -39,9 +42,6 @@ Outline::Outline(const Pixels& img, const Blobs& blobs, const Coord& point,
     // point if the pixel above it was black)
     Coord position(point.x, point.y-1);
     
-    // End where we started
-    Coord end = position;
-
     // A fail-safe
     int iterations = 0;
 
@@ -52,21 +52,14 @@ Outline::Outline(const Pixels& img, const Blobs& blobs, const Coord& point,
         // Find next pixel to go to
         EdgePair edge = findEdge(position);
 
-        // Ran out of options (shouldn't happen?)
+        // We've gone everywhere
         if (edge.index == -1)
-        {
-            log("ran out of options on edge");
-            return;
-        }
+            break;
 
         // Go to new position (note that edge.point will be position unless
         // we had to retrace our steps a ways)
         position = edge.point+matrix[edge.index];
         path.push_back(position);
-
-        // We've walked around the entire object now
-        if (position == end)
-            break;
         
         // Give up after we reach a certain size of object
         ++iterations;

@@ -2,7 +2,6 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Fix pixel problem with four pixels in a diamond shape
  *   - Improve findBlack()
  *   - Write histogram auto threshold function to determine GRAY_SHADE
  *   - Take amount of memory into consideration when creating threads

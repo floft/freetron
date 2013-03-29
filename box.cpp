@@ -68,19 +68,24 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point)
             bottomright = *point;
     }
 
+    // We need the width to check for out-of-line points
+    w  = distance(topleft, topright);
+
+    // Find the relative rectangle error
+    double rect_error = RECT_ERROR*w;
+
     // Check if all the points are on the lines between TL-TR, TR-BR, etc.
     for (const Coord& point : outline)
     {
-        if (distance(topleft,    topright,    point) > RECT_ERROR &&
-            distance(topright,   bottomright, point) > RECT_ERROR &&
-            distance(bottomleft, bottomright, point) > RECT_ERROR &&
-            distance(topleft,    bottomleft,  point) > RECT_ERROR)
+        if (distance(topleft,    topright,    point) > rect_error &&
+            distance(topright,   bottomright, point) > rect_error &&
+            distance(bottomleft, bottomright, point) > rect_error &&
+            distance(topleft,    bottomleft,  point) > rect_error)
             return;
     }
 
     // We've traced some shape now, so using the four supposed "corners" calculate the
     // box's properties
-    w  = distance(topleft, topright);
     h  = distance(topleft, bottomleft);
     mp = findMidpoint(topleft, bottomright);
     ar = (h>0)?1.0*w/h:0;
@@ -104,9 +109,20 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point)
             img.mark(topright);
             img.mark(bottomleft);
             img.mark(bottomright);
+
+            for (const Coord& c : outline)
+                img.mark(c, 1);
         }
 
         valid_box = true;
+    }
+
+    if (DEBUG)
+    {
+        img.mark(topleft, 1);
+        img.mark(topright, 1);
+        img.mark(bottomleft, 1);
+        img.mark(bottomright, 1);
     }
 }
 
@@ -136,10 +152,10 @@ bool Box::validBoxColor() const
         for (int x = bounds.topLeft().x; x <= bounds.bottomRight().x; ++x)
         {
             // Inside box
-            if (y >= lineFunctionY(topleft,    topright,    x) &&
-                y <= lineFunctionY(bottomleft, bottomright, x) &&
-                x >= lineFunctionX(topleft,    bottomleft,  y) &&
-                x <= lineFunctionX(topright,   bottomright, y))
+            if (y > lineFunctionY(topleft,    topright,    x) &&
+                y < lineFunctionY(bottomleft, bottomright, x) &&
+                x > lineFunctionX(topleft,    bottomleft,  y) &&
+                x < lineFunctionX(topright,   bottomright, y))
             {
                 if (blobs.label(Coord(x,y)) == label)
                     ++inside_black;
