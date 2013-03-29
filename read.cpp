@@ -203,13 +203,13 @@ std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
         {
             // A circle with radius d/2 should encompass all of a bubble
             bubbles.push_back(Bubble(d/2, blobs.label(object), center));
-        }
 
             if (DEBUG)
             {
                 for (const Coord& c : outline.points())
                     img.mark(c, 1);
             }
+        }
     }
 
     return bubbles;

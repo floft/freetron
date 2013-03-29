@@ -2,8 +2,9 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Improve findBlack() or auto threshold instead of using 127, 172...
  *   - Fix pixel problem with four pixels in a diamond shape
+ *   - Improve findBlack()
+ *   - Write histogram auto threshold function to determine GRAY_SHADE
  *   - Take amount of memory into consideration when creating threads
  *   - When a box is missing, calculate supposed position
  */
