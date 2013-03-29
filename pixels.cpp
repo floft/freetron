@@ -84,7 +84,7 @@ Pixels::Pixels(ILenum type, const char* lump, const int size, const std::string&
     // After loading, determine the real gray shade to view this as a black and white
     // image. We'll be using this constantly, so we might as well do it now.
     const Histogram h(p);
-    gray_shade = h.balancedThreshold(gray_shade);
+    gray_shade = h.threshold(gray_shade);
 }
 
 void Pixels::mark(const Coord& c, int size)

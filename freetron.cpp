@@ -3,7 +3,7 @@
  *
  * Todo:
  *   - Improve findBlack()
- *   - Write histogram auto threshold function to determine GRAY_SHADE
+ *   - Improve thresholdValue()
  *   - Take amount of memory into consideration when creating threads
  *   - When a box is missing, calculate supposed position
  */

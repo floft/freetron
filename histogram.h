@@ -1,7 +1,6 @@
 /*
  * A class that creates a histogram for a 2D array of grayscale pixel values.
- * This is used to determine the threshold value. It's supposed to be
- * "balanced histogram thresholding" as described on Wikipedia.
+ * This is used to determine the threshold value.
  */
 
 #ifndef H_HISTOGRAM
@@ -25,7 +24,7 @@ public:
 
     // Auto threshold. Specify the initial threshold to use to determine the
     // foreground and background.
-    unsigned char balancedThreshold(unsigned char initial) const;
+    unsigned char threshold(unsigned char initial) const;
 };
 
 #endif

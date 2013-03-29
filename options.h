@@ -40,10 +40,7 @@ static const double MIN_BLACK = 0.8;
 static const double MAX_BLACK = 0.5;
 static const int WHITE_SEARCH = 5;
 
-// Average RGB considered black. Currently the colors are stored in a vector of
-// chars, so 128 is 50% of 256. (Then -1 since it's zero-based.) However, 172
-// seems to give better results over all. Note that this is the initial shade.
-// We use this to find the threshold from a histogram. (See histogram.h)
+// What is considered black initially when auto thresholding in histogram.h
 static const int GRAY_SHADE = 165;
 
 // When finding the filled in bubbles, look for something as wide as a box with

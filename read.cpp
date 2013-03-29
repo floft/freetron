@@ -296,6 +296,8 @@ double findBlack(Pixels& img, const Blobs& blobs, const std::vector<Coord>& boxe
 
     // I'm guessing that the halfway point between the filled-in bubbles' average
     // and the not-filled-in bubbles' average is a decent black value
+    //
+    // TODO: fix this algorithm
     double black = (avg+max_avg+MIN_BLACK)/3;
 
     return (avg+max_avg>0)?black:MIN_BLACK;
