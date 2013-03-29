@@ -40,8 +40,10 @@ static const double MIN_BLACK = 0.8;
 static const double MAX_BLACK = 0.5;
 static const int WHITE_SEARCH = 5;
 
-// What is considered black initially when auto thresholding in histogram.h
-static const int GRAY_SHADE = 165;
+// What is considered black initially when auto thresholding in histogram.h. A
+// value of 165 works best if we didn't have any auto thresholding, but since
+// we do, it'll pick something good if this is somewhere near 50% of 256.
+static const int GRAY_SHADE = 127;
 
 // When finding the filled in bubbles, look for something as wide as a box with
 // a height calculated from the below aspect ratio. The curve of the bubble is

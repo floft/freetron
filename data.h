@@ -31,7 +31,6 @@ struct CoordXSort
 struct Data
 {
     // The approximate width of the box
-    // TODO: is this used?
     int width = 0;
 
     // The diagonal of the first used box

@@ -116,14 +116,6 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point)
 
         valid_box = true;
     }
-
-    if (DEBUG)
-    {
-        img.mark(topleft, 1);
-        img.mark(topright, 1);
-        img.mark(bottomleft, 1);
-        img.mark(bottomright, 1);
-    }
 }
 
 // Get average color of pixels within the corners of the box and also the average

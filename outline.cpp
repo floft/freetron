@@ -2,15 +2,6 @@
 
 // The priority for which pixels to go to, search forward if no black yet
 // or backward for white if first is black (see Outline::findEdge)
-//  0 1 2
-//  7   3
-//  6 5 4
-//
-//  TODO: fix it so that either way would work. This new way has problems
-//  with a pixel diamond with a hole in the center.
-//  
-//  Now we use the following since the above version caused problems when
-//  the first pixel was alone with the next pixel down and to the left.
 //  6 7 0
 //  5   1
 //  4 3 2

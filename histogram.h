@@ -7,7 +7,6 @@
 #define H_HISTOGRAM
 
 #include <vector>
-#include <iomanip> // TODO: remove
 
 #include "math.h"
 #include "options.h"

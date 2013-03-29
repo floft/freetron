@@ -1,7 +1,7 @@
 /*
  * Determine number of CPU cores on different operating systems
  *
- * This is seperated into a different headers since this is one of the
+ * This is separated into a different headers since this is one of the
  * only parts of the program that is OS specific. It is messy, so I might
  * as well only have one really messy file.
  */
@@ -10,7 +10,6 @@
 #define H_CORES
 
 // Default to using two threads
-// TODO: is this bad?
 #define DEFAULT_CORES 2
 
 #if defined(linux) || defined(__linux) || defined(__linux__) || \

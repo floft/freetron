@@ -3,9 +3,10 @@
  *
  * Todo:
  *   - Improve findBlack()
- *   - Improve thresholdValue()
+ *   - Improve threshold()
  *   - Take amount of memory into consideration when creating threads
  *   - When a box is missing, calculate supposed position
+ *   - Would multithreading extract() increase speed?
  */
 
 #include <vector>

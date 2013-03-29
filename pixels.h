@@ -81,7 +81,7 @@ inline bool Pixels::black(const Coord& c, const bool default_value) const
 {
     if (c.x >= 0 && c.y >= 0 &&
         c.x < w  && c.y < h)
-        return p[c.y][c.x] < GRAY_SHADE;
+        return p[c.y][c.x] < gray_shade;
 
     return default_value;
 }

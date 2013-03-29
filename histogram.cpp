@@ -20,12 +20,10 @@ Histogram::Histogram(const std::vector<std::vector<unsigned char>>& img)
 }
 
 // Search for max black value and max white value. Use the shade halfway
-// in between.
+// in between. There may be better algorithms, but this one is very simple
+// and appears to work quite well.
 unsigned char Histogram::threshold(unsigned char initial) const
 {
-    // TODO: fix this algorithm
-    return initial;
-
     typedef std::vector<int>::const_iterator iterator;
 
     const iterator half = graph.begin() + initial;
