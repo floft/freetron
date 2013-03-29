@@ -33,7 +33,7 @@ static const double ASPECT = 2.722;
 
 // Minimum percent of pixels in a supposed box needing to be black to be
 // considered a box. This is between 0 and 1.
-static const double MIN_BLACK = 0.60;
+static const double MIN_BLACK = 0.65;
 
 // Maximum percent of pixels that can be black in the region around a box, and
 // what sized region around box to check in pixels.
@@ -41,8 +41,9 @@ static const double MAX_BLACK = 1-MIN_BLACK;
 static const int WHITE_SEARCH = 5;
 
 // Average RGB considered black. Currently the colors are stored in a vector of
-// chars, so 128 is 50% of 256. (Then -1 since it's zero-based.)
-static const int GRAY_SHADE = 127;
+// chars, so 128 is 50% of 256. (Then -1 since it's zero-based.) However, 172
+// seems to give better results over all.
+static const int GRAY_SHADE = 165;
 
 // When finding the filled in bubbles, look for something as wide as a box with
 // a height calculated from the below aspect ratio. The curve of the bubble is

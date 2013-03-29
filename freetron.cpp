@@ -2,11 +2,10 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
+ *   - Improve findBlack() or auto threshold instead of using 127, 172...
+ *   - Fix pixel problem with four pixels in a diamond shape
  *   - Take amount of memory into consideration when creating threads
- *   - When a box is missing (box #26 on cat22.pdf), calculate supposed position
- *   - Make image extraction multi-threaded for computing isBlack bool or maybe
- *      start processing other pages after key has been processed while reading
- *      other images
+ *   - When a box is missing, calculate supposed position
  */
 
 #include <vector>

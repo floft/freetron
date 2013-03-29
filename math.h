@@ -20,6 +20,8 @@ inline double distance(const Coord& p1, const Coord& p2, const Coord& p3);
 inline double average(const std::vector<double>& v);
 inline double max_value(const std::vector<double>& v);
 inline double min_value(const std::vector<double>& v);
+inline double min(double, double, double);
+inline double max(double, double, double);
 inline int round(const int x, const int r);
 inline int smartFloor(const double value, const double epsilon = 0.00001);
 inline int smartCeil(const double value,  const double epsilon = 0.00001);
@@ -173,9 +175,30 @@ inline double slopeXY(const Coord& a, const Coord& b)
         return 1.0*(b.x - a.x)/(b.y - a.y);
 }
 
-Coord findMidpoint(const Coord& a, const Coord& b)
+inline Coord findMidpoint(const Coord& a, const Coord& b)
 {
     return Coord((a.x+b.x)/2, (a.y+b.y)/2);
+}
+
+// 3 way compares
+inline double min(double a, double b, double c)
+{
+    double m = a;
+    
+    if (m > b) m = b;
+    if (m > c) m = c;
+
+    return m;
+}
+
+inline double max(double a, double b, double c)
+{
+    double m = a;
+
+    if (m < b) m = b;
+    if (m < c) m = c;
+
+    return m;
 }
 
 #endif

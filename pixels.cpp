@@ -43,7 +43,16 @@ Pixels::Pixels(ILenum type, const char* lump, const int size, const std::string&
         // Start at third
         for (int i = 2; i < total; i+=3)
         {
-            // Average for grayscale
+            // Average min and max to get lightness
+            //  p[y][x] = smartFloor((min(data[i-2], data[i-1], data[i]) +
+            //                        max(data[i-2], data[i-1], data[i]))/2);
+            // For average:
+            //  p[y][x] = smartFloor((1.0*data[i-2]+data[i-1]+data[i])/3);
+            //
+            // For luminosity:
+            //  p[y][x] = smartFloor(0.2126*data[i-2] + 0.7152*data[i-1] + 0.0722*data[i]);
+            
+            // Use the simplest. It doesn't seem to make a difference.
             p[y][x] = smartFloor((1.0*data[i-2]+data[i-1]+data[i])/3);
             
             // Increase y every time we get to end of row
