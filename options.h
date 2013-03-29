@@ -96,6 +96,13 @@ static const int MIN_HEIGHT = 5;
 // this should be a safe value.
 static const int MAX_ITERATIONS = MAX_DIAG*4;
 
+// While the histogram threshold value differs more than this than in the previous
+// iteration, continue
+static const double HIST_DIFF = 0.05;
+
+// As a fail-safe, quit after this many iterations
+static const int HIST_MAX = 10;
+
 // What defines the huge jump in pixels
 static const int HUGE_JUMP = 200;
 
