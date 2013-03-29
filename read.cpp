@@ -1,8 +1,9 @@
 #include "read.h"
 
-// Percentage of pixels in a circle that are a certain label
+// Percentage of pixels in the bubble that are a certain label
 // 0 = no label, 1 = all label
-double percentageLabel(const Pixels& img, const Blobs& blobs, const Bubble& b)
+// How black the bubble is. 0 = none this label, 1 = all this label
+double bubbleBlackness(const Pixels& img, const Blobs& blobs, const Bubble& b)
 {
     // Find square around circle of radius r centered at (x,y)
     Square s(img, b.coord.x, b.coord.y, b.radius);
@@ -181,13 +182,13 @@ std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
     std::vector<Bubble> bubbles;
     const std::vector<Coord> local_blobs = blobs.in(a, b);
 
-    if (DEBUG)
+    /*if (DEBUG)
     {
         img.line(a, Coord(b.x, a.y));
         img.line(Coord(b.x, a.y), b);
         img.line(Coord(a.x, b.y), b);
         img.line(a, Coord(a.x, b.y));
-    }
+    }*/
 
     for (const Coord& object : local_blobs)
     {
@@ -200,12 +201,14 @@ std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
         if (d > MIN_DIAG && d < MAX_DIAG &&  // Decent size
             d > diag - DIAG_ERROR) // Have a lower bound on the diagonal
         {
-            // w / (w/h) = h, h/2 = "radius" of the bubble
-            bubbles.push_back(Bubble(d/BUBBLE_ASPECT/2, blobs.label(object), center));
+            // A circle with radius d/2 should encompass all of a bubble
+            bubbles.push_back(Bubble(d/2, blobs.label(object), center));
 
             if (DEBUG)
+            {
                 for (const Coord& c : outline.points())
                     img.mark(c, 1);
+            }
         }
     }
 
@@ -214,7 +217,7 @@ std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
 
 // use_x = true means use X coordinate, false means use Y coordinate
 int findFilled(Pixels& img, const Blobs& blobs, const std::vector<Bubble>& bubbles,
-    int start, double jump, int options, double black, bool use_x)
+    const int start, const double jump, const int options, double black, const bool use_x)
 {
     Coord coord;
     int count = 0;
@@ -227,7 +230,7 @@ int findFilled(Pixels& img, const Blobs& blobs, const std::vector<Bubble>& bubbl
 
         for (const Bubble& b : bubbles)
         {
-            if (percentageLabel(img, blobs, b) > black)
+            if (bubbleBlackness(img, blobs, b) > black)
             {
                 ++count;
                 coord = b.coord;
@@ -263,7 +266,7 @@ int findFilled(Pixels& img, const Blobs& blobs, const std::vector<Bubble>& bubbl
     return DefaultFilled;
 }
 
-double findBlack(Pixels& img, const Blobs& blobs, std::vector<Coord>& boxes,
+double findBlack(Pixels& img, const Blobs& blobs, const std::vector<Coord>& boxes,
     const Data& data)
 {
     const double jump = 0.5*(boxes[BOT_START+1].x - boxes[BOT_START].x);
@@ -274,9 +277,7 @@ double findBlack(Pixels& img, const Blobs& blobs, std::vector<Coord>& boxes,
     std::vector<double> color(bubbles.size());
 
     for (const Bubble& b : bubbles)
-        color.push_back(percentageLabel(img, blobs, b));
-
-    double avg = average(color);
+        color.push_back(bubbleBlackness(img, blobs, b));
     
     // Throw out the max value ID_LENGTH times
     for (int i = 0; i < ID_LENGTH; ++i)
@@ -285,17 +286,17 @@ double findBlack(Pixels& img, const Blobs& blobs, std::vector<Coord>& boxes,
 
         if (max != color.end())
         {
-            color.erase(max);
             maxes.push_back(*max);
+            color.erase(max);
         }
     }
 
-    // Get the average of these max values
+    double avg     = average(color);
     double max_avg = average(maxes);
 
     // I'm guessing that the halfway point between the filled-in bubbles' average
     // and the not-filled-in bubbles' average is a decent black value
-    double black = (avg+max_avg)/2;
+    double black = (avg+max_avg+MIN_BLACK)/3;
 
-    return (black>0)?black:MIN_BLACK;
+    return (avg+max_avg>0)?black:MIN_BLACK;
 }

@@ -269,6 +269,8 @@ int main(int argc, char* argv[])
 
     if (found)
     {
+        typedef std::vector<Answer>::size_type size_type;
+
         // Grade student's exams
         std::map<int, double> scores;
         
@@ -285,12 +287,16 @@ int main(int argc, char* argv[])
 
                 int same = 0;
 
-                for (int q = 0; q < total; ++q)
+                // Only score the ones that the teacher didn't leave blank
+                for (size_type q = 0; q < i.answers.size(); ++q)
                 {
-                    std::cout << i.answers[q] << " ";
+                    if (key[q] != Answer::Blank)
+                    {
+                        std::cout << i.answers[q] << " ";
 
-                    if (key[q] == i.answers[q])
-                        ++same;
+                        if (key[q] == i.answers[q])
+                            ++same;
+                    }
                 }
 
                 std::cout << std::endl;
