@@ -18,6 +18,7 @@
 #include "math.h"
 #include "data.h"
 #include "options.h"
+#include "histogram.h"
 
 struct Mark
 {
@@ -36,6 +37,7 @@ class Pixels
     int h;
     bool loaded;
     std::string fn;
+    unsigned char gray_shade;
 
     // Lock this so that only one thread can read an image or save()
     // OpenIL/DevIL is not multithreaded

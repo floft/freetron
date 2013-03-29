@@ -10,72 +10,81 @@ Pixels::Pixels()
 
 // type is either IL_JPG or IL_PNM in this case
 Pixels::Pixels(ILenum type, const char* lump, const int size, const std::string& fn)
-    :w(0), h(0), loaded(false), fn(fn)
+    :w(0), h(0), loaded(false), fn(fn), gray_shade(GRAY_SHADE)
 {
-    // Only execute in one thread since DevIL/OpenIL doesn't support multithreading
-    std::unique_lock<std::mutex> lck(lock);
-
-    ILuint name;
-    ilGenImages(1, &name);
-    ilBindImage(name);
-
-    if (ilLoadL(type, lump, static_cast<ILuint>(size)))
+    // Only execute in one thread since DevIL/OpenIL doesn't support multithreading,
+    // so use a unique lock here. But, we'll do a bit more that doesn't need to be
+    // in a single thread, so make the lock go out of scope when we're done.
     {
-        w = ilGetInteger(IL_IMAGE_WIDTH);
-        h = ilGetInteger(IL_IMAGE_HEIGHT);
-        
-        // If the image height or width is larger than int's max, it will appear
-        // to be negative. Just don't use extremely large (many gigapixel) images.
-        if (w < 0 || h < 0)
-            throw std::runtime_error("use a smaller image, can't store dimensions in int");
+        std::unique_lock<std::mutex> lck(lock);
 
-        // 3 because IL_RGB
-        const int total = w*h*3;
-        unsigned char* data = new unsigned char[total];
+        ILuint name;
+        ilGenImages(1, &name);
+        ilBindImage(name);
 
-        ilCopyPixels(0, 0, 0, w, h, 1, IL_RGB, IL_UNSIGNED_BYTE, data);
-        
-        // Move data into a nicer format
-        int x = 0;
-        int y = 0;
-        p = std::vector<std::vector<unsigned char>>(h, std::vector<unsigned char>(w));
-
-        // Start at third
-        for (int i = 2; i < total; i+=3)
+        if (ilLoadL(type, lump, static_cast<ILuint>(size)))
         {
-            // Average min and max to get lightness
-            //  p[y][x] = smartFloor((min(data[i-2], data[i-1], data[i]) +
-            //                        max(data[i-2], data[i-1], data[i]))/2);
-            // For average:
-            //  p[y][x] = smartFloor((1.0*data[i-2]+data[i-1]+data[i])/3);
-            //
-            // For luminosity:
-            //  p[y][x] = smartFloor(0.2126*data[i-2] + 0.7152*data[i-1] + 0.0722*data[i]);
+            w = ilGetInteger(IL_IMAGE_WIDTH);
+            h = ilGetInteger(IL_IMAGE_HEIGHT);
             
-            // Use the simplest. It doesn't seem to make a difference.
-            p[y][x] = smartFloor((1.0*data[i-2]+data[i-1]+data[i])/3);
-            
-            // Increase y every time we get to end of row
-            if (x+1 == w)
-            {
-                x=0;
-                ++y;
-            }
-            else
-            {
-                ++x;
-            }
-        }
+            // If the image height or width is larger than int's max, it will appear
+            // to be negative. Just don't use extremely large (many gigapixel) images.
+            if (w < 0 || h < 0)
+                throw std::runtime_error("use a smaller image, can't store dimensions in int");
 
-        loaded = true;
-        delete[] data;
+            // 3 because IL_RGB
+            const int total = w*h*3;
+            unsigned char* data = new unsigned char[total];
+
+            ilCopyPixels(0, 0, 0, w, h, 1, IL_RGB, IL_UNSIGNED_BYTE, data);
+            
+            // Move data into a nicer format
+            int x = 0;
+            int y = 0;
+            p = std::vector<std::vector<unsigned char>>(h, std::vector<unsigned char>(w));
+
+            // Start at third
+            for (int i = 2; i < total; i+=3)
+            {
+                // Average min and max to get lightness
+                //  p[y][x] = smartFloor((min(data[i-2], data[i-1], data[i]) +
+                //                        max(data[i-2], data[i-1], data[i]))/2);
+                // For average:
+                //  p[y][x] = smartFloor((1.0*data[i-2]+data[i-1]+data[i])/3);
+                //
+                // For luminosity:
+                //  p[y][x] = smartFloor(0.2126*data[i-2] + 0.7152*data[i-1] + 0.0722*data[i]);
+                
+                // Use the simplest. It doesn't seem to make a difference.
+                p[y][x] = smartFloor((1.0*data[i-2]+data[i-1]+data[i])/3);
+                
+                // Increase y every time we get to end of row
+                if (x+1 == w)
+                {
+                    x=0;
+                    ++y;
+                }
+                else
+                {
+                    ++x;
+                }
+            }
+
+            loaded = true;
+            delete[] data;
+        }
+        else
+        {
+            throw std::runtime_error("could not read image");
+        }
+        
+        ilDeleteImages(1, &name);
     }
-    else
-    {
-        throw std::runtime_error("could not read image");
-    }
-    
-    ilDeleteImages(1, &name);
+
+    // After loading, determine the real gray shade to view this as a black and white
+    // image. We'll be using this constantly, so we might as well do it now.
+    const Histogram h(p);
+    gray_shade = h.balancedThreshold(gray_shade);
 }
 
 void Pixels::mark(const Coord& c, int size)
