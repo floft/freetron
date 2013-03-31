@@ -302,7 +302,12 @@ double findBlack(Pixels& img, const Blobs& blobs, const std::vector<Coord>& boxe
     // and the not-filled-in bubbles' average is a decent black value
     //
     // TODO: fix this algorithm
-    double black = (avg+max_avg+MIN_BLACK)/3;
+    //  - Don't throw out all 10 since the ID number might not be completely filled in
+    //  - Is d/2 the correct radius to search for?
+    double black = (avg+max_avg)/2;
 
-    return (avg+max_avg>0)?black:MIN_BLACK;
+    if (black == 0)
+        std::cout << "black is 0" << std::endl;
+
+    return (black>0)?black:MIN_BLACK;
 }
