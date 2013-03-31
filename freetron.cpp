@@ -227,9 +227,12 @@ int main(int argc, char* argv[])
     std::vector<Info> results = threadForEach(images, parseImage);
 
     // Find the key based on the teacher's ID
-    std::cout << std::left
-              << std::setw(5)  << "#"
-              << std::setw(10) << "ID"
+    std::cout << std::left;
+
+    if (DEBUG)
+        std::cout << std::setw(5)  << "#";
+
+    std::cout << std::setw(10) << "ID"
               << "\tAnswers (key first)"
               << std::endl;
 
@@ -247,8 +250,10 @@ int main(int argc, char* argv[])
             }
             else
             {
-                std::cout << std::setw(5) << i.thread_id
-                          << std::setw(10) << i.id << "\t";
+                if (DEBUG)
+                    std::cout << std::setw(5) << i.thread_id;
+
+                std::cout << std::setw(10) << i.id << "\t";
 
                 for (const Answer b : i.answers)
                 {
@@ -282,8 +287,10 @@ int main(int argc, char* argv[])
             }
             else if (i.id != teacher)
             {
-                std::cout << std::left << std::setw(5) << i.thread_id
-                          << std::left << std::setw(10) << i.id << "\t";
+                if (DEBUG)
+                    std::cout << std::left << std::setw(5) << i.thread_id;
+
+                std::cout << std::left << std::setw(10) << i.id << "\t";
 
                 int same = 0;
 
