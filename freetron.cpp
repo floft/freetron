@@ -4,8 +4,9 @@
  * Todo:
  *   - Improve findBlack()
  *   - Improve threshold()
- *   - Take amount of memory into consideration when creating threads
  *   - When a box is missing, calculate supposed position
+ *   - Don't crash on corrupt or non-supported PDFs
+ *   - Specify max memory usage, number of threads, debug mode, quiet, etc.
  *   - Would multithreading extract() increase speed?
  */
 
@@ -43,7 +44,7 @@ void help()
 
 void invalid()
 {
-    std::cerr << "Invalid argument (see \"-h\" for usage)" << std::endl;
+    std::cout << "Invalid argument (see \"-h\" for usage)" << std::endl;
     std::exit(1);
 }
 
@@ -199,7 +200,7 @@ int main(int argc, char* argv[])
 
     if (teacher == DefaultID)
     {
-        log("teacher ID cannot be the default ID");
+        std::cerr << "teacher ID cannot be the default ID" << std::endl;
         return 1;
     }
 
