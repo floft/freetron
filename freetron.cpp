@@ -39,12 +39,12 @@ enum class Args
 
 void help()
 {
-    std::cout << "Usage: freetron -i TeacherID in.pdf" << std::endl;
+    std::cerr << "Usage: freetron -i TeacherID in.pdf" << std::endl;
 }
 
 void invalid()
 {
-    std::cout << "Invalid argument (see \"-h\" for usage)" << std::endl;
+    std::cerr << "Invalid argument (see \"-h\" for usage)" << std::endl;
     std::exit(1);
 }
 
@@ -187,7 +187,14 @@ int main(int argc, char* argv[])
                 if (i == argc)
                     invalid();
 
-                teacher = std::stoi(argv[i]);
+                try
+                {
+                    teacher = std::stoi(argv[i]);
+                }
+                catch (const std::invalid_argument& e)
+                {
+                    std::cerr << "Error: invalid teacher ID" << std::endl;
+                }
                 break;
             default:
                 if (!filename.empty())
@@ -200,7 +207,7 @@ int main(int argc, char* argv[])
 
     if (teacher == DefaultID)
     {
-        std::cerr << "teacher ID cannot be the default ID" << std::endl;
+        std::cerr << "Error: teacher ID cannot be the default ID" << std::endl;
         return 1;
     }
 
@@ -284,7 +291,7 @@ int main(int argc, char* argv[])
         {
             if (i.id == DefaultID)
             {
-                std::cout << i.thread_id << ": failed to determine student ID" << std::endl;
+                std::cerr << i.thread_id << ": failed to determine student ID" << std::endl;
             }
             else if (i.id != teacher)
             {
@@ -325,11 +332,11 @@ int main(int argc, char* argv[])
     }
     else
     {
-        std::cout << "Key not found. Given IDs:" << std::endl;
+        std::cerr << "Key not found. Given IDs:" << std::endl;
 
         for (const Info& i : results)
             if (i.id != DefaultID)
-                std::cout << "  " << i.id << std::endl;
+                std::cerr << "  " << i.id << std::endl;
     }
     
     return 0;
