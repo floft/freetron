@@ -35,16 +35,17 @@ libtiff (custom: http://www.libtiff.org/misc.html)
 
 Example
 -------
-Currently, before I've done any sort of website frontend, you can grade forms
-using the terminal. If the teacher's id is 01234567 and you have a PDF file of
-the forms, you can run `./freetron -i 01234567 forms.pdf 2>/dev/null` giving
-the following as output.
+Download an [example form](http://floft.net/uploads/freetron_example.pdf)
+created from the Apperson form mentioned above. Before I've done any sort of
+website frontend, you can grade forms using the terminal. If the teacher's id
+is 123456789 and you have a PDF file of the forms, you can run `./freetron -i
+123456789 freetron_example.pdf 2>/dev/null` giving the following as output.
 
     ID          Answers (key first)
-    01234567    C C D B C A E D B E A A E D E D B D B B C B C E
-    6543210     C B B C D B A D D D B D C C E A C B E C B B _ _
-    6543211     C C D B C A E D B E A A E D E D B D B B C B C E
+    123456789   A B C D E A B C D E A B C D E 
+    1233224     A A D D D A B C D E A B B C E 
+    987444      A B C D E E D C B A B C D E D 
 
     Scores
-      6543210      16.67%
-      6543211     100.00%
+      987444      40.00%
+      1233224     66.67%
