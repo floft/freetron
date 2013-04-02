@@ -3,10 +3,16 @@
 // Percentage of pixels in the bubble that are a certain label
 // 0 = no label, 1 = all label
 // How black the bubble is. 0 = none this label, 1 = all this label
-double bubbleBlackness(const Pixels& img, const Blobs& blobs, const Bubble& b)
+double bubbleBlackness(const Pixels& img, const Blobs& blobs,
+    const Bubble& b, const int radius)
 {
+    int rad = b.radius;
+
+    if (radius > 0)
+        rad = radius;
+
     // Find square around circle of radius r centered at (x,y)
-    Square s(img, b.coord.x, b.coord.y, b.radius);
+    Square s(img, b.coord.x, b.coord.y, rad);
     const int x1    = s.topLeft().x;
     const int y1    = s.topLeft().y;
     const int x2    = s.bottomRight().x;
@@ -15,7 +21,7 @@ double bubbleBlackness(const Pixels& img, const Blobs& blobs, const Bubble& b)
     const int mid_y = s.midPoint().y;
 
     // Maybe this makes it a bit faster
-    const int r2 = b.radius*b.radius;
+    const int r2 = std::pow(rad, 2);
 
     int black = 0;
     int total = 0;
@@ -87,10 +93,11 @@ int findID(Pixels& img, const Blobs& blobs,
         const std::vector<Bubble> bubbles = findBubbles(img, blobs, data.diag,
              Coord(center - half_jump, y_start),
              Coord(center + half_jump, y_end));
+        const int radius = avgRadius(bubbles);
 
         // Find which bubble is filled. 9 is because there's 0-9
         const int filled = findFilled(img, blobs, bubbles, y_start, vert_jump,
-            9, min_black, false);
+            9, min_black, false, radius);
 
         if (filled != DefaultFilled)
             digits.push_back(filled);
@@ -155,10 +162,11 @@ std::vector<Answer> findAnswers(Pixels& img, const Blobs& blobs,
         const std::vector<Bubble> bubbles = findBubbles(img, blobs, data.diag,
              Coord(start, boxes[box].y - box_height),
              Coord(end,   boxes[box].y + box_height));
+        const int radius = avgRadius(bubbles);
 
         // Find which bubble is filled
         const int filled = findFilled(img, blobs, bubbles, start, jump,
-            Q_OPTIONS, min_black, true);
+            Q_OPTIONS, min_black, true, radius);
 
         if (filled != DefaultFilled)
             answers[q] = (Answer)(filled+1);
@@ -203,7 +211,7 @@ std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
         const double d = distance(p1, p2);
 
         if (d > MIN_DIAG && d < MAX_DIAG &&  // Decent size
-            d > diag - DIAG_ERROR) // Have a lower bound on the diagonal
+            d > diag - DIAG_ERROR) // Only a lower bound since bubbles are larger than boxes
         {
             // A circle with radius d/2 should encompass all of a bubble
             bubbles.push_back(Bubble(d/2, blobs.label(object), center));
@@ -221,7 +229,8 @@ std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
 
 // use_x = true means use X coordinate, false means use Y coordinate
 int findFilled(Pixels& img, const Blobs& blobs, const std::vector<Bubble>& bubbles,
-    const int start, const double jump, const int options, double black, const bool use_x)
+    const int start, const double jump, const int options, double black,
+    const bool use_x, const int radius)
 {
     Coord coord;
     int count = 0;
@@ -234,13 +243,14 @@ int findFilled(Pixels& img, const Blobs& blobs, const std::vector<Bubble>& bubbl
 
         for (const Bubble& b : bubbles)
         {
-            if (bubbleBlackness(img, blobs, b) > black)
+            if (bubbleBlackness(img, blobs, b, radius) > black)
             {
                 ++count;
                 coord = b.coord;
             }
         }
 
+        // Maybe this should be in options.h since it's an arbitrary value.
         black += 0.05;
     } while (black < 1 && count > 1);
 
@@ -310,4 +320,17 @@ double findBlack(Pixels& img, const Blobs& blobs, const std::vector<Coord>& boxe
         std::cout << "black is 0" << std::endl;
 
     return (black>0)?black:MIN_BLACK;
+}
+
+int avgRadius(const std::vector<Bubble>& bubbles)
+{
+    if (bubbles.size() == 0)
+        return 0;
+
+    int total = 0;
+
+    for (const Bubble& b : bubbles)
+        total += b.radius;
+
+    return total/bubbles.size();
 }
