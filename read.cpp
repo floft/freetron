@@ -190,14 +190,6 @@ std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
     std::vector<Bubble> bubbles;
     const std::vector<Coord> local_blobs = blobs.in(a, b);
 
-    /*if (DEBUG)
-    {
-        img.line(a, Coord(b.x, a.y));
-        img.line(Coord(b.x, a.y), b);
-        img.line(Coord(a.x, b.y), b);
-        img.line(a, Coord(a.x, b.y));
-    }*/
-
     for (const Coord& object : local_blobs)
     {
         const Outline outline(img, blobs, object, MAX_ITERATIONS);
@@ -217,10 +209,8 @@ std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
             bubbles.push_back(Bubble(d/2, blobs.label(object), center));
 
             if (DEBUG)
-            {
                 for (const Coord& c : outline.points())
                     img.mark(c, 1);
-            }
         }
     }
 

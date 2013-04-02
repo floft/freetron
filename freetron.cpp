@@ -4,8 +4,8 @@
  * Todo:
  *   - When a box is missing, calculate supposed position
  *   - Don't crash on corrupt or non-supported PDFs
- *   - Specify max memory usage, number of threads, debug mode, quiet, etc.
  *   - Would multithreading extract() increase speed?
+ *   - Make threadForEach accept extra arguments to pass to function
  */
 
 #include <vector>
@@ -32,12 +32,21 @@ enum class Args
 {
     Unknown,
     Help,
+    Threads,
+    Debug,
+    Quiet,
     ID
 };
 
 void help()
 {
-    std::cerr << "Usage: freetron -i TeacherID in.pdf" << std::endl;
+    std::cerr << "Usage: freetron [options] -i TeacherID in.pdf" << std::endl
+              << std::endl
+              << "  Options" << std::endl
+              << "    -i, --id          ID of form to use as the key" << std::endl
+              << "    -q, --quiet       don't print error messages (not implemented)" << std::endl
+              << "    -d, --debug       output debug images" << std::endl
+              << "    -t, --threads #   max number of threads to create" << std::endl;
 }
 
 void invalid()
@@ -60,7 +69,7 @@ struct Info
 };
 
 // Called in a new thread for each image
-Info parseImage(Pixels* image)
+Info parseImage(Pixels* image, bool debug)
 {
     // Use this to get a unique ID each time this function is called,
     // used for writing out the debug images
@@ -86,7 +95,7 @@ Info parseImage(Pixels* image)
         if (boxes.size() < TOTAL_BOXES)
             throw std::runtime_error("some boxes not detected");
 
-        if (DEBUG)
+        if (debug)
         {
             std::ostringstream s_orig;
             s_orig << "debug" << thread_id << "_orig.png";
@@ -127,13 +136,13 @@ Info parseImage(Pixels* image)
             answers = findAnswers(*image, blobs, boxes, data, black);
 
         // Debug information
-        if (DEBUG)
+        if (debug)
         {
             for (const Coord& box : boxes)
                 image->mark(box);
             
             std::ostringstream s;
-            s      << "debug" << thread_id << ".png";
+            s << "debug" << thread_id << ".png";
             image->save(s.str());
         }
     
@@ -141,10 +150,10 @@ Info parseImage(Pixels* image)
     }
     catch (const std::runtime_error& error)
     {
-        if (DEBUG)
+        if (debug)
         {
             std::ostringstream s;
-            s << "debug" << thread_id << "_error.png";
+            s << "debug" << thread_id << ".png";
             image->save(s.str());
         }
 
@@ -163,13 +172,22 @@ int main(int argc, char* argv[])
 
     // Argument parsing
     std::string filename;
+    bool debug = false;
+    bool quiet = false;
+    int threads = 0; // 0 == number of cores
     int teacher = DefaultID;
 
     std::map<std::string, Args> options = {{
-        { "-h",      Args::Help },
-        { "--help",  Args::Help },
-        { "-i",      Args::ID },
-        { "--id",    Args::ID }
+        { "-h",        Args::Help },
+        { "--help",    Args::Help },
+        { "-i",        Args::ID },
+        { "--id",      Args::ID },
+        { "-t",        Args::Threads },
+        { "--threads", Args::Threads },
+        { "-d",        Args::Debug },
+        { "--debug",   Args::Debug },
+        { "-q",        Args::Quiet },
+        { "--quiet",   Args::Quiet }
     }};
 
     for (int i = 1; i < argc; ++i)
@@ -193,6 +211,27 @@ int main(int argc, char* argv[])
                 {
                     std::cerr << "Error: invalid teacher ID" << std::endl;
                 }
+                break;
+            case Args::Threads:
+                ++i;
+
+                if (i == argc)
+                    invalid();
+
+                try
+                {
+                    threads = std::stoi(argv[i]);
+                }
+                catch (const std::invalid_argument& e)
+                {
+                    std::cerr << "Error: invalid number of threads" << std::endl;
+                }
+                break;
+            case Args::Debug:
+                debug = true;
+                break;
+            case Args::Quiet:
+                quiet = true;
                 break;
             default:
                 if (!filename.empty())
@@ -230,12 +269,12 @@ int main(int argc, char* argv[])
     }
     
     // Find ID of each page in separate thread
-    std::vector<Info> results = threadForEach(images, parseImage);
+    std::vector<Info> results = threadForEach(images, parseImage, debug, threads);
 
     // Find the key based on the teacher's ID
     std::cout << std::left;
 
-    if (DEBUG)
+    if (debug)
         std::cout << std::setw(5)  << "#";
 
     std::cout << std::setw(10) << "ID"
@@ -256,7 +295,7 @@ int main(int argc, char* argv[])
             }
             else
             {
-                if (DEBUG)
+                if (debug)
                     std::cout << std::setw(5) << i.thread_id;
 
                 std::cout << std::setw(10) << i.id << "\t";
@@ -293,7 +332,7 @@ int main(int argc, char* argv[])
             }
             else if (i.id != teacher)
             {
-                if (DEBUG)
+                if (debug)
                     std::cout << std::left << std::setw(5) << i.thread_id;
 
                 std::cout << std::left << std::setw(10) << i.id << "\t";

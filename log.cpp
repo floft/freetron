@@ -5,7 +5,7 @@ static std::mutex localtime_lock;
 
 void log(const std::string& msg, const LogType prefix, const bool err)
 {
-    if (DEBUG && err)
+    if (err)
     {
         std::cerr << prefix << ": " << msg << std::endl;
     }
