@@ -69,7 +69,7 @@ struct Info
 };
 
 // Called in a new thread for each image
-Info parseImage(Pixels* image, bool debug)
+Info parseImage(Pixels* image)
 {
     // Use this to get a unique ID each time this function is called,
     // used for writing out the debug images
@@ -95,7 +95,7 @@ Info parseImage(Pixels* image, bool debug)
         if (boxes.size() < TOTAL_BOXES)
             throw std::runtime_error("some boxes not detected");
 
-        if (debug)
+        if (DEBUG)
         {
             std::ostringstream s_orig;
             s_orig << "debug" << thread_id << "_orig.png";
@@ -136,7 +136,7 @@ Info parseImage(Pixels* image, bool debug)
             answers = findAnswers(*image, blobs, boxes, data, black);
 
         // Debug information
-        if (debug)
+        if (DEBUG)
         {
             for (const Coord& box : boxes)
                 image->mark(box);
@@ -150,7 +150,7 @@ Info parseImage(Pixels* image, bool debug)
     }
     catch (const std::runtime_error& error)
     {
-        if (debug)
+        if (DEBUG)
         {
             std::ostringstream s;
             s << "debug" << thread_id << ".png";
@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
     }
     
     // Find ID of each page in separate thread
-    std::vector<Info> results = threadForEach(images, parseImage, debug, threads);
+    std::vector<Info> results = threadForEach(images, parseImage, threads);
 
     // Find the key based on the teacher's ID
     std::cout << std::left;

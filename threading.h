@@ -133,13 +133,16 @@ private:
 
 // For each CPU core, run function with an item from the vector items
 template <class Result, class Type, class Container>
-std::vector<Result> threadForEach(Container items, Result (*function)(Type*))
+std::vector<Result> threadForEach(Container items, Result (*function)(Type*), int threads = 0)
 {
     typedef typename std::vector<Result>::size_type size_type;
 
+    if (threads == 0)
+        threads = core_count();
+
     size_type thread_id = 0;
     std::vector<Result> results(items.size());
-    ThreadScheduler<Result,Type> scheduler(core_count());
+    ThreadScheduler<Result,Type> scheduler(threads);
 
     // Not sure if we'd ever run into this...
     if (results.size() != items.size())
