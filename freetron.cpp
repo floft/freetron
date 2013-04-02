@@ -2,7 +2,6 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
- *   - Improve findBlack()
  *   - Improve threshold()
  *   - When a box is missing, calculate supposed position
  *   - Don't crash on corrupt or non-supported PDFs

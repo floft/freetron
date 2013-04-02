@@ -66,9 +66,8 @@ int findFilled(Pixels& img, const Blobs& blobs, const std::vector<Bubble>& bubbl
     const bool use_x, const int radius = -1);
 
 // Determine answer black from the average of all bubbles in the student ID box.
-// Since at most ID_LENGTH should be filled in, we could use a black value halfway
-// between the average of the bubbles not filled in and the bubbles filled in. If
-// the student ID is really short (or blank), this may not work.
+// Look for the largest jump in color, which is probably the jump from not filled
+// to filled-in bubbles. Pick the middle of the jump as the black value.
 double findBlack(Pixels& img, const Blobs& blobs, const std::vector<Coord>& boxes,
     const Data& data);
 

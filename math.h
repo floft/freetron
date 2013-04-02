@@ -18,6 +18,9 @@ inline double distance(const Coord& p1, const Coord& p2);
 // Perpendicular distance between p3 and the line from p1 to p2
 inline double distance(const Coord& p1, const Coord& p2, const Coord& p3);
 inline double average(const std::vector<double>& v);
+inline double average(const std::vector<double>& v,
+    std::vector<double>::const_iterator start,
+    std::vector<double>::const_iterator end);
 inline double max_value(const std::vector<double>& v);
 inline double min_value(const std::vector<double>& v);
 inline double min(double, double, double);
@@ -99,6 +102,16 @@ inline double average(const std::vector<double>& v)
 {
     if (v.size() > 0)
         return std::accumulate(v.begin(), v.end(), 0.0)/v.size();
+    
+    return 0;
+}
+
+inline double average(const std::vector<double>& v,
+    std::vector<double>::const_iterator start,
+    std::vector<double>::const_iterator end)
+{
+    if (v.size() > 0)
+        return std::accumulate(start, end, 0.0)/v.size();
     
     return 0;
 }

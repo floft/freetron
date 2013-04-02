@@ -280,44 +280,45 @@ int findFilled(Pixels& img, const Blobs& blobs, const std::vector<Bubble>& bubbl
     return DefaultFilled;
 }
 
+// Note that this only works if the student ID is filled in
 double findBlack(Pixels& img, const Blobs& blobs, const std::vector<Coord>& boxes,
     const Data& data)
 {
+    typedef std::vector<double>::size_type size_type;
+
     const double jump = 0.5*(boxes[BOT_START+1].x - boxes[BOT_START].x);
     const std::vector<Bubble> bubbles = findBubbles(img, blobs, data.diag,
         Coord(boxes[BOT_START].x, boxes[ID_START-1].y),
         Coord(boxes[BOT_START].x + jump*(ID_LENGTH-1), boxes[ID_END-1].y));
-    std::vector<double> maxes;
+    const int radius = avgRadius(bubbles);
     std::vector<double> color(bubbles.size());
 
-    for (const Bubble& b : bubbles)
-        color.push_back(bubbleBlackness(img, blobs, b));
+    for (size_type i = 0; i < color.size(); ++i)
+        color[i] = bubbleBlackness(img, blobs, bubbles[i], radius);
     
-    // Throw out the max value ID_LENGTH times
-    for (int i = 0; i < ID_LENGTH; ++i)
-    {
-        std::vector<double>::iterator max = std::max_element(color.begin(), color.end());
+    std::sort(color.begin(), color.end());
 
-        if (max != color.end())
+    // Find the biggest jump to know what to set the black level to. We assume
+    // that the biggest jump is between the darkest blank bubble with the lightest
+    // filled-in bubble.
+    double before = 0;
+    double after  = 0;
+    double largest_jump = 0;
+
+    for (size_type i = 1; i < color.size(); ++i)
+    {
+        double current_jump = color[i] - color[i-1];
+
+        if (current_jump > largest_jump)
         {
-            maxes.push_back(*max);
-            color.erase(max);
+            largest_jump = current_jump;
+            before = color[i-1];
+            after  = color[i];
         }
     }
 
-    double avg     = average(color);
-    double max_avg = average(maxes);
-
-    // I'm guessing that the halfway point between the filled-in bubbles' average
-    // and the not-filled-in bubbles' average is a decent black value
-    //
-    // TODO: fix this algorithm
-    //  - Don't throw out all 10 since the ID number might not be completely filled in
-    //  - Is d/2 the correct radius to search for?
-    double black = (avg+max_avg)/2;
-
-    if (black == 0)
-        std::cout << "black is 0" << std::endl;
+    // Pick the middle of the jump as the minimum black value
+    double black = (before + after)/2;
 
     return (black>0)?black:MIN_BLACK;
 }
