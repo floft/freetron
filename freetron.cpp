@@ -2,8 +2,8 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
+ *   - Web UI and make this into a daemon
  *   - When a box is missing, calculate supposed position
- *   - Don't crash on corrupt or non-supported PDFs
  *   - Would multithreading extract() increase speed?
  *   - Make threadForEach accept extra arguments to pass to function
  *   - Pick largest image on the page of a PDF
