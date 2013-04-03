@@ -6,6 +6,7 @@
  *   - Don't crash on corrupt or non-supported PDFs
  *   - Would multithreading extract() increase speed?
  *   - Make threadForEach accept extra arguments to pass to function
+ *   - Pick largest image on the page of a PDF
  */
 
 #include <vector>

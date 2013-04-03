@@ -55,7 +55,7 @@ std::vector<Pixels> extract(const std::string& filename)
                         images.push_back(readPDFImage(*it, PixelType::TIF, colorspace, filename));
                     // PNM is the default
                     //else if (name == "FlateDecode")
-                    //  images.push_back(readPDFImage(*it, PixelType::PNM, colorspace));
+                    //  images.push_back(readPDFImage(*it, PixelType::PNM, colorspace, filename));
                     else
                         images.push_back(readPDFImage(*it, PixelType::PNM, colorspace, filename));
                 }
@@ -66,7 +66,6 @@ std::vector<Pixels> extract(const std::string& filename)
 
                 document.FreeObjectMemory(*it);
             }
-
         }
 
         ++it;
