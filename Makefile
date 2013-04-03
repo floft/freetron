@@ -4,7 +4,7 @@ OBJ        = ${SRC:.cpp=.o}
 DEPENDS    = .depends
 
 CC         = g++
-CFLAGS    := ${CFLAGS}  -ffast-math -funroll-loops -O2 -std=c++11 -Wall
+CFLAGS    := ${CFLAGS}  -g -ffast-math -funroll-loops -O2 -std=c++11 -Wall
 LDFLAGS   := ${LDFLAGS} -lpodofo -lIL -ltiff -ltiffxx -pthread
 
 PREFIX    ?= /usr/local

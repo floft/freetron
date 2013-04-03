@@ -23,7 +23,7 @@ std::vector<Pixels> extract(const std::string& filename)
                 color = (*it)->GetDictionary().GetKey(PoDoFo::PdfName("ColorSpace"));
                 colorspace = ColorSpace::Unknown;
 
-                if (color->IsReference())
+                if (color && color->IsReference())
                     color = document.GetObjects().GetObject(color->GetReference());
 
                 if (color && color->IsName())

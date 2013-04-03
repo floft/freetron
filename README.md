@@ -12,11 +12,10 @@ from [Apperson](https://ssl1.appersonsecure.com/pdfs/common/29240.PDF).
 
 Project Status
 --------------
-Currently this program will accept most multi-page PDFs (some such as the
-example PDF above will crash the program), find the black boxes, rotate the
-image, find the student ID number, find the filled in answers, and grade based
-on the form with the teacher's ID. What's left is all the fancy Web UI,
-database, and email stuff.
+Currently this program will accept most multi-page PDFs, find the black boxes,
+rotate the image, find the student ID number, find the filled in answers, and
+grade based on the form with the teacher's ID. What's left is all the fancy Web
+UI, database, and email stuff.
 
 Using
 -----
