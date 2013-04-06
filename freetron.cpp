@@ -2,10 +2,12 @@
  * Freetron - an open-source software scantron implementation
  *
  * Todo:
+ *   - Statistics (e.g. most missed, least missed, ...?) as text and/or images
  *   - Web UI and make this into a daemon
+ *   - Generalize for any style of form, make forms/type*.xml and autodetect
  *   - When a box is missing, calculate supposed position
- *   - Would multithreading extract() increase speed?
- *   - Make threadForEach accept extra arguments to pass to function
+ *   - Would multithreading extract() noticeably increase speed?
+ *   - Make threadForEach() accept extra arguments to pass to function
  *   - Pick largest image on the page of a PDF
  */
 

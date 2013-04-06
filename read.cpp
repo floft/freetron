@@ -192,7 +192,7 @@ std::vector<Bubble> findBubbles(Pixels& img, const Blobs& blobs, const int diag,
 
     for (const Coord& object : local_blobs)
     {
-        const Outline outline(img, blobs, object, MAX_ITERATIONS);
+        const Outline outline(blobs, object, MAX_ITERATIONS);
         const Coord center = findCenter(outline.points());
 
         if (center == default_coord)

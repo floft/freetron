@@ -15,7 +15,6 @@ class Histogram
 {
     int total;
     std::vector<int> graph;
-    const std::vector<std::vector<unsigned char>>& img;
 
 public:
     // Each inner vector is assumed to have the same length

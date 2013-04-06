@@ -97,7 +97,7 @@ public:
         return iter->second;
     }
     
-    const Value* const operator->() const
+    const Value* operator->() const
     {
         return &iter->second;
     }

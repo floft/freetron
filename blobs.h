@@ -65,7 +65,7 @@ public:
 
 private:
     // Merge object o into object n by changing labels and updating object
-    void switchLabel(const Pixels& img, int old_label, int new_label);
+    void switchLabel(int old_label, int new_label);
 };
 
 #endif

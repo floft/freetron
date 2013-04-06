@@ -1,7 +1,6 @@
 #include "histogram.h"
 
 Histogram::Histogram(const std::vector<std::vector<unsigned char>>& img)
-    : img(img)
 {
     // This is unsigned char, so there's 0-255
     graph = std::vector<int>(256, 0);

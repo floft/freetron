@@ -33,7 +33,6 @@ struct EdgePair
 // Get the outline of the object
 class Outline
 {
-    const Pixels& img;
     const Blobs& blobs;
 
     // Label of this pixel
@@ -50,8 +49,7 @@ class Outline
     static const std::array<Coord, 8> matrix;
 
 public:
-    Outline(const Pixels& pixels, const Blobs& blobs, const Coord& point,
-        const int max_length);
+    Outline(const Blobs& blobs, const Coord& point, const int max_length);
 
     bool good() const { return found; }
 

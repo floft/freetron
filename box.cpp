@@ -35,7 +35,7 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point)
         return;
     }
     
-    const Outline shape(img, blobs, point, MAX_ITERATIONS);
+    const Outline shape(blobs, point, MAX_ITERATIONS);
 
     // Not a valid box if it was beyond max length
     if (!shape.good())

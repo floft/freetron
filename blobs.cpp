@@ -53,7 +53,7 @@ Blobs::Blobs(const Pixels& img)
                     {
                         // If they are not, make all of the previous object this object
                         if (img.black(p) && labels[y][x] != labels[p.y][p.x])
-                            switchLabel(img, labels[p.y][p.x], labels[y][x]);
+                            switchLabel(labels[p.y][p.x], labels[y][x]);
                     }
                 }
                 else
@@ -71,7 +71,7 @@ Blobs::Blobs(const Pixels& img)
 
 // Change label o to label n by looping through the y values from the first to
 // last coordinates of the object
-void Blobs::switchLabel(const Pixels& img, const int old_label, const int new_label)
+void Blobs::switchLabel(const int old_label, const int new_label)
 {
     const Coord& old_first = objs[old_label].first;
     const Coord& old_last  = objs[old_label].last;

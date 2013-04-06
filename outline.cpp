@@ -16,9 +16,9 @@ const std::array<Coord, 8> Outline::matrix = {{
     Coord( 0, -1)
 }};
 
-Outline::Outline(const Pixels& img, const Blobs& blobs, const Coord& point,
+Outline::Outline(const Blobs& blobs, const Coord& point,
     const int max_length)
-    :img(img), blobs(blobs)
+    :blobs(blobs)
 {
     // Current label so we only walk around this object
     label = blobs.label(point);
