@@ -208,9 +208,13 @@ void Pixels::save(const std::string& filename, bool show_marks, bool dim, bool b
     ilTexImage(w, h, 1, 3, IL_RGB, IL_UNSIGNED_BYTE, data);
     
     if (!ilSaveImage(filename.c_str()) || ilGetError() == IL_INVALID_PARAM)
+    {
+        delete[] data;
         throw std::runtime_error("could not save image");
+    }
     
     ilDeleteImages(1, &name);
+    delete[] data;
 }
 
 Coord Pixels::rotatePoint(const Coord& origin, const Coord& c, double sin_rad, double cos_rad) const
