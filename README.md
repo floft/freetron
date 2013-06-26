@@ -32,6 +32,11 @@ PoDoFo (LGPL)
 OpenIL/DevIL (LGPL)  
 libtiff (custom: http://www.libtiff.org/misc.html)
 
+As for the C++11 compiler, I have tested g++ and clang++ on Linux, but in
+theory the latest version of Visual C++ should compile it with few changes. The
+most work would be compiling PoDoFo for Windows, hence why I haven't tested it
+yet.
+
 Example
 -------
 Download an [example form](http://floft.net/uploads/freetron_example.pdf)
