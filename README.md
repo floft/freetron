@@ -26,7 +26,7 @@ where the webserver will place uploaded forms. Then, after the forms in a queue
 have been processed, the grades will be shown on the website. Well, that might be
 what happens. We'll see what it looks like when it's done.
 
-**Dependencies**  
+###Dependencies###
 *a C++11 compiler*  
 PoDoFo (LGPL)  
 OpenIL/DevIL (LGPL)  
@@ -35,7 +35,21 @@ libtiff (custom: http://www.libtiff.org/misc.html)
 As for the C++11 compiler, I have tested g++ and clang++ on Linux, but in
 theory the latest version of Visual C++ should compile it with few changes. The
 most work would be compiling PoDoFo for Windows, hence why I haven't tested it
-yet.
+yet. As for Mac, since the above dependencies are available in Macports (didn't
+check any other package managers), they should be fairly straightforward to
+install.
+
+###Compiling###
+Now, normally I wouldn't put in a section about compiling, but I feel that it
+may be of use in this particular project since there are multiple ways at the
+moment. There are two ways you can compile it after getting the necessary
+dependencies listed above.
+
+**make:** ``make``  
+**cmake:** ``cd cmake; cmake .; make``
+
+Note that cmake will probably look prettier, giving more helpful error
+messages.
 
 Example
 -------
