@@ -22,3 +22,9 @@ freetron
 *.log
 images
 test.sh
+
+# Cmake
+CMakeCache.txt
+cmake_install.cmake
+cmake/Makefile
+cmake/CMakeFiles
