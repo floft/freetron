@@ -7,10 +7,10 @@
  *   - Generalize for any style of form, make forms/type*.xml and autodetect
  *   - When a box is missing, calculate supposed position
  *   - Would multithreading extract() noticeably increase speed?
- *   - Make threadForEach() accept extra arguments to pass to function
  *   - Pick largest image on the page of a PDF
  */
 
+#include <list>
 #include <vector>
 #include <cstring>
 #include <sstream>
@@ -29,7 +29,7 @@
 #include "pixels.h"
 #include "extract.h"
 #include "options.h"
-#include "threading.h"
+#include "threadqueue.h"
 
 enum class Args
 {
@@ -58,19 +58,6 @@ void invalid()
     std::exit(1);
 }
 
-// Return type for threads
-struct Info
-{
-    int thread_id = 0;
-    int id = 0;
-    std::vector<Answer> answers;
-
-    Info() { }
-    Info(int t) :thread_id(t) { }
-    Info(int t, int i, const std::vector<Answer>& answers)
-        :thread_id(t), id(i), answers(answers) { }
-};
-
 // Called in a new thread for each image
 Info parseImage(Pixels* image)
 {
@@ -88,7 +75,7 @@ Info parseImage(Pixels* image)
 
         // Box information for this image
         Data data;
-        
+
         // Find all the boxes
         std::vector<Coord> boxes = findBoxes(*image, blobs, data);
 
@@ -143,12 +130,12 @@ Info parseImage(Pixels* image)
         {
             for (const Coord& box : boxes)
                 image->mark(box);
-            
+
             std::ostringstream s;
             s << "debug" << thread_id << ".png";
             image->save(s.str());
         }
-    
+
         return Info(thread_id, id, answers);
     }
     catch (const std::runtime_error& error)
@@ -171,7 +158,10 @@ Info parseImage(Pixels* image)
 int main(int argc, char* argv[])
 {
     ilInit();
-    std::vector<Pixels> images;
+
+    // We need consistent memory locations since we're adding the address to a
+    // queue to process as we load each image.
+    std::list<Pixels> images;
 
     // Argument parsing
     std::string filename;
@@ -251,10 +241,13 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    ThreadQueue<Info, Pixels*> ts(parseImage, threads);
+
     try
     {
-        // Get the images from the PDF
-        images = extract(filename);
+        // Get the images from the PDF while at the same time adding them to
+        // the thread queue to process.
+        images = extract(filename, ts);
     }
     catch (const std::runtime_error& error)
     {
@@ -270,9 +263,9 @@ int main(int argc, char* argv[])
 
         return error.GetError();
     }
-    
-    // Find ID of each page in separate thread
-    std::vector<Info> results = threadForEach(images, parseImage, threads);
+
+    // Get all the IDs, block until they're all done processing
+    std::vector<Info> results = ts.results();
 
     // Find the key based on the teacher's ID
     std::cout << std::left;
@@ -326,7 +319,7 @@ int main(int argc, char* argv[])
 
         // Grade student's exams
         std::map<int, double> scores;
-        
+
         for (const Info& i : results)
         {
             if (i.id == DefaultID)
@@ -359,7 +352,7 @@ int main(int argc, char* argv[])
                 scores[i.id] = (total>0)?1.0*same/total:1;
             }
         }
-        
+
         // Output scores
         std::cout << std::endl << "Scores" << std::endl;
 
@@ -378,6 +371,6 @@ int main(int argc, char* argv[])
             if (i.id != DefaultID)
                 std::cerr << "  " << i.id << std::endl;
     }
-    
+
     return 0;
 }

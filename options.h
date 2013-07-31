@@ -124,10 +124,4 @@ static const int Q_OPTIONS = 5;
 static const int BOT_START = 45;
 static const int BOT_END   = TOTAL_BOXES;
 
-// In the threading header file, we create a certain number of threads
-// depending on the number of CPUs. After we create as many threads as cores,
-// we wait this many milliseconds till we check if any of the threads have
-// completed.
-static const int THREAD_WAIT = 50;
-
 #endif

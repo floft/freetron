@@ -1,8 +1,8 @@
 #include "extract.h"
 
-std::vector<Pixels> extract(const std::string& filename)
+std::list<Pixels> extract(const std::string& filename, ThreadQueue<Info, Pixels*>& ts)
 {
-    std::vector<Pixels> images;
+    std::list<Pixels> images;
     ColorSpace colorspace;
     PoDoFo::PdfObject* obj = nullptr;
     PoDoFo::PdfObject* color = nullptr;
@@ -15,7 +15,7 @@ std::vector<Pixels> extract(const std::string& filename)
         {
             PoDoFo::PdfObject* objType = (*it)->GetDictionary().GetKey(PoDoFo::PdfName::KeyType);
             PoDoFo::PdfObject* objSubType = (*it)->GetDictionary().GetKey(PoDoFo::PdfName::KeySubtype);
-            
+
             if ((objType    && objType->IsName()    && objType->GetName().GetName() == "XObject") ||
                 (objSubType && objSubType->IsName() && objSubType->GetName().GetName() == "Image" ))
             {
@@ -35,7 +35,7 @@ std::vector<Pixels> extract(const std::string& filename)
                     else if (col == "DeviceGray")
                         colorspace = ColorSpace::Gray;
                 }
-                
+
                 // Stream
                 obj = (*it)->GetDictionary().GetKey(PoDoFo::PdfName::KeyFilter);
 
@@ -65,6 +65,7 @@ std::vector<Pixels> extract(const std::string& filename)
                 }
 
                 document.FreeObjectMemory(*it);
+                ts.queue(&images.back());
             }
         }
 
@@ -90,7 +91,7 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type, const Color
         // Monochrome, otherwise wouldn't have used CCITT
         const unsigned int bits = 1;
         const unsigned int samples = 1;
-        
+
         std::ostringstream os;
         TIFF* tif = TIFFStreamOpen("Input", &os);
         TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,       width);
@@ -107,7 +108,7 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type, const Color
         TIFFSetField(tif, TIFFTAG_ORIENTATION,      ORIENTATION_TOPLEFT);
         TIFFSetField(tif, TIFFTAG_FAXMODE,      FAXMODE_CLASSF);
         TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP,     (uint32)-1L);
-        
+
         // stream->Get returns read-only, so copy it
         PoDoFo::PdfMemStream* stream = dynamic_cast<PoDoFo::PdfMemStream*>(object->GetStream());
         const char* readonly = stream->Get();
@@ -127,7 +128,7 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type, const Color
     {
         std::ostringstream os;
 
-        // P5 is graymap (8 bit), P6 is pixmap (24 bit). See: 
+        // P5 is graymap (8 bit), P6 is pixmap (24 bit). See:
         // http://en.wikipedia.org/wiki/Portable_anymap#File_format_description
         if (colorspace == ColorSpace::Gray)
             os << "P5\n";

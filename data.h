@@ -6,6 +6,7 @@
 #define H_DATA
 
 #include <iostream>
+#include <vector>
 
 struct Coord
 {
@@ -40,9 +41,22 @@ struct Data
 };
 
 // I have never seen one with more than 5 options
-enum class Answer 
+enum class Answer
 {
     Blank = 0, A, B, C, D, E
+};
+
+// Return type for threads
+struct Info
+{
+    int thread_id = 0;
+    int id = 0;
+    std::vector<Answer> answers;
+
+    Info() { }
+    Info(int t) :thread_id(t) { }
+    Info(int t, int i, const std::vector<Answer>& answers)
+        :thread_id(t), id(i), answers(answers) { }
 };
 
 std::ostream& operator<<(std::ostream& os, const Coord& c);
