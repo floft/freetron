@@ -1,8 +1,20 @@
+/*
+ * Create a certain number of threads in the background and process data as it
+ * is added to a queue. Example:
+ *
+ *   Result function(Item) { return Result(Item); }
+ *   ThreadScheduler ts(function);
+ *   ts.queue(Item);
+ *   std::vector<Result> results = ts.results();
+ */
+
+
 #ifndef H_THREADQUEUE
 #define H_THREADQUEUE
 
 #include <queue>
 #include <mutex>
+#include <atomic>
 #include <thread>
 #include <vector>
 #include <condition_variable>
@@ -23,15 +35,14 @@ template<class Result, class Item> class Thread
     std::mutex& rMutex;
     std::queue<Item>& q;
     std::mutex& qMutex;
-    bool& exited;
-    std::mutex& exitedMutex;
+    std::atomic_bool& exited;
 
 public:
     Thread(Result (*function)(Item), std::condition_variable& moreData,
             std::vector<Result>& r, std::mutex& rMutex, std::queue<Item>& q,
-            std::mutex& qMutex, bool& exited, std::mutex& exitedMutex)
+            std::mutex& qMutex, std::atomic_bool& exited)
         : function(function), moreData(moreData), r(r), rMutex(rMutex), q(q),
-          qMutex(qMutex), exited(exited), exitedMutex(exitedMutex) { }
+          qMutex(qMutex), exited(exited) { }
 
     void operator()();
 };
@@ -42,8 +53,7 @@ template<class Result, class Item> class ThreadQueue
     std::vector<std::thread> pool;
 
     // Did we already exit, don't allow adding more items to the queue
-    bool exited;
-    std::mutex exitedMutex;
+    std::atomic_bool exited;
 
     // Items to process
     std::queue<Item> q;
@@ -58,9 +68,8 @@ template<class Result, class Item> class ThreadQueue
 
 public:
     // Create a thread queue with a certain number of threads. Normally you'd
-    // detect and specify the number of CPU cores in the computer. Setting the
-    // threads to zero will attempt to auto-detect this. Initialization does
-    // not block.
+    // detect and specify the number of CPU cores in the computer. Defaults to
+    // supposed number of cores if zero. Initialization does not block.
     ThreadQueue(Result (*function)(Item), int threads = 0);
 
     // Add another item to the queue to be processed and signal any waiting
@@ -78,28 +87,18 @@ template<class Result, class Item> void Thread<Result,Item>::operator()()
 {
     while (true)
     {
+        Item item;
+
         {
             std::unique_lock<std::mutex> lck(qMutex);
+            moreData.wait(lck, [this]{ return !q.empty() || exited; });
 
-            while (q.empty())
-            {
-                {
-                    std::lock_guard<std::mutex> lck(exitedMutex);
+            if (exited)
+                break;
 
-                    if (exited)
-                        return;
-                }
-
-                moreData.wait(lck);
-            }
+            item = q.front();
+            q.pop();
         }
-
-        // We can't really use scope here since item may not have a default
-        // no-argument constructor
-        qMutex.lock();
-        Item item = q.front();
-        q.pop();
-        qMutex.unlock();
 
         Result result = function(item);
 
@@ -119,19 +118,15 @@ template<class Result, class Item> ThreadQueue<Result,Item>::ThreadQueue(
         threads = core_count();
 
     for (int i = 0; i < threads; ++i)
-        pool.push_back(std::thread(Thread<Result,Item>(function, moreData, r,
-                        rMutex, q, qMutex, exited, exitedMutex)));
+        pool.push_back(std::thread(Thread<Result,Item>(function,
+                    moreData, r, rMutex, q, qMutex, exited)));
 }
 
 template<class Result, class Item> void ThreadQueue<Result,Item>::queue(Item i)
 {
     // Just to make sure we will actually process these eventually
-    {
-        std::lock_guard<std::mutex> lck(exitedMutex);
-
-        if (exited)
-            throw ThreadsExited();
-    }
+    if (exited)
+        throw ThreadsExited();
 
     std::lock_guard<std::mutex> lck(qMutex);
     q.push(i);
@@ -140,10 +135,7 @@ template<class Result, class Item> void ThreadQueue<Result,Item>::queue(Item i)
 
 template<class Result, class Item> std::vector<Result> ThreadQueue<Result,Item>::results()
 {
-    {
-        std::lock_guard<std::mutex> lck(exitedMutex);
-        exited = true;
-    }
+    exited = true;
 
     // Cause all other non-working threads to die
     {
