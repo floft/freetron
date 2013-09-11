@@ -33,5 +33,5 @@ clean:
 	${RM} ${OUT} ${OBJ}
 	${RM} -rf cmake/CMakeFiles cmake/CMakeCache.txt cmake/cmake_install.cmake cmake/Makefile cmake/freetron
 
-include ${DEPENDS}
+-include ${DEPENDS}
 .PHONY: all depends install uninstall clean
