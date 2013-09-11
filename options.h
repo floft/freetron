@@ -65,7 +65,7 @@ static const int MAX_ERROR = 5;
 // The error margin in pixels for difference in height from the estimated
 // height from the aspect ratio and width. If it's beyond this it won't be
 // considered a box.
-static const int HEIGHT_ERROR = 10;
+static const int HEIGHT_ERROR = 5;
 
 // The max distance a point on the rectangle's side can be from the straight
 // line connecting the two corners. This is relative to the width.
