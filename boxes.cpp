@@ -35,7 +35,7 @@ std::vector<Coord> findBoxes(Pixels& img, const Blobs& blobs, Data& data)
             jump = i;
             found = true;
         }
-        
+
         // We'll return the midpoints to use later
         if (found)
             coords.push_back(boxes[i].midpoint());

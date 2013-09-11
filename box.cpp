@@ -69,18 +69,18 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point)
     }
 
     // We need the width to check for out-of-line points
-    w  = distance(topleft, topright);
+    w = distance(topleft, topright);
 
     // Find the relative rectangle error
     double rect_error = RECT_ERROR*w;
 
     // Check if all the points are on the lines between TL-TR, TR-BR, etc.
-    for (const Coord& point : outline)
+    for (const Coord& testPoint : outline)
     {
-        if (distance(topleft,    topright,    point) > rect_error &&
-            distance(topright,   bottomright, point) > rect_error &&
-            distance(bottomleft, bottomright, point) > rect_error &&
-            distance(topleft,    bottomleft,  point) > rect_error)
+        if (distance(topleft,    topright,    testPoint) > rect_error &&
+            distance(topright,   bottomright, testPoint) > rect_error &&
+            distance(bottomleft, bottomright, testPoint) > rect_error &&
+            distance(topleft,    bottomleft,  testPoint) > rect_error)
             return;
     }
 
