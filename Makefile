@@ -12,7 +12,7 @@ MANPREFIX ?= ${PREFIX}/share/man
 all: CXXFLAGS += -O2
 all: ${OUT}
 
-debug: CXXFLAGS += -g -Wall -Wextra -Wpedantic -DENABLE_DEBUG
+debug: CXXFLAGS += -g -Wall -Wextra -Wpedantic
 debug: ${OUT}
 
 ${OUT}: ${OBJ}

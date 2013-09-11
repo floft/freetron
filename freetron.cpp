@@ -164,7 +164,6 @@ int main(int argc, char* argv[])
 
     // Argument parsing
     std::string filename;
-    bool debug = false;
     bool quiet = false;
     int threads = 0; // 0 == number of cores
     int teacher = DefaultID;
@@ -220,7 +219,7 @@ int main(int argc, char* argv[])
                 }
                 break;
             case Args::Debug:
-                debug = true;
+                DEBUG = true;
                 break;
             case Args::Quiet:
                 quiet = true;
@@ -269,7 +268,7 @@ int main(int argc, char* argv[])
     // Find the key based on the teacher's ID
     std::cout << std::left;
 
-    if (debug)
+    if (DEBUG)
         std::cout << std::setw(5)  << "#";
 
     std::cout << std::setw(10) << "ID"
@@ -290,7 +289,7 @@ int main(int argc, char* argv[])
             }
             else
             {
-                if (debug)
+                if (DEBUG)
                     std::cout << std::setw(5) << i.thread_id;
 
                 std::cout << std::setw(10) << i.id << "\t";
@@ -327,7 +326,7 @@ int main(int argc, char* argv[])
             }
             else if (i.id != teacher)
             {
-                if (debug)
+                if (DEBUG)
                     std::cout << std::left << std::setw(5) << i.thread_id;
 
                 std::cout << std::left << std::setw(10) << i.id << "\t";
