@@ -38,7 +38,14 @@ inline Coord findMidpoint(const Coord& a, const Coord& b);
 // Used to find corners of boxes and bubbles
 Coord farthestFromPoint(const Coord& p,
      const std::vector<Coord>& points);
+
 Coord farthestFromLine(const Coord& p1, const Coord& p2,
+     const std::vector<Coord>& points);
+
+// Instead of taking the diagonal distance for finding boxes, we can add the
+// horizontal and vertical distance. This will tend to get rid of the odd
+// extruded pixels on the side of a box.
+Coord farthestFromPointSquare(const Coord& p,
      const std::vector<Coord>& points);
 
 // Determine "center" by averaging all points

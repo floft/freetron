@@ -7,9 +7,25 @@ Coord farthestFromPoint(const Coord& p, const std::vector<Coord>& points)
 
     for (const Coord& point : points)
     {
-        // Instead of taking the diagonal distance like distance(p,point), we can
-        // add the horizontal and vertical distance. This will tend to get rid of
-        // the odd extruded pixels on the side of a box.
+        double cdist = distance(p, point);
+
+        if (cdist > dist)
+        {
+            dist = cdist;
+            farthest = point;
+        }
+    }
+
+    return farthest;
+}
+
+Coord farthestFromPointSquare(const Coord& p, const std::vector<Coord>& points)
+{
+    double dist = 0;
+    Coord farthest;
+
+    for (const Coord& point : points)
+    {
         double cdist = std::abs(p.x-point.x)+std::abs(p.y-point.y);
 
         if (cdist > dist)

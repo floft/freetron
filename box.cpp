@@ -43,11 +43,14 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point)
 
     const std::vector<Coord> outline = shape.points();
 
-    // Find the four corners by finding the four farthest points from each other
-    const Coord p1 = farthestFromPoint(point, outline);
-    const Coord p2 = farthestFromPoint(p1,    outline);
+    // Find the four corners by finding the four farthest points from each other.
+    // Note that we'll use the square versions of these, since this is a box
+    // instead of a elipse; otherwise, slight extrusions on the side of a box
+    // might throw the corners off.
+    const Coord p1 = farthestFromPointSquare(point, outline);
+    const Coord p2 = farthestFromPointSquare(p1, outline);
     const Coord p3 = farthestFromLine(p1, p2, outline);
-    const Coord p4 = farthestFromPoint(p3,    outline);
+    const Coord p4 = farthestFromPointSquare(p3, outline);
 
     // We know p1 and p2 are on opposite corners, so we can use this as a diagonal
     // to find the approximate center
