@@ -3,13 +3,17 @@ SRC        = ${wildcard *.cpp}
 OBJ        = ${SRC:.cpp=.o}
 DEPENDS    = .depends
 
-CXXFLAGS  := ${CXXFLAGS} -g -ffast-math -funroll-loops -O2 -std=c++11 -Wall -Wextra -Wpedantic
-LDFLAGS   := ${LDFLAGS} -lpodofo -lIL -ltiff -ltiffxx -pthread
+CXXFLAGS  += -ffast-math -funroll-loops -std=c++11
+LDFLAGS   += -lpodofo -lIL -ltiff -ltiffxx -pthread
 
 PREFIX    ?= /usr/local
 MANPREFIX ?= ${PREFIX}/share/man
 
+all: CXXFLAGS += -O2
 all: ${OUT}
+
+debug: CXXFLAGS += -g -Wall -Wextra -Wpedantic -DENABLE_DEBUG
+debug: ${OUT}
 
 ${OUT}: ${OBJ}
 	${CXX} -o $@ ${OBJ} ${LDFLAGS}
