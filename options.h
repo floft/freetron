@@ -17,7 +17,7 @@ typedef std::vector<Coord>::size_type vsize_coord;
 // Allow easy debugging, enable debug mode with "-d" command-line option. When
 // enabled we will save debug0.png, debug1.png, etc. for the PDF pages processed
 // with marks of size MARK_SIZE and color MARK_COLOR.
-static bool DEBUG = false;
+extern bool DEBUG;
 static const int MARK_SIZE = 5;
 static const unsigned char MARK_COLOR = 127;
 

@@ -30,6 +30,10 @@
 #include "options.h"
 #include "threadqueue.h"
 
+// This must be global since we're using extern in options.h. This is used all
+// over the place to enable outputting debug images.
+bool DEBUG = false;
+
 enum class Args
 {
     Unknown,
