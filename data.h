@@ -50,12 +50,12 @@ enum class Answer
 struct Info
 {
     int thread_id = 0;
-    int id = 0;
+    long long id = 0;
     std::vector<Answer> answers;
 
     Info() { }
     Info(int t) :thread_id(t) { }
-    Info(int t, int i, const std::vector<Answer>& answers)
+    Info(int t, long long i, const std::vector<Answer>& answers)
         :thread_id(t), id(i), answers(answers) { }
 };
 

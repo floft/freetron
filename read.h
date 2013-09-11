@@ -19,7 +19,7 @@
 #include "options.h"
 
 // Set this to something that can't be detected on the form
-static const int DefaultID = -1;
+static const long long DefaultID = -1;
 static const int DefaultFilled = -1;
 
 // Data to keep about a bubble
@@ -38,7 +38,7 @@ bool vertical(const std::vector<Coord>& boxes,
     const int start_box, const int end_box);
 
 // Determine ID number from boxes 2-11
-int findID(Pixels& img, const Blobs& blobs,
+long long findID(Pixels& img, const Blobs& blobs,
     const std::vector<Coord>& boxes, const Data& data, const double min_black);
 
 // Find which of the answers is filled

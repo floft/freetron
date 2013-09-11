@@ -116,7 +116,7 @@ Info parseImage(Pixels* image)
         double black = findBlack(*image, blobs, boxes, data);
 
         // Find ID number
-        int id = findID(*image, blobs, boxes, data, black);
+        long long id = findID(*image, blobs, boxes, data, black);
 
         std::vector<Answer> answers;
 
@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
         typedef std::vector<Answer>::size_type size_type;
 
         // Grade student's exams
-        std::map<int, double> scores;
+        std::map<long long, double> scores;
 
         for (const Info& i : results)
         {
@@ -355,7 +355,7 @@ int main(int argc, char* argv[])
         // Output scores
         std::cout << std::endl << "Scores" << std::endl;
 
-        for (const std::pair<int, double>& score: scores)
+        for (const std::pair<long long, double>& score: scores)
         {
             std::cout << "  " << std::left << std::setw(10) << score.first << " "
                       << std::fixed << std::setprecision(2) << std::right << std::setw(6)

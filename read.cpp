@@ -60,14 +60,13 @@ bool vertical(const std::vector<Coord>& boxes,
     return true;
 }
 
-int findID(Pixels& img, const Blobs& blobs,
+long long findID(Pixels& img, const Blobs& blobs,
     const std::vector<Coord>& boxes, const Data& data,
     const double min_black)
 {
     typedef std::vector<Coord>::size_type size_type;
 
-    int id = DefaultID;
-    std::map<int, int> filled;
+    long long id = DefaultID;
     
     // Get rid of compilation warnings in vertical()
     const size_type& start_box = ID_START;
@@ -109,7 +108,7 @@ int findID(Pixels& img, const Blobs& blobs,
     int i = 0;
 
     for (iterator iter = digits.rbegin(); iter != digits.rend(); ++iter, ++i)
-        id += *iter*std::pow(10, i);
+        id += static_cast<long long>(*iter)*std::pow(10, i);
 
     return id;
 }
