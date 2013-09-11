@@ -93,7 +93,7 @@ template<class Result, class Item> void Thread<Result,Item>::operator()()
             std::unique_lock<std::mutex> lck(qMutex);
             moreData.wait(lck, [this]{ return !q.empty() || exited; });
 
-            if (exited)
+            if (exited && q.empty())
                 break;
 
             item = q.front();
@@ -135,6 +135,7 @@ template<class Result, class Item> void ThreadQueue<Result,Item>::queue(Item i)
 
 template<class Result, class Item> std::vector<Result> ThreadQueue<Result,Item>::results()
 {
+    // We want all threads to die as the queue becomes empty.
     exited = true;
 
     // Cause all other non-working threads to die
