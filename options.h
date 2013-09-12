@@ -33,7 +33,7 @@ static const double ASPECT = 2.722;
 
 // Minimum percent of pixels in a supposed box needing to be black to be
 // considered a box. This is between 0 and 1.
-static const double MIN_BLACK = 0.8;
+static const double MIN_BLACK = 0.7;
 
 // Maximum percent of pixels that can be black in the region around a box, and
 // what sized region around box to check in pixels.

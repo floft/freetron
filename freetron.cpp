@@ -8,6 +8,7 @@
  *   - When a box is missing, calculate supposed position
  *   - Pick largest image on the page of a PDF
  *   - Rotate based on a few boxes in line, then find all boxes
+ *   - Auto-adjusting HEIGHT_ERROR and MIN_BLACK
  */
 
 #include <list>

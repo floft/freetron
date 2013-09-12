@@ -9,7 +9,7 @@ LDFLAGS   += -lpodofo -lIL -ltiff -ltiffxx -pthread
 PREFIX    ?= /usr/local
 MANPREFIX ?= ${PREFIX}/share/man
 
-all: CXXFLAGS += -O2
+all: CXXFLAGS += -O2 -Os
 all: ${OUT}
 
 debug: CXXFLAGS += -g -Wall -Wextra -Wpedantic
