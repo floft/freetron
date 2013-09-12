@@ -49,12 +49,49 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point)
     // might throw the corners off.
     const Coord p1 = farthestFromPointSquare(point, outline);
     const Coord p2 = farthestFromPointSquare(p1, outline);
-    const Coord p3 = farthestFromLine(p1, p2, outline);
-    const Coord p4 = farthestFromPointSquare(p3, outline);
 
     // We know p1 and p2 are on opposite corners, so we can use this as a diagonal
     // to find the approximate center
-    const Coord center = Coord((p1.x + p2.x)/2, (p1.y + p2.y)/2);
+    const Coord center = findMidpoint(p1, p2);
+
+    // Calculate other two points. We can't use the same algorithm above. We'd
+    // have to calculate the farthest points perpendicularly from the line from
+    // p1 to p2, but if it is a box, we could just rotate these two points by the
+    // known box aspect ratio. In tests this works out in just a few more cases.
+    double rotation = 2*std::atan(1/ASPECT);
+
+    // For determing which way to rotate, we'll look at the sign of an angle.
+    // This requires that we have a consistent order of points.
+    Coord bottom = p2;
+    Coord top = p1;
+
+    if (p1.y > p2.y)
+        std::swap(bottom, top);
+
+    // Rotate clockwise if current diagonal BL/TR, counterclockwise if BR/TL
+    if (std::atan(1.0*(bottom.y-top.y)/(bottom.x-top.x)) < 0)
+        rotation *= -1.0;
+
+    const double sin_rad = std::sin(rotation);
+    const double cos_rad = std::cos(rotation);
+    Coord p3 = img.rotatePoint(center, p1, sin_rad, cos_rad);
+    Coord p4 = img.rotatePoint(center, p2, sin_rad, cos_rad);
+
+    // If we have invalid points, try this other method. It'll work in most cases.
+    // The only time it shouldn't work is if it's rotated more than say 25 degrees.
+    // An alternative to this would be farthestFromLine operating on the half of
+    // outline between p1 and p2 on one side of the box and then on the other side
+    // (based on the index with some sort of wrap-around).
+    if (p3 == default_coord || p4 == default_coord)
+    {
+        // farthestFromLine doesn't have the x+y style algorithm tending towards
+        // boxes, so use it after the perpendicular from line algorithm to get a
+        // more likely corner. Otherwise this third point is not as good of a corner
+        // as the other three, which occasionally will throw out the box.
+        p3 = farthestFromPointSquare(farthestFromLine(p1, p2, outline), outline);
+        p4 = farthestFromPointSquare(p3, outline);
+    }
+
     const Coord* const points[] = { &p1, &p2, &p3, &p4 };
 
     // Top left is up and left, ...
@@ -78,6 +115,8 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point)
     double rect_error = RECT_ERROR*w;
 
     // Check if all the points are on the lines between TL-TR, TR-BR, etc.
+    // If a point is farther from all of these lines than a relative error,
+    // it's not a box.
     for (const Coord& testPoint : outline)
     {
         if (distance(topleft,    topright,    testPoint) > rect_error &&
@@ -97,6 +136,10 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point)
     // What should the width be approximately given the aspect ratio (width/height)
     const double approx_height = w/ASPECT;
 
+    // Note that when using the rotation method for calculating p3 and p4 above,
+    // the first "Correct height" check is more or less pointless since the aspect
+    // ratio will be exactly correct. In this case we'll rely more on other checks
+    // like validBoxColor().
     if (h >= approx_height-HEIGHT_ERROR && h <= approx_height+HEIGHT_ERROR && // Correct height
         std::abs(distance(topleft, bottomright) - distance(topright, bottomleft)) < DIAG_ERROR && // Diagonals same
         std::abs(distance(topleft, bottomleft) - distance(topright, bottomright)) < DIAG_ERROR && // Height same

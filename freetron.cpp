@@ -7,6 +7,7 @@
  *   - Generalize for any style of form, make forms/type*.xml and autodetect
  *   - When a box is missing, calculate supposed position
  *   - Pick largest image on the page of a PDF
+ *   - Rotate based on a few boxes in line, then find all boxes
  */
 
 #include <list>
