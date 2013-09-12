@@ -68,6 +68,12 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point)
     if (p1.y > p2.y)
         std::swap(bottom, top);
 
+    // This means that it's rotated 90-atan(1/ASPECT) degrees, or about 70. We
+    // don't support more than maybe 45, probably no more than 25 or so. You
+    // can't accidently scan a sheet rotated 70 degrees in a scanner.
+    if (bottom.x-top.x == 0)
+        return;
+
     // Rotate clockwise if current diagonal BL/TR, counterclockwise if BR/TL
     if (std::atan(1.0*(bottom.y-top.y)/(bottom.x-top.x)) < 0)
         rotation *= -1.0;
