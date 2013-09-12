@@ -35,14 +35,15 @@ template<class Result, class Item> class Thread
     std::mutex& rMutex;
     std::queue<Item>& q;
     std::mutex& qMutex;
-    std::atomic_bool& exited;
+    std::atomic_bool& waiting;
+    std::atomic_bool& killed;
 
 public:
     Thread(Result (*function)(Item), std::condition_variable& moreData,
             std::vector<Result>& r, std::mutex& rMutex, std::queue<Item>& q,
-            std::mutex& qMutex, std::atomic_bool& exited)
+            std::mutex& qMutex, std::atomic_bool& waiting, std::atomic_bool& killed)
         : function(function), moreData(moreData), r(r), rMutex(rMutex), q(q),
-          qMutex(qMutex), exited(exited) { }
+          qMutex(qMutex), waiting(waiting), killed(killed) { }
 
     void operator()();
 };
@@ -52,8 +53,12 @@ template<class Result, class Item> class ThreadQueue
     // Our thread pool
     std::vector<std::thread> pool;
 
+    // Are we waiting for the results now? If so, exit once the queue
+    // becomes empty.
+    std::atomic_bool waiting;
+
     // Did we already exit, don't allow adding more items to the queue
-    std::atomic_bool exited;
+    std::atomic_bool killed;
 
     // Items to process
     std::queue<Item> q;
@@ -81,6 +86,9 @@ public:
     // values of the function. This will also exit all of the threads, so
     // adding anything more to the queue will throw an exception.
     std::vector<Result> results();
+
+    // Quit processing new items in the queue
+    void exit();
 };
 
 template<class Result, class Item> void Thread<Result,Item>::operator()()
@@ -91,9 +99,9 @@ template<class Result, class Item> void Thread<Result,Item>::operator()()
 
         {
             std::unique_lock<std::mutex> lck(qMutex);
-            moreData.wait(lck, [this]{ return !q.empty() || exited; });
+            moreData.wait(lck, [this]{ return !q.empty() || waiting || killed; });
 
-            if (exited && q.empty())
+            if ((waiting && q.empty()) || killed)
                 break;
 
             item = q.front();
@@ -112,20 +120,20 @@ template<class Result, class Item> void Thread<Result,Item>::operator()()
 
 template<class Result, class Item> ThreadQueue<Result,Item>::ThreadQueue(
         Result (*function)(Item), int threads)
-    : exited(false)
+    : waiting(false), killed(false)
 {
     if (threads <= 0)
         threads = core_count();
 
     for (int i = 0; i < threads; ++i)
         pool.push_back(std::thread(Thread<Result,Item>(function,
-                    moreData, r, rMutex, q, qMutex, exited)));
+                    moreData, r, rMutex, q, qMutex, waiting, killed)));
 }
 
 template<class Result, class Item> void ThreadQueue<Result,Item>::queue(Item i)
 {
     // Just to make sure we will actually process these eventually
-    if (exited)
+    if (waiting)
         throw ThreadsExited();
 
     std::lock_guard<std::mutex> lck(qMutex);
@@ -133,10 +141,25 @@ template<class Result, class Item> void ThreadQueue<Result,Item>::queue(Item i)
     moreData.notify_one();
 }
 
+template<class Result, class Item> void ThreadQueue<Result,Item>::exit()
+{
+    killed = true;
+
+    // Cause all other non-working threads to die
+    {
+        std::lock_guard<std::mutex> lck(qMutex);
+        moreData.notify_all();
+    }
+
+    // Wait for these to exit
+    for (std::thread& t : pool)
+        t.join();
+}
+
 template<class Result, class Item> std::vector<Result> ThreadQueue<Result,Item>::results()
 {
     // We want all threads to die as the queue becomes empty.
-    exited = true;
+    waiting = true;
 
     // Cause all other non-working threads to die
     {

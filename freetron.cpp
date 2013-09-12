@@ -254,11 +254,15 @@ int main(int argc, char* argv[])
     }
     catch (const std::runtime_error& error)
     {
+        ts.exit();
+
         log(filename + ", " + error.what());
         return 1;
     }
     catch (const PoDoFo::PdfError& error)
     {
+        ts.exit();
+
         error.PrintErrorMsg();
 
         // Don't write this to screen
