@@ -53,9 +53,9 @@ takes about 1 second and the second about 3 seconds on my computer.
 
     $ ./freetron -i 123456789 freetron_example.pdf 2>/dev/null
     ID          Answers (key first)
-    123456789   A B C D E A B C D E A B C D E 
-    1233224     A A D D D A B C D E A B B C E 
-    987444      A B C D E E D C B A B C D E D 
+    123456789   A B C D E A B C D E A B C D E
+    1233224     A A D D D A B C D E A B B C E
+    987444      A B C D E E D C B A B C D E D
 
     Scores
       987444      40.00%
