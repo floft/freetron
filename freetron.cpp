@@ -162,17 +162,11 @@ Info parseImage(Pixels* image)
 
 int main(int argc, char* argv[])
 {
-    ilInit();
-
-    // We need consistent memory locations since we're adding the address to a
-    // queue to process as we load each image.
-    std::list<Pixels> images;
-
     // Argument parsing
     std::string filename;
     bool quiet = false;
     int threads = 0; // 0 == number of cores
-    int teacher = DefaultID;
+    long long teacher = DefaultID;
 
     std::map<std::string, Args> options = {{
         { "-h",        Args::Help },
@@ -202,11 +196,17 @@ int main(int argc, char* argv[])
 
                 try
                 {
-                    teacher = std::stoi(argv[i]);
+                    teacher = std::stoll(argv[i]);
                 }
-                catch (const std::invalid_argument& e)
+                catch (const std::invalid_argument&)
                 {
                     std::cerr << "Error: invalid teacher ID" << std::endl;
+                    return 1;
+                }
+                catch (const std::out_of_range&)
+                {
+                    std::cerr << "Error: teacher ID too long" << std::endl;
+                    return 1;
                 }
                 break;
             case Args::Threads:
@@ -219,9 +219,15 @@ int main(int argc, char* argv[])
                 {
                     threads = std::stoi(argv[i]);
                 }
-                catch (const std::invalid_argument& e)
+                catch (const std::invalid_argument&)
                 {
                     std::cerr << "Error: invalid number of threads" << std::endl;
+                    return 1;
+                }
+                catch (const std::out_of_range&)
+                {
+                    std::cerr << "Error: max threads too long" << std::endl;
+                    return 1;
                 }
                 break;
             case Args::Debug:
@@ -244,6 +250,13 @@ int main(int argc, char* argv[])
         std::cerr << "Error: teacher ID cannot be the default ID" << std::endl;
         return 1;
     }
+
+    // Wait till after we might return on simple errors to setup this stuff.
+    ilInit();
+
+    // We need consistent memory locations since we're adding the address to a
+    // queue to process as we load each image.
+    std::list<Pixels> images;
 
     ThreadQueue<Info, Pixels*> ts(parseImage, threads);
 
