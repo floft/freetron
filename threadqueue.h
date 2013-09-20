@@ -2,10 +2,11 @@
  * Create a certain number of threads in the background and process data as it
  * is added to a queue. Example:
  *
- *   Result function(Item) { return Result(Item); }
- *   ThreadScheduler ts(function);
- *   ts.queue(Item);
- *   std::vector<Result> results = ts.results();
+ *   Output function(Input) { return Output(Input); }
+ *   ThreadQueue<Output, Input> ts(function);
+ *   ts.queue(Input);
+ *   // other processing
+ *   std::vector<Output> results = ts.results();
  */
 
 
