@@ -4,7 +4,7 @@
 std::mutex Pixels::lock;
 
 Pixels::Pixels()
-    :w(0), h(0), loaded(false)
+    :w(0), h(0), loaded(false), gray_shade(GRAY_SHADE)
 {
 }
 
@@ -26,7 +26,7 @@ Pixels::Pixels(ILenum type, const char* lump, const int size, const std::string&
         {
             w = ilGetInteger(IL_IMAGE_WIDTH);
             h = ilGetInteger(IL_IMAGE_HEIGHT);
-            
+
             // If the image height or width is larger than int's max, it will appear
             // to be negative. Just don't use extremely large (many gigapixel) images.
             if (w < 0 || h < 0)
@@ -37,7 +37,7 @@ Pixels::Pixels(ILenum type, const char* lump, const int size, const std::string&
             unsigned char* data = new unsigned char[total];
 
             ilCopyPixels(0, 0, 0, w, h, 1, IL_RGB, IL_UNSIGNED_BYTE, data);
-            
+
             // Move data into a nicer format
             int x = 0;
             int y = 0;
@@ -54,10 +54,10 @@ Pixels::Pixels(ILenum type, const char* lump, const int size, const std::string&
                 //
                 // For luminosity:
                 //  p[y][x] = smartFloor(0.2126*data[i-2] + 0.7152*data[i-1] + 0.0722*data[i]);
-                
+
                 // Use the simplest. It doesn't seem to make a difference.
                 p[y][x] = smartFloor((1.0*data[i-2]+data[i-1]+data[i])/3);
-                
+
                 // Increase y every time we get to end of row
                 if (x+1 == w)
                 {
@@ -77,7 +77,7 @@ Pixels::Pixels(ILenum type, const char* lump, const int size, const std::string&
         {
             throw std::runtime_error("could not read image");
         }
-        
+
         ilDeleteImages(1, &name);
     }
 
@@ -180,7 +180,7 @@ void Pixels::save(const std::string& filename, bool show_marks, bool dim, bool b
     ilGenImages(1, &name);
     ilBindImage(name);
     ilEnable(IL_FILE_OVERWRITE);
-    
+
     // 3 because IL_RGB
     const int total = w*h*3;
     unsigned char* data = new unsigned char[total];
@@ -204,15 +204,15 @@ void Pixels::save(const std::string& filename, bool show_marks, bool dim, bool b
             pos+=3;
         }
     }
-    
+
     ilTexImage(w, h, 1, 3, IL_RGB, IL_UNSIGNED_BYTE, data);
-    
+
     if (!ilSaveImage(filename.c_str()) || ilGetError() == IL_INVALID_PARAM)
     {
         delete[] data;
         throw std::runtime_error("could not save image");
     }
-    
+
     ilDeleteImages(1, &name);
     delete[] data;
 }
@@ -231,7 +231,7 @@ Coord Pixels::rotatePoint(const Coord& origin, const Coord& c, double sin_rad, d
     if (new_x >= 0 && new_y >= 0 &&
         new_x < w && new_y < h)
         return Coord(new_x, new_y);
-    
+
     return default_coord;
 }
 

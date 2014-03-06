@@ -1,10 +1,8 @@
 #include "histogram.h"
 
 Histogram::Histogram(const std::vector<std::vector<unsigned char>>& img)
+    : graph(256, 0) // This is unsigned char, so there's 0-255
 {
-    // This is unsigned char, so there's 0-255
-    graph = std::vector<int>(256, 0);
-
     int h = img.size();
     int w = (h>0)?img[0].size():0;
     total = w*h;
