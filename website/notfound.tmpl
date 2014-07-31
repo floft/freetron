@@ -1,0 +1,10 @@
+<% skin theme %>
+<% view notfound uses content::master extends master %>
+<% template title() %><%= pageName %> :: <% include master::title() %><% end %>
+<% template page_content() %>
+<h1>404 Not Found</h1>
+<p>Looks like the page you were looking for doesn't exist anymore.
+Sorry about that.</p>
+<% end template %>
+<% end view %>
+<% end skin %>

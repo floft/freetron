@@ -1,0 +1,67 @@
+<% skin theme %>
+<% view forms uses content::forms extends master %>
+<% template title() %>Forms :: <% include master::title() %><% end %>
+<% template page_content() %>
+<h1>Forms</h1>
+<% if loggedIn %>
+<form id="upload" enctype="multipart/form-data" method="post" action="#">
+<input type="file" name="file" id="uploadFile" />
+<input type="button" id="uploadFileButton" value="Upload" />
+<div id="fileError"></div>
+<div id="progress"></div>
+
+<!--<div id="fileName"></div>
+<div id="fileSize"></div>
+<div id="fileType"></div>-->
+</form>
+
+<table id="forms">
+<tr class="title"><td class="info">
+Uploaded PDF files sorted from newest to oldest
+</td></tr>
+<tr class="head"><td>
+<span class="id">12345</span>
+<span class="del" onclick="deleteEntry(this)">X</span>
+<span class="name">freetron_example</span>
+<span class="date">&mdash; 2014/07/25</span>
+</td></tr>
+<tr class="data"><td>ID          Answers (key first)
+123456789   A B C D E A B C D E A B C D E
+1233224     A A D D D A B C D E A B B C E
+987444      A B C D E E D C B A B C D E D
+
+Scores
+  987444      40.00%
+  1233224     66.67%
+</td></tr>
+
+<tr class="head"><td>
+<span class="id">23456</span>
+<span class="del" onclick="deleteEntry(this)">X</span>
+<span class="name">freetron_example2</span>
+<span class="date">&mdash; 2014/07/13</span>
+</td></tr>
+<tr class="data"><td>ID          Answers (key first)
+1793240     E D B B C A B D C B D A D E E B D C E C A A E C C D C C C E C E E D D A C B E A D E A A A C D A E A
+888324401   D D B B C C B D A B D A E E E B D C B C A B E C D D C C E E C D D D A A C A A A D A A B A C D A E A
+3741083751  _ C C C B A B D C B C A D D E A D D E A A A E C D D E A C B C E E E D C C E E C C E B A _ E B A E B
+
+Scores
+  888324401   70.00%
+  3741083751  52.00%
+</td></tr>
+</table>
+
+<% foreach message in news_list %>
+    <ul>
+    <% item %>
+        <li><%= message %></li>
+    <% end %>
+    </ul>
+<% end foreach %>
+<% else %>
+<p>Please <a href="<% url "/account" %>">login</a>.</p>
+<% end %>
+<% end template %>
+<% end view %>
+<% end skin %>

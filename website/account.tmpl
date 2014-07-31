@@ -1,0 +1,49 @@
+<% skin theme %>
+<% view account uses content::account extends master %>
+
+<% template title() %><%= pageName %> :: <% include master::title() %><% end %>
+<% template page_content() %>
+<h1>Account</h1>
+<% if loggedIn %>
+<div id="logged_in">
+<p>Edit your account information below.</p>
+<form action="<% url "/account" %>" id="update_account" method="post">
+    <div id="badusernameupdate">Username not available</div>
+    <input type="hidden" name="confirm" value="<%= confirm %>" id="confirm" />
+    <input type="text" name="update_user" value="<%= user %>" placeholder="Username" class="field" id="update_user" />
+    <input type="password" name="update_pass" placeholder="New Password" class="field" id="update_pass" />
+    <input type="submit" value="Update" />
+</form>
+
+<p><a href="#" id="delete_account">Delete your account</a></p>
+</div>
+<% else %>
+<div id="logged_out">
+<p>Please either sign in or create an account.</p>
+
+<table class="login"><tr><td class="left">
+<form action="<% url "/account" %>" id="account" method="post">
+    <div id="badlogin">Incorrect login information</div>
+    <input type="text" name="user" placeholder="Username" class="field" id="user" />
+    <input type="password" name="pass" placeholder="Password" class="field" id="pass" />
+    <input type="submit" value="Login" />
+    <a href="#" id="forgotlink">Forgot Password?</a>
+    <div id="forgotmsg">
+        We know neither your password nor your email, so just create a new account.
+        If you really need your data recovered, send an email to the webmaster.
+    </div>
+</form>
+</td><td>
+<form action="<% url "/account" %>" id="new_account" method="post">
+    <div id="badusername">Username not available</div>
+    <input type="text" name="new_user" placeholder="New Username" class="field" id="new_user" />
+    <input type="password" name="new_pass" placeholder="New Password" class="field" id="new_pass" />
+    <input type="submit" value="Create Account" />
+</form>
+</td></tr></table>
+</div>
+<% end %>
+<!--<%= page_content | raw %>-->
+<% end template %>
+<% end view %>
+<% end skin %>

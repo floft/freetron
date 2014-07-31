@@ -1,0 +1,41 @@
+{
+    "service" : {
+        "ip" : "0.0.0.0",
+        "api" : "http",
+        "port" : 8080,
+        "disable_xpowered_by" : true
+    },
+    "http" : {
+        "script_names" : [ "/website", "/rpc" ],
+        "rewrite" : [
+            { "regex" : "/", "pattern" : "/website" },
+            { "regex" : "/files.*", "pattern" : "$0" },
+            { "regex" : "/rpc.*", "pattern" : "/rpc$0" },
+            { "regex" : ".*", "pattern" : "/website$0" }
+        ]
+    },
+    "file_server": {
+        "enable" : true,
+        "alias" : [
+            {
+                "url" : "/files",
+                "path" : "files"
+            }
+        ]
+    },
+    "session" : {
+        "expire" : "renew",
+        "timeout" : 604800,
+        "location" : "client",
+        "client" : {
+            "cbc" : "aes",
+            "cbc_key" : "<the key>",
+            "hmac" : "sha256",
+            "hmac_key" : "<the key>"
+        }
+    },
+    "cache" : {
+        "backend" : "thread_shared",
+        "limit" : 200,
+    }
+}

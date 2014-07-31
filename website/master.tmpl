@@ -1,0 +1,62 @@
+<% c++ #include "content.h" %>
+<% skin theme %>
+<% view master uses content::master %>
+
+<% template title() %><%= title %><% end %>
+<% template page_content() %><% end %>
+<% template render() %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title><% include title() %></title>
+    <!--<link rel="shortcut icon" type="image/png" href="/files/favicon.ico" />-->
+    <link rel="stylesheet" type="text/css" href="/files/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/files/mobile.css"
+        media="screen and (max-width: 650px), screen and (max-height: 201px)" />
+    <link rel="stylesheet" type="text/css" href="/files/small.css"
+        media="screen and (min-width: 651px) and (max-width: 880px) and (min-height: 200px)" />
+    <script type="text/javascript" src="/files/script.js"></script>
+    <script type="text/javascript" src="/files/sha256.js"></script>
+    <script type="text/javascript" src="/files/json2.js"></script>
+    <script type="text/javascript" src="/files/jsonrpc.js"></script>
+</head>
+<body>
+<div class="page">
+<div class="header"></div>
+<div class="menu">
+<ul>
+<% foreach menuItem in menuList %>
+<% item %>
+    <% if (menuItem.logon == false || content.loggedIn) %>
+    <% if (content.pageName == menuItem.name) %>
+    <li class="selected"><%= menuItem.name %></li>
+    <% else %>
+    <li><a href="<%= menuItem.path %>"><%= menuItem.name %></a></li>
+    <% end %>
+    <% end %>
+<% end item %>
+<% end foreach %>
+
+<% if loggedIn %>
+    <li class="blank"><br /></li>
+    <li><a href="#" id="logout">Logout</a></li>
+<% end %>
+</ul>
+</div>
+<div class="content">
+
+<% include page_content() %>
+
+</div>
+<div class="footer">
+    Freetron is open-source software, available at <a href="https://github.com/floft/freetron">Github</a>.
+</div>
+<div id="footer_color"></div>
+</div>
+</body>
+</html>
+<% end template %>
+<% end view %>
+<% end skin %>
