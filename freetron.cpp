@@ -22,6 +22,17 @@
 #include "options.h"
 #include "processor.h"
 
+#ifndef NOSITE
+#include <unistd.h>
+#include <cppcms/service.h>
+#include <cppcms/mount_point.h>
+#include <cppcms/application.h>
+#include <cppcms/applications_pool.h>
+
+#include "website/website.h"
+#include "website/rpc.h"
+#endif
+
 // This must be global since we're using extern in options.h. This is used all
 // over the place to enable outputting debug images.
 bool DEBUG = false;
@@ -40,7 +51,7 @@ enum class Args
 void help()
 {
     std::cerr << "Usage:" << std::endl
-              << "  freetron [options] --daemon" << std::endl
+              << "  freetron [options] --daemon path/to/files" << std::endl
               << "  freetron [options] -i KeyID in.pdf" << std::endl
               << std::endl
               << "  Options" << std::endl
@@ -48,7 +59,7 @@ void help()
               << "    -q, --quiet       don't print error messages (not implemented)" << std::endl
               << "    -d, --debug       output debug images" << std::endl
               << "    -t, --threads #   max number of threads to create" << std::endl
-              << "    --daemon          run the website, don't exit till Ctrl+C" << std::endl;
+              << "    --daemon path/    run the website, don't exit till Ctrl+C" << std::endl;
 }
 
 void invalid()
@@ -60,6 +71,7 @@ void invalid()
 int main(int argc, char* argv[])
 {
     // Argument parsing
+    std::string path;
     std::string filename;
     bool daemon = false;
     bool quiet = false;
@@ -136,7 +148,13 @@ int main(int argc, char* argv[])
                 quiet = true;
                 break;
             case Args::Daemon:
+                ++i;
                 daemon = true;
+
+                if (i == argc)
+                    invalid();
+
+                path = argv[i];
                 break;
             default:
                 if (!filename.empty())
@@ -157,15 +175,55 @@ int main(int argc, char* argv[])
     ilInit();
     Processor p(threads);
 
-    if (daemon)
+    if (!daemon)
     {
-        p.exit();
-    }
-    else
-    {
+        // Process a single form and exit
         p.add(0, key, filename);
         p.wait();
         std::cout << p.print(0);
+    }
+    else
+    {
+#ifndef NOSITE
+        try
+        {
+            // Go to the website directory
+            if (chdir(path.c_str()) != 0)
+            {
+                throw std::runtime_error("Couldn't set directory");
+            }
+
+            int count = 3;
+            char args1[] = "-c";
+            char args2[] = "config.js";
+            char* args[] = { argv[0], args1, args2 };
+
+            // Init website
+            cppcms::service srv(count, args);
+
+            srv.applications_pool().mount(
+                cppcms::applications_factory<website>(),
+                cppcms::mount_point("/website")
+            );
+
+            srv.applications_pool().mount(
+                cppcms::applications_factory<rpc>(),
+                cppcms::mount_point("/rpc")
+            );
+
+            // Look for any leftover forms in the upload directory
+
+            srv.run();
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Error: " << e.what() << std::endl;
+            p.exit();
+        }
+#else
+        p.exit();
+        std::cerr << "Error: Website disabled when compiled" << std::endl;
+#endif
     }
 
     return 0;
