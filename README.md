@@ -28,9 +28,11 @@ project file if you prefer an IDE.
 
 ###Dependencies###
 *a C++11 compiler*  
+CppDB (Boost or MIT)  
+CppCMS (LGPL)
 PoDoFo (LGPL)  
 OpenIL/DevIL (LGPL)  
-libtiff (custom: http://www.libtiff.org/misc.html)
+libtiff (custom: http://www.libtiff.org/misc.html)  
 
 I have tested g++ and clang++ on Linux. I haven't tested it on Windows yet
 since I'd have to compile PoDoFo.  All the dependencies above are in Macports,

@@ -3,7 +3,6 @@
  *
  * Todo:
  *   - Statistics (e.g. most missed, least missed, ...?) as text and/or images
- *   - Web UI and make this into a daemon
  *   - Generalize for any style of form, make forms/type*.xml and autodetect
  *   - When a box is missing, calculate supposed position
  *   - Pick largest image on the page of a PDF

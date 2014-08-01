@@ -5,8 +5,10 @@
 <h1>Forms</h1>
 <% if loggedIn %>
 <form id="upload" enctype="multipart/form-data" method="post" action="#">
-<input type="file" name="file" id="uploadFile" />
-<input type="button" id="uploadFileButton" value="Upload" />
+<input type="file" name="file" id="uploadFile" class="file" />
+<input type="text" name="key" placeholder="Key ID" id="key" />
+<input type="submit" id="uploadFileButton" value="Upload" />
+<br />
 <div id="fileError"></div>
 <div id="progress"></div>
 

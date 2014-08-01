@@ -26,7 +26,7 @@ public:
     void forms();
 
     // Used when uploading a new form
-    void upload();
+    void upload(std::string num);
     void process(std::string num);
 
     // 404 Page

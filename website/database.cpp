@@ -12,7 +12,7 @@ Database::Database(const std::string& filename)
     validUserQ = db << "select id from users where user = ? and pass = ? limit 1";
     updateAccountQ = db << "update or ignore users set user = ?, pass = ? where id = ?";
     deleteAccountQ = db << "delete from users where id = ?";
-    initFileQ = db << "insert into forms(name, userId) values(?, ?)";
+    initFileQ = db << "insert into forms(name, userId, key) values(?, ?, ?)";
 }
 
 void Database::initialize()
@@ -29,6 +29,7 @@ void Database::initialize()
     db << "create table if not exists forms ("
               "id     integer primary key autoincrement not null,"
               "userId integer not null,"
+              "key    integer not null,"
               "name   text not null,"
               "data   text"
           ")"
@@ -109,12 +110,13 @@ void Database::deleteAccount(long long id)
     guard.commit();
 }
 
-long long Database::initFile(const std::string& name, long long userId)
+long long Database::initFile(const std::string& name, long long userId, long long key)
 {
     cppdb::transaction guard(db);
 
     initFileQ.bind(1, name);
     initFileQ.bind(2, userId);
+    initFileQ.bind(3, key);
     initFileQ.exec();
 
     long long id = initFileQ.last_insert_id();

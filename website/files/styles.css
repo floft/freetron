@@ -191,8 +191,13 @@ form input.field {
     border-radius: 1px;
 }
 
-#upload input#uploadFileButton {
+#upload input#uploadFileButton, input#key {
     padding: 7px;
+}
+
+#upload input.file {
+    width: 250px;
+    max-width: 250px;
 }
 
 #upload #fileError {

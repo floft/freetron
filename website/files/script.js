@@ -199,6 +199,16 @@ function isPdf(type, name) {
     return type === "application/pdf" || name.substr(-3,3).toLowerCase() === "pdf";
 }
 
+function validKey(key) {
+	if (key.length < 1 || key.length > 10)
+		return false;
+
+	if (!key.match(/^[0-9]+$/))
+		return false;
+
+	return true;
+}
+
 // Mostly from http://matlus.com/html5-file-upload-with-progress/
 function fileSelected() {
     var error = $('fileError');
@@ -233,8 +243,10 @@ function uploadFile() {
     var file = $('uploadFile').files[0];
     var error = $('fileError');
     var progress = $('progress');
+    var button = $('uploadFileButton');
+    var key = $('key').value;
 
-    if (file && isPdf(file.type, file.name)) {
+    if (file && isPdf(file.type, file.name) && validKey(key)) {
         var fd;
 
         // If this doesn't work at some point, look at
@@ -247,7 +259,7 @@ function uploadFile() {
             fd = new FormData(form);
         }
 
-        http("/upload",
+        http("/upload/" + key,
         uploadComplete, function(data) {
             fileError("Error uploading file");
         }, uploadProgress, function(evt) {
@@ -256,7 +268,10 @@ function uploadFile() {
 
         progress.style.display = "inline";
         error.style.display = "none";
+        button.disabled = true;
     }
+
+    return false;
 }
 
 // Create a request to see the processing status
@@ -344,9 +359,11 @@ function processComplete(result) {
 function fileError(msg) {
     var error = $('fileError');
     var progress = $('progress');
+    var button = $('uploadFileButton');
     progress.style.display = "none";
     error.innerHTML = msg;
     error.style.display = "inline";
+    button.disabled = false;
 }
 
 // Delete an entry in the table including the header row and the data row
@@ -578,7 +595,7 @@ window.onload = function() {
         var fileUpload = $("uploadFile");
         fileUpload.onchange = fileSelected;
 
-        var fileUploadButton = $("uploadFileButton");
-        fileUploadButton.onclick = uploadFile;
+        var uploadForm = $("upload");
+        uploadForm.onsubmit = uploadFile;
     }
 }

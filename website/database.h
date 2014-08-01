@@ -30,7 +30,8 @@ public:
     void updateAccount(const std::string& user, const std::string& pass,
         long long id);
     void deleteAccount(long long id);
-    long long initFile(const std::string& name, long long userId);
+    long long initFile(const std::string& name, long long userId,
+        long long key);
 
 private:
     void initialize();

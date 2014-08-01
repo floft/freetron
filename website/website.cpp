@@ -23,8 +23,8 @@ website::website(cppcms::service& srv)
     dispatcher().assign("/account", &website::account, this);
     mapper().assign("account", "/account");
 
-    dispatcher().assign("/upload", &website::upload, this);
-    mapper().assign("upload", "/upload");
+    dispatcher().assign("/upload/(\\d+)", &website::upload, this, 1);
+    mapper().assign("upload", "/upload/{1}");
 
     dispatcher().assign("/process/(\\d+)", &website::process, this, 1);
     mapper().assign("process", "/process/{1}");
@@ -79,13 +79,14 @@ void website::forms()
     render("forms", c);
 }
 
-void website::upload()
+void website::upload(std::string num)
 {
     response().set_plain_text_header();
 
     if (!loggedIn())
         return;
 
+    long long teacherKey = atoll(num.c_str());
     long long userId = session().get<long long>("id");
 
     if (request().request_method() == "POST")
@@ -106,7 +107,7 @@ void website::upload()
                 ext == "pdf") && file->size() < maxFilesize)
             {
                 std::string name = file->filename();
-                long long id = db.initFile(name, userId);
+                long long id = db.initFile(name, userId, teacherKey);
 
                 std::ostringstream s;
                 s << "./uploads/" << id << ".pdf";
