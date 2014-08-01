@@ -1,21 +1,21 @@
 /*
- * Function returns a result version.
+ * Function returns void version.
  *
  * Create a certain number of threads in the background and process data as it
  * is added to a queue.
  *
  * Example:
  *
- *   Output function(Input) { return Output(Input); }
- *   ThreadQueue<Output, Input> ts(function);
+ *   void function(Input) { }
+ *   ThreadQueueVoid<Input> ts(function);
  *   ts.queue(Input);
  *   // other processing
- *   std::vector<Output> results = ts.results();
+ *   ts.wait();
  */
 
 
-#ifndef H_THREADQUEUE
-#define H_THREADQUEUE
+#ifndef H_THREADQUEUEVOID
+#define H_THREADQUEUEVOID
 
 #include <queue>
 #include <mutex>
@@ -28,32 +28,30 @@
 
 // Thrown if attempting to add more items to the queue after all the threads
 // have exited.
-class ThreadsExited { };
+class ThreadsExitedVoid { };
 
 // Each of the threads created, just waits for data in the queue and calls the
 // function on an item when one is available.
-template<class Result, class Item> class Thread
+template<class Item> class ThreadVoid
 {
-    Result (*function)(Item);
+    void (*function)(Item);
     std::condition_variable& moreData;
-    std::vector<Result>& r;
-    std::mutex& rMutex;
     std::queue<Item>& q;
     std::mutex& qMutex;
     std::atomic_bool& waiting;
     std::atomic_bool& killed;
 
 public:
-    Thread(Result (*function)(Item), std::condition_variable& moreData,
-            std::vector<Result>& r, std::mutex& rMutex, std::queue<Item>& q,
-            std::mutex& qMutex, std::atomic_bool& waiting, std::atomic_bool& killed)
-        : function(function), moreData(moreData), r(r), rMutex(rMutex), q(q),
-          qMutex(qMutex), waiting(waiting), killed(killed) { }
+    ThreadVoid(void (*function)(Item), std::condition_variable& moreData,
+            std::queue<Item>& q, std::mutex& qMutex, std::atomic_bool& waiting,
+            std::atomic_bool& killed)
+        : function(function), moreData(moreData), q(q), qMutex(qMutex),
+        waiting(waiting), killed(killed) { }
 
     void operator()();
 };
 
-template<class Result, class Item> class ThreadQueue
+template<class Item> class ThreadQueueVoid
 {
     // Our thread pool
     std::vector<std::thread> pool;
@@ -69,10 +67,6 @@ template<class Result, class Item> class ThreadQueue
     std::queue<Item> q;
     std::mutex qMutex;
 
-    // Results
-    std::vector<Result> r;
-    std::mutex rMutex;
-
     // Signal we have more data (wake up a thread to process)
     std::condition_variable moreData;
 
@@ -80,23 +74,23 @@ public:
     // Create a thread queue with a certain number of threads. Normally you'd
     // detect and specify the number of CPU cores in the computer. Defaults to
     // supposed number of cores if zero. Initialization does not block.
-    ThreadQueue(Result (*function)(Item), int threads = 0);
+    ThreadQueueVoid(void (*function)(Item), int threads = 0);
 
     // Add another item to the queue to be processed and signal any waiting
     // threads that there's more data. Throws ThreadsExited() if already called
     // results().
     void queue(Item);
 
-    // Block until all items in queue have been processed and return the return
-    // values of the function. This will also exit all of the threads, so
-    // adding anything more to the queue will throw an exception.
-    std::vector<Result> results();
+    // Block until all items in queue have been processed. This will also exit
+    // all of the threads, so adding anything more to the queue will throw an
+    // exception.
+    void wait();
 
     // Quit processing new items in the queue
     void exit();
 };
 
-template<class Result, class Item> void Thread<Result,Item>::operator()()
+template<class Item> void ThreadVoid<Item>::operator()()
 {
     while (true)
     {
@@ -113,40 +107,35 @@ template<class Result, class Item> void Thread<Result,Item>::operator()()
             q.pop();
         }
 
-        Result result = function(item);
-
-        {
-            std::lock_guard<std::mutex> lck(rMutex);
-            r.push_back(result);
-        }
+        function(item);
     }
 }
 
 
-template<class Result, class Item> ThreadQueue<Result,Item>::ThreadQueue(
-        Result (*function)(Item), int threads)
+template<class Item> ThreadQueueVoid<Item>::ThreadQueueVoid(
+        void (*function)(Item), int threads)
     : waiting(false), killed(false)
 {
     if (threads <= 0)
         threads = core_count();
 
     for (int i = 0; i < threads; ++i)
-        pool.push_back(std::thread(Thread<Result,Item>(function,
-                    moreData, r, rMutex, q, qMutex, waiting, killed)));
+        pool.push_back(std::thread(ThreadVoid<Item>(function,
+                    moreData, q, qMutex, waiting, killed)));
 }
 
-template<class Result, class Item> void ThreadQueue<Result,Item>::queue(Item i)
+template<class Item> void ThreadQueueVoid<Item>::queue(Item i)
 {
     // Just to make sure we will actually process these eventually
     if (waiting)
-        throw ThreadsExited();
+        throw ThreadsExitedVoid();
 
     std::lock_guard<std::mutex> lck(qMutex);
     q.push(i);
     moreData.notify_one();
 }
 
-template<class Result, class Item> void ThreadQueue<Result,Item>::exit()
+template<class Item> void ThreadQueueVoid<Item>::exit()
 {
     killed = true;
 
@@ -161,7 +150,7 @@ template<class Result, class Item> void ThreadQueue<Result,Item>::exit()
         t.join();
 }
 
-template<class Result, class Item> std::vector<Result> ThreadQueue<Result,Item>::results()
+template<class Item> void ThreadQueueVoid<Item>::wait()
 {
     // We want all threads to die as the queue becomes empty.
     waiting = true;
@@ -175,9 +164,6 @@ template<class Result, class Item> std::vector<Result> ThreadQueue<Result,Item>:
     // Wait for the results
     for (std::thread& t : pool)
         t.join();
-
-    std::lock_guard<std::mutex> lck(rMutex); // Not really needed
-    return r;
 }
 
 #endif

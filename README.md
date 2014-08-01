@@ -29,7 +29,7 @@ project file if you prefer an IDE.
 ###Dependencies###
 *a C++11 compiler*  
 CppDB (Boost or MIT)  
-CppCMS (LGPL)
+CppCMS (LGPL)  
 PoDoFo (LGPL)  
 OpenIL/DevIL (LGPL)  
 libtiff (custom: http://www.libtiff.org/misc.html)  

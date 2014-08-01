@@ -1,6 +1,6 @@
 /*
- * Extract the images from the PDF using PoDoFo and libtiff, somewhat similar to
- * podofoimgextract and fax2tiff, a command-line utility
+ * Extract the images from the PDF using PoDoFo and libtiff, somewhat similar
+ * to podofoimgextract and fax2tiff, a command-line utility
  *
  * Useful stuff for tiffio:
  *   http://www.asmail.be/msg0055289992.html
@@ -26,8 +26,9 @@
 #include <tiffio.hxx>
 #include <podofo/podofo.h>
 
+#include "forms.h"
 #include "pixels.h"
-#include "threadqueue.h"
+#include "threadqueuevoid.h"
 
 enum class PixelType
 {
@@ -44,7 +45,8 @@ enum class ColorSpace
     RGB     // PNM6
 };
 
-std::list<Pixels> extract(const std::string& filename, ThreadQueue<Info, Pixels*>&);
+std::list<FormImage> extract(const std::string& filename,
+        ThreadQueueVoid<FormImage*>&, Form& form);
 Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
     const ColorSpace colorspace, const std::string& filename);
 

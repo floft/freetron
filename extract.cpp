@@ -1,8 +1,9 @@
 #include "extract.h"
 
-std::list<Pixels> extract(const std::string& filename, ThreadQueue<Info, Pixels*>& ts)
+std::list<FormImage> extract(const std::string& filename,
+    ThreadQueueVoid<FormImage*>& ts, Form& form)
 {
-    std::list<Pixels> images;
+    std::list<FormImage> images;
     ColorSpace colorspace;
     PoDoFo::PdfObject* obj = nullptr;
     PoDoFo::PdfObject* color = nullptr;
@@ -45,26 +46,29 @@ std::list<Pixels> extract(const std::string& filename, ThreadQueue<Info, Pixels*
                      (obj->GetArray()[0].IsName() && obj->GetArray()[0].GetName().GetName() == "FlateDecode")))
                     obj = &obj->GetArray()[0];
 
+                Pixels pixels;
+
                 if (obj && obj->IsName())
                 {
                     std::string name = obj->GetName().GetName();
 
                     if(name == "DCTDecode")
-                        images.push_back(readPDFImage(*it, PixelType::JPG, colorspace, filename));
+                        pixels = readPDFImage(*it, PixelType::JPG, colorspace, filename);
                     else if (name == "CCITTFaxDecode")
-                        images.push_back(readPDFImage(*it, PixelType::TIF, colorspace, filename));
+                        pixels = readPDFImage(*it, PixelType::TIF, colorspace, filename);
                     // PNM is the default
                     //else if (name == "FlateDecode")
-                    //  images.push_back(readPDFImage(*it, PixelType::PNM, colorspace, filename));
+                    //  pixels = readPDFImage(*it, PixelType::PNM, colorspace, filename);
                     else
-                        images.push_back(readPDFImage(*it, PixelType::PNM, colorspace, filename));
+                        pixels = readPDFImage(*it, PixelType::PNM, colorspace, filename);
                 }
                 else
                 {
-                    images.push_back(readPDFImage(*it, PixelType::PNM, colorspace, filename));
+                    pixels = readPDFImage(*it, PixelType::PNM, colorspace, filename);
                 }
 
                 document.FreeObjectMemory(*it);
+                images.push_back(FormImage(form, std::move(pixels)));
                 ts.queue(&images.back());
             }
         }
@@ -75,7 +79,8 @@ std::list<Pixels> extract(const std::string& filename, ThreadQueue<Info, Pixels*
     return images;
 }
 
-Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type, const ColorSpace colorspace, const std::string& filename)
+Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
+    const ColorSpace colorspace, const std::string& filename)
 {
     Pixels pixels;
     const unsigned int width  = object->GetDictionary().GetKey(PoDoFo::PdfName("Width"))->GetNumber();
