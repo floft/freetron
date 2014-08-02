@@ -11,9 +11,8 @@
 #include "options.h"
 #include "content.h"
 
-rpc::rpc(cppcms::service& srv)
-    : cppcms::rpc::json_rpc_server(srv),
-      db(SQL_DATABASE)
+rpc::rpc(cppcms::service& srv, Database& db, Processor& p)
+    : cppcms::rpc::json_rpc_server(srv), db(db), p(p)
 {
     // Random, used for form confirmations
     srand(time(NULL));

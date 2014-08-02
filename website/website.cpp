@@ -10,9 +10,8 @@
 #include "website.h"
 #include "options.h"
 
-website::website(cppcms::service& srv)
-    : cppcms::application(srv),
-      db(SQL_DATABASE)
+website::website(cppcms::service& srv, Database& db, Processor& p)
+    : cppcms::application(srv), db(db), p(p)
 {
     dispatcher().assign("", &website::home, this);
     mapper().assign("");

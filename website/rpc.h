@@ -9,13 +9,15 @@
 #include <cppcms/rpc_json.h>
 
 #include "database.h"
+#include "../processor.h"
 
 class rpc : public cppcms::rpc::json_rpc_server
 {
-    Database db;
+    Database& db;
+    Processor& p;
 
 public:
-    rpc(cppcms::service& srv);
+    rpc(cppcms::service& srv, Database& db, Processor& p);
 
     void account_login(const std::string& user, const std::string& pass);
     void account_logout();

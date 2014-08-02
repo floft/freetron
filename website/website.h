@@ -9,13 +9,15 @@
 
 #include "content.h"
 #include "database.h"
+#include "../processor.h"
 
 class website : public cppcms::application
 {
-    Database db;
+    Database& db;
+    Processor& p;
 
 public:
-    website(cppcms::service& srv);
+    website(cppcms::service& srv, Database& db, Processor& p);
 
     // Create menu and set template settings
     void init(content::master& c);

@@ -12,6 +12,7 @@
 
 #include <list>
 #include <vector>
+#include <string>
 #include <cstring>
 #include <sstream>
 #include <iomanip>
@@ -24,13 +25,16 @@
 
 #ifndef NOSITE
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <cppcms/service.h>
 #include <cppcms/mount_point.h>
 #include <cppcms/application.h>
 #include <cppcms/applications_pool.h>
 
-#include "website/website.h"
 #include "website/rpc.h"
+#include "website/website.h"
+#include "website/database.h"
 #endif
 
 // This must be global since we're using extern in options.h. This is used all
@@ -45,7 +49,9 @@ enum class Args
     Debug,
     Quiet,
     ID,
-    Daemon
+    DB,
+    Daemon,
+    SiteConfig
 };
 
 void help()
@@ -55,11 +61,13 @@ void help()
               << "  freetron [options] -i KeyID in.pdf" << std::endl
               << std::endl
               << "  Options" << std::endl
-              << "    -i, --id          ID of form to use as the key (if not daemon)" << std::endl
-              << "    -q, --quiet       don't print error messages (not implemented)" << std::endl
-              << "    -d, --debug       output debug images" << std::endl
-              << "    -t, --threads #   max number of threads to create" << std::endl
-              << "    --daemon path/    run the website, don't exit till Ctrl+C" << std::endl;
+              << "    -i, --id         ID of form to use as the key (if not daemon)" << std::endl
+              << "    -q, --quiet      don't print error messages (not implemented)" << std::endl
+              << "    -d, --debug      output debug images" << std::endl
+              << "    -t, --threads #  max number of threads to create" << std::endl
+              << "    --daemon web/    run the website, don't exit till Ctrl+C" << std::endl
+              << "    --config c.js    alternate config (no path)" << std::endl
+              << "    --db sqlite.db   alternate database (no path)" << std::endl;
 }
 
 void invalid()
@@ -73,6 +81,8 @@ int main(int argc, char* argv[])
     // Argument parsing
     std::string path;
     std::string filename;
+    std::string siteconfig = "config.js";
+    std::string database = "sqlite.db";
     bool daemon = false;
     bool quiet = false;
     int threads = 0; // 0 == number of cores
@@ -81,15 +91,21 @@ int main(int argc, char* argv[])
     std::map<std::string, Args> options = {{
         { "-h",        Args::Help },
         { "--help",    Args::Help },
-        { "-i",        Args::ID },
-        { "--id",      Args::ID },
         { "-t",        Args::Threads },
         { "--threads", Args::Threads },
         { "-d",        Args::Debug },
         { "--debug",   Args::Debug },
         { "-q",        Args::Quiet },
         { "--quiet",   Args::Quiet },
-        { "--daemon",  Args::Daemon }
+
+        // Daemon specific
+        { "-i",        Args::ID },
+        { "--id",      Args::ID },
+
+        // Website specific
+        { "--daemon",  Args::Daemon },
+        { "--config",  Args::SiteConfig },
+        { "--db",      Args::DB }
     }};
 
     for (int i = 1; i < argc; ++i)
@@ -156,6 +172,22 @@ int main(int argc, char* argv[])
 
                 path = argv[i];
                 break;
+            case Args::SiteConfig:
+                ++i;
+
+                if (i == argc)
+                    invalid();
+
+                siteconfig = argv[i];
+                break;
+            case Args::DB:
+                ++i;
+
+                if (i == argc)
+                    invalid();
+
+                database = argv[i];
+                break;
             default:
                 if (!filename.empty())
                     invalid();
@@ -189,36 +221,55 @@ int main(int argc, char* argv[])
         {
             // Go to the website directory
             if (chdir(path.c_str()) != 0)
-            {
-                throw std::runtime_error("Couldn't set directory");
-            }
+                throw std::runtime_error("couldn't set directory");
 
-            int count = 3;
-            char args1[] = "-c";
-            char args2[] = "config.js";
-            char* args[] = { argv[0], args1, args2 };
+            // Load config
+            std::ifstream configFile(siteconfig);
+
+            if (!configFile.is_open())
+                throw std::runtime_error("couldn't open config file");
+
+            int configError = 0;
+            cppcms::json::value config;
+
+            if (!config.load(configFile, true, &configError))
+                throw std::runtime_error("config error on line " + std::to_string(configError));
+
+            // Check that uploads/ and files/ subdirectories exist
+            struct stat info;
+
+            if (stat("uploads", &info) != 0 || !info.st_mode&S_IFDIR)
+                throw std::runtime_error("couldn't find uploads/ subdirectory");
+
+            if (stat("files", &info) != 0 || !info.st_mode&S_IFDIR)
+                throw std::runtime_error("couldn't find files/ subdirectory");
+
+            // Database
+            Database db(database);
 
             // Init website
-            cppcms::service srv(count, args);
+            cppcms::service srv(config);
 
             srv.applications_pool().mount(
-                cppcms::applications_factory<website>(),
+                cppcms::applications_factory<website,Database&,Processor&>(db, p),
                 cppcms::mount_point("/website")
             );
 
             srv.applications_pool().mount(
-                cppcms::applications_factory<rpc>(),
+                cppcms::applications_factory<rpc,Database&,Processor&>(db, p),
                 cppcms::mount_point("/rpc")
             );
 
-            // Look for any leftover forms in the upload directory
+            // TODO: Look for any leftover forms in the upload directory
 
+            // Run website and block
             srv.run();
         }
         catch (const std::exception& e)
         {
             std::cerr << "Error: " << e.what() << std::endl;
             p.exit();
+            return 1;
         }
 #else
         p.exit();
