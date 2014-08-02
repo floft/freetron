@@ -36,7 +36,7 @@ void extractImages(Form* form)
     // Move these new images to the actual list. Do this here instead
     // of directly appending them to the list so that we only need
     // to lock this once.
-    std::lock_guard<std::mutex> lock(form->images_mutex);
+    std::unique_lock<std::mutex> lock(form->images_mutex);
     form->formImages.splice(form->formImages.end(), newImages);
 }
 
@@ -135,6 +135,9 @@ void parseImage(FormImage* formImage)
             << " - " << error.what();
         formImage->form.log(msg.str());
     }
+
+    // Another page is complete
+    formImage->form.incDone();
 }
 
 void Processor::wait()
@@ -145,12 +148,14 @@ void Processor::wait()
 
 void Processor::exit()
 {
+    exiting = true;
     extractT.exit();
     parseT.exit();
 }
 
 Form& Processor::findForm(long long id)
 {
+    std::unique_lock<std::mutex> lock(forms_mutex);
     std::list<Form>::iterator i = std::find_if(forms.begin(), forms.end(),
             FormPredicate(id));
 
@@ -160,9 +165,78 @@ Form& Processor::findForm(long long id)
         return *i;
 }
 
+bool Processor::done(long long id)
+{
+    Form& form = findForm(id);
+    long long done = form.getDone();
+
+    return form == defaultForm || done == form.pages || form.pages == 0;
+}
+
+int Processor::statusWait(long long id)
+{
+    Form& form = findForm(id);
+
+    if (form == defaultForm)
+        return 100;
+
+    std::unique_lock<std::mutex> lck(form.done_mutex);
+    long long done = form.done;
+
+    if (done == form.pages || form.pages == 0)
+        return 100;
+
+    // Wait for update
+    form.waitCond.wait(lck, [this, &form, done] {
+        return form.done == form.pages || form.done != done || exiting;
+    });
+
+    // Now we're definitely "done"
+    if (exiting)
+        return 100;
+
+    // Return new percentage
+    return smartCeil(100.0*form.done/form.pages);
+}
+
+std::string Processor::get(long long id)
+{
+    std::unique_lock<std::mutex> lock(forms_mutex);
+    std::list<Form>::iterator form = std::find_if(forms.begin(), forms.end(),
+            FormPredicate(id));
+
+    // Not found
+    if (form == forms.end())
+        return "";
+
+    long long done = form->getDone();
+
+    if (done == form->pages)
+    {
+        // Get output
+        std::string out = print(*form);
+
+        // Delete off disk
+        if (std::remove(form->filename.c_str()) != 0)
+            log("Couldn't delete form \"" + form->filename + "\"");
+
+        // Delete from list
+        forms.erase(form);
+
+        return out;
+    }
+
+    return "";
+}
+
 std::string Processor::print(long long id)
 {
     Form& form = findForm(id);
+    return print(form);
+}
+
+std::string Processor::print(Form& form)
+{
     std::ostringstream out;
 
     if (form == defaultForm)
@@ -281,7 +355,7 @@ std::string Processor::print(long long id)
 
 void Processor::add(long long id, long long key, const std::string& filename)
 {
-    std::lock_guard<std::mutex> lock(forms_mutex);
+    std::unique_lock<std::mutex> lock(forms_mutex);
     forms.push_back(Form(id, key, filename, *this));
     extractT.queue(&forms.back());
 }

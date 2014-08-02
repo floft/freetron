@@ -334,11 +334,13 @@ function processComplete(result) {
     var lastLine = lines[lines.length - 2];
     var form = $('upload');
     var progress = $('progress');
+    var button = $('uploadFileButton');
 
     if (lastLine !== "failed") {
         // Processing bar
         form.reset();
         progress.innerHTML = "Done";
+        button.disabled = false;
 
         var id = parseInt(result, 10);
         requestResults(id); // TODO: specify correct ID

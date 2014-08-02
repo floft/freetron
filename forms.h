@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <condition_variable>
 
 #include "log.h"
 #include "data.h"
@@ -45,6 +46,13 @@ struct Form
     long long pages;
     std::string filename;
 
+    // Forms processed
+    long long done;
+    std::mutex done_mutex;
+
+    // Signal we have processed more forms
+    std::condition_variable waitCond;
+
     // For thread-safe log messages
     std::string output;
     std::mutex output_mutex;
@@ -64,9 +72,13 @@ struct Form
 
     Form(long long id, long long key, const std::string& filename,
             Processor& processor)
-        : id(id), key(key), pages(-1), filename(filename), processor(processor)
+        : id(id), key(key), pages(-1), filename(filename), done(0), processor(processor)
     {
     }
+
+    // Increment or get how many forms we've done
+    void incDone();
+    long long getDone();
 
     void log(const std::string& msg, const LogType& t = LogType::Error);
 };

@@ -130,8 +130,11 @@ template<class Item> void ThreadQueueVoid<Item>::queue(Item i)
     if (waiting)
         throw ThreadsExitedVoid();
 
-    std::lock_guard<std::mutex> lck(qMutex);
-    q.push(i);
+    {
+        std::lock_guard<std::mutex> lck(qMutex);
+        q.push(i);
+    }
+
     moreData.notify_one();
 }
 
@@ -140,10 +143,7 @@ template<class Item> void ThreadQueueVoid<Item>::exit()
     killed = true;
 
     // Cause all other non-working threads to die
-    {
-        std::lock_guard<std::mutex> lck(qMutex);
-        moreData.notify_all();
-    }
+    moreData.notify_all();
 
     // Wait for these to exit
     for (std::thread& t : pool)
@@ -156,10 +156,7 @@ template<class Item> void ThreadQueueVoid<Item>::wait()
     waiting = true;
 
     // Cause all other non-working threads to die
-    {
-        std::lock_guard<std::mutex> lck(qMutex);
-        moreData.notify_all();
-    }
+    moreData.notify_all();
 
     // Wait for the results
     for (std::thread& t : pool)

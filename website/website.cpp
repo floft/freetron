@@ -85,7 +85,7 @@ void website::upload(std::string num)
     if (!loggedIn())
         return;
 
-    long long teacherKey = atoll(num.c_str());
+    long long key = atoll(num.c_str());
     long long userId = session().get<long long>("id");
 
     if (request().request_method() == "POST")
@@ -106,12 +106,17 @@ void website::upload(std::string num)
                 ext == "pdf") && file->size() < maxFilesize)
             {
                 std::string name = file->filename();
-                long long id = db.initFile(name, userId, teacherKey);
 
+                // Add to database
+                long long id = db.initFile(name, userId, key);
+
+                // Save to disk
                 std::ostringstream s;
                 s << "./uploads/" << id << ".pdf";
-
                 file->save_to(s.str());
+
+                // Start processing
+                p.add(id, key, s.str());
 
                 response().out() << id;
                 return;
@@ -124,43 +129,35 @@ void website::upload(std::string num)
 
 void website::process(std::string num)
 {
-    /*response().erase_header("Connection");
-    response().erase_header("Server");
-    response().set_header("Server", "Apache");
-    response().set_header("Connection", "Keep-Alive");
-    response().set_header("Transfer-Encoding", "chunked");
-    response().io_mode(cppcms::http::response::raw);
-
-    response().out() << "HTTP/1.1 200 OK" << std::endl
-                     << "Date: Thu, 31 Jul 2014 06:20:11 GMT" << std::endl
-                     << "Server: Apache" << std::endl
-                     << "Content-Encoding: none" << std::endl
-                     << "Cache-Control: no-store, no-cache, must-revalidate, max-age=0" << std::endl
-                     << "Pragma: no-cache" << std::endl
-                     << "Keep-Alive: timeout=5, max=99" << std::endl
-                     << "Connection: Keep-Alive" << std::endl
-                     << "Transfer-Encoding: chunked" << std::endl
-                     << "Content-Type: text/html; charset=UTF-8" << std::endl << std::endl;*/
-
     response().io_mode(cppcms::http::response::nogzip);
     response().set_plain_text_header();
 
-    //if (!loggedIn())
-    //    return;
+    if (!loggedIn())
+        return;
 
     long long id = atoll(num.c_str());
 
-    for (int i = 0; i < 100; ++i)
+    if (p.done(id))
     {
-        response().out() << i << "\n";
+        response().out() << 100 << "\n";
+        response().out() << id << "\n";
         response().out() << std::flush;
-        usleep(10000);
+    }
+    else
+    {
+        int percent = 0;
+        response().out() << 0 << "\n";
+        response().out() << std::flush;
+
+        while (percent != 100)
+        {
+            percent = p.statusWait(id);
+            response().out() << percent << "\n";
+            response().out() << std::flush;
+        }
     }
 
-    response().out() << id << "\n";
-    response().out() << std::flush;
-
-    // response().out() << "failed" << "\n";
+    //response().out() << "failed" << "\n";
 }
 
 // 404 Page

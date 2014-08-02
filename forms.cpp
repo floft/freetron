@@ -15,7 +15,7 @@ void Form::log(const std::string& msg, const LogType& t)
     std::ostringstream s;
     s << t << ": " << msg << std::endl;
 
-    std::lock_guard<std::mutex> lock(output_mutex);
+    std::unique_lock<std::mutex> lock(output_mutex);
     output += s.str();
 }
 
@@ -25,6 +25,29 @@ Form::Form(Form&& f)
     filename = std::move(f.filename);
     formImages = std::move(f.formImages);
 
-    std::lock_guard<std::mutex> lock(f.output_mutex);
-    output = std::move(f.output);
+    {
+        std::unique_lock<std::mutex> lock1(f.done_mutex);
+        done = f.done;
+    }
+
+    {
+        std::unique_lock<std::mutex> lock2(f.output_mutex);
+        output = std::move(f.output);
+    }
+}
+
+void Form::incDone()
+{
+    {
+        std::unique_lock<std::mutex> lock(done_mutex);
+        ++done;
+    }
+
+    waitCond.notify_all();
+}
+
+long long Form::getDone()
+{
+    std::unique_lock<std::mutex> lock(done_mutex);
+    return done;
 }
