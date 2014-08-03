@@ -83,6 +83,11 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
     const ColorSpace colorspace, const std::string& filename)
 {
     Pixels pixels;
+
+    if (!object->GetDictionary().HasKey(PoDoFo::PdfName("Width")) ||
+        !object->GetDictionary().HasKey(PoDoFo::PdfName("Height")))
+        return pixels;
+
     const unsigned int width  = object->GetDictionary().GetKey(PoDoFo::PdfName("Width"))->GetNumber();
     const unsigned int height = object->GetDictionary().GetKey(PoDoFo::PdfName("Height"))->GetNumber();
 
