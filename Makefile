@@ -9,18 +9,7 @@ SKINOBJ    = ${SKIN:.cpp=.o}
 SKINSRC    = ${wildcard website/*.tmpl}
 
 CXXFLAGS  += -ffast-math -funroll-loops -std=c++11
-LDFLAGS   += -lpodofo -lIL -ltiff -ltiffxx -pthread
-
-# For the website
-LDFLAGS   += -lcppcms -lbooster -lcppdb
-
-# Disable website
-#WEBSRC   =
-#WEBOBJ   =
-#SKIN     =
-#SKINOBJ  =
-#SKINSRC  =
-#CXXFLAGS += -DNOSITE
+LDFLAGS   += -lpodofo -lIL -ltiff -ltiffxx -pthread -lcppcms -lbooster -lcppdb
 
 TMPLCC    ?= cppcms_tmpl_cc
 PREFIX    ?= /usr/local
@@ -38,7 +27,7 @@ ${OUT}: ${OBJ} ${WEBOBJ} ${SKINOBJ}
 .cpp.o:
 	${CXX} -c -o $@ $< ${CXXFLAGS}
 
-${DEPENDS}: ${SRC}
+${DEPENDS}: ${SRC} ${WEBSRC}
 	${RM} -f ./${DEPENDS}
 	${CXX} ${CXXFLAGS} -MM $^ >> ./${DEPENDS}
 

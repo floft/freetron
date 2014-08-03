@@ -1,5 +1,20 @@
 #include "processor.h"
 
+Processor::Processor(int threads, bool website, Database& db)
+    : extractT(extractImages, threads),
+      parseT(parseImage, threads),
+      defaultForm(*this),
+      exiting(false),
+      website(website),
+      db(db)
+{
+}
+
+Processor::~Processor()
+{
+    exit();
+}
+
 void extractImages(Form* form)
 {
     std::list<FormImage> newImages;
@@ -138,10 +153,15 @@ void parseImage(FormImage* formImage)
 
     // Another page is complete
     formImage->form.incDone();
+
+    // If done, save results
+    if (formImage->form.getDone() == formImage->form.pages)
+        formImage->form.processor.finish(formImage->form.id);
 }
 
 void Processor::wait()
 {
+    waiting = true;
     extractT.wait();
     parseT.wait();
 }
@@ -149,8 +169,14 @@ void Processor::wait()
 void Processor::exit()
 {
     exiting = true;
-    extractT.exit();
-    parseT.exit();
+
+    // Only exit these threads if we haven't already waited for them to complete
+    // (thus they already exited)
+    if (!waiting)
+    {
+        extractT.exit();
+        parseT.exit();
+    }
 }
 
 Form& Processor::findForm(long long id)
@@ -168,23 +194,18 @@ Form& Processor::findForm(long long id)
 bool Processor::done(long long id)
 {
     Form& form = findForm(id);
-    long long done = form.getDone();
-
-    return form == defaultForm || done == form.pages || form.pages == 0;
+    return form == defaultForm || form.finished;
 }
 
 int Processor::statusWait(long long id)
 {
     Form& form = findForm(id);
 
-    if (form == defaultForm)
+    if (form == defaultForm || form.finished || form.pages == 0)
         return 100;
 
     std::unique_lock<std::mutex> lck(form.done_mutex);
     long long done = form.done;
-
-    if (done == form.pages || form.pages == 0)
-        return 100;
 
     // Wait for update
     form.waitCond.wait(lck, [this, &form, done] {
@@ -196,37 +217,63 @@ int Processor::statusWait(long long id)
         return 100;
 
     // Return new percentage
-    return smartCeil(100.0*form.done/form.pages);
+    int percentage = smartFloor(100.0*form.done/form.pages);
+
+    // Return 99 if it's "done," the last percent is adding it to
+    // the database, etc.
+    return (percentage==100)?99:percentage;
 }
 
-std::string Processor::get(long long id)
+void Processor::finish(long long id)
 {
-    std::unique_lock<std::mutex> lock(forms_mutex);
-    std::list<Form>::iterator form = std::find_if(forms.begin(), forms.end(),
-            FormPredicate(id));
+    // Only do this when used with the website. We don't want to delete
+    // forms passed in as command line arguments.
+    if (!website)
+        return;
 
-    // Not found
-    if (form == forms.end())
-        return "";
+    std::string out;
+    std::string filename;
 
-    long long done = form->getDone();
-
-    if (done == form->pages)
     {
-        // Get output
-        std::string out = print(*form);
+        std::unique_lock<std::mutex> lock(forms_mutex);
+        std::list<Form>::iterator form = std::find_if(forms.begin(), forms.end(),
+                FormPredicate(id));
 
-        // Delete off disk
-        if (std::remove(form->filename.c_str()) != 0)
-            log("Couldn't delete form \"" + form->filename + "\"");
+        // Not found
+        if (form == forms.end())
+            return;
+
+        long long done = form->getDone();
+
+        // Not done yet
+        if (done != form->pages)
+            return;
+
+        // Wake up anybody still waiting for this setting finished to true
+        // so they will all exit before we delete this form.
+        form->finished = true;
+        form->waitCond.notify_all();
+
+        // Get output
+        out = print(*form);
+        filename = form->filename;
+
+        {
+            // Hopefully wait till the last website thread accesses the form
+            std::unique_lock<std::mutex> lck(form->done_mutex);
+        }
 
         // Delete from list
         forms.erase(form);
-
-        return out;
     }
 
-    return "";
+    // Save to database
+    db.updateForm(id, out);
+
+    // Delete off disk last, if we get killed right before doing this,
+    // we'll see this file still exists and reprocess this form on start
+    if (std::remove(filename.c_str()) != 0)
+        log("Couldn't delete form \"" + filename + "\"");
 }
 
 std::string Processor::print(long long id)

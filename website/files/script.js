@@ -169,6 +169,8 @@ function updateAccountSubmit() {
         window.rpc.account_update.on_error = function(e) {
             var badusername = $("badusernameupdate");
             var update_user = $("update_user");
+            badusername.style.display = "inline";
+            update_user.className = "new_user";
         };
         window.rpc.account_update.on_result = function(r) {
             var badusername = $("badusernameupdate");
@@ -269,6 +271,7 @@ function uploadFile() {
         progress.style.display = "inline";
         error.style.display = "none";
         button.disabled = true;
+        window.needToConfirm = true;
     }
 
     return false;
@@ -314,14 +317,15 @@ function processProgress(evt) {
 function uploadComplete(result) {
     var form = $('upload');
     var progress = $('progress');
+    window.needToConfirm = false;
 
     if (result !== "failed") {
         var id = parseInt(result, 10);
         progress.innerHTML = "Processing";
-        monitorProcessing(id); // TODO: specify correct ID
+        monitorProcessing(id);
     } else {
         var error = $('fileError');
-        progress.style.display = "none";
+        progress.innerHTML = "";
         error.innerHTML = "Error uploading file";
         error.style.display = "inline";
     }
@@ -334,24 +338,22 @@ function processComplete(result) {
     var lastLine = lines[lines.length - 2];
     var form = $('upload');
     var progress = $('progress');
-    var button = $('uploadFileButton');
 
     if (lastLine !== "failed") {
         // Processing bar
         form.reset();
         progress.innerHTML = "Done";
-        button.disabled = false;
 
-        var id = parseInt(result, 10);
-        requestResults(id); // TODO: specify correct ID
+        var id = parseInt(lastLine, 10);
+        formGetOne(id);
 
         setTimeout(function() {
             if (progress.innerHTML === "Done")
-                progress.style.display = "none";
+                progress.innerHTML = "";
         }, 3000);
     } else {
         var error = $('fileError');
-        progress.style.display = "none";
+        progress.innerHTML = "";
         error.innerHTML = "Error processing file";
         error.style.display = "inline";
     }
@@ -362,48 +364,70 @@ function fileError(msg) {
     var error = $('fileError');
     var progress = $('progress');
     var button = $('uploadFileButton');
-    progress.style.display = "none";
+    progress.innerHTML = "";
     error.innerHTML = msg;
     error.style.display = "inline";
     button.disabled = false;
+    window.needToConfirm = false;
 }
 
 // Delete an entry in the table including the header row and the data row
 function deleteEntry(delElem) {
+    var name;
     var id = parseInt(delElem.parentNode.firstElementChild.innerHTML, 10);
 
-    // Send the delete request
-    var url = "delete.php?id=" + id;
+    for (var i = 0; i < delElem.parentNode.children.length; i++) {
+        if (delElem.parentNode.children[i].className == "name") {
+            name = delElem.parentNode.children[i].innerHTML;
+            break;
+        }
+    }
 
-    // TODO: do this with Json
+    var result = confirm("Are you sure you want to delete \"" + name + "\"? "+
+            "This cannot be undone.");
 
-    http(url, function(data) {
-        var row = delElem.parentNode.parentNode;
-        var index = row.rowIndex;
-        var nextRow = row.parentNode.rows[index + 1];
+    if (result) {
+        window.rpc.form_delete.on_result = function(r) {
+            var row = delElem.parentNode.parentNode;
+            var index = row.rowIndex;
+            var nextRow = row.parentNode.rows[index + 1];
 
-        row.parentNode.removeChild(row);
-        nextRow.parentNode.removeChild(nextRow);
-    }, function(data) {
-        alert("Failed to delete entry of id = " + id);
-    });
+            row.parentNode.removeChild(row);
+            nextRow.parentNode.removeChild(nextRow);
+        };
+        window.rpc.form_delete(id);
+    }
+}
+
+// Request all of this users forms
+function formGetAll() {
+    window.rpc.form_getall.on_result = function(r) {
+        var i;
+        for (i = 0; i < r.length; ++i) {
+            createEntry(r[i]["id"], r[i]["name"], r[i]["date"], r[i]["data"]);
+        }
+    };
+    window.rpc.form_getall();
 }
 
 // Request the resulting data
-function requestResults(id) {
-    // TODO: get newly updated form data
-    // TODO: display output if there were any warnings/errors
+function formGetOne(id) {
+    window.rpc.form_getone.on_error = function(e) {
+        fileError("Error downloading information");
 
-    var now = new Date();
-    var name = "freetron_example3";
-    var date = now.getFullYear() + "/" + (now.getMonth() + 1) + "/" + now.getDate();
-    var data = "ID          Answers (key first)\n"+
-"0123456789  C C D B C A E D B E A A E D E D B D B B C B C E E E A A E A E B B C B E A B B A B C A D D E C C\n"+
-"9876543210  C B B C D B A D D D B D C C E A C B E C B B _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\n"+
-"Scores\n"+
-"  9876543210    8.33%\n";
+        // Allow uploading again
+        var button = $('uploadFileButton');
+        button.disabled = false;
+    };
+    window.rpc.form_getone.on_result = function(r) {
+        if (r.length == 1)
+            createEntry(r[0]["id"], r[0]["name"], r[0]["date"], r[0]["data"]);
 
-   createEntry(id, name, date, data);
+        // Allow uploading again
+        var button = $('uploadFileButton');
+        button.disabled = false;
+    };
+    window.rpc.form_getone(id);
 }
 
 // Insert a new entry into the table
@@ -557,9 +581,10 @@ window.onload = function() {
             "account_update",
             "account_delete",
             "form_process",
-            "form_result",
             "form_delete",
-            "form_rename"
+            "form_rename",
+            "form_getall",
+            "form_getone"
         ], []);
 
     // Whenever logged in
@@ -599,5 +624,7 @@ window.onload = function() {
 
         var uploadForm = $("upload");
         uploadForm.onsubmit = uploadFile;
+
+        formGetAll();
     }
 }

@@ -201,9 +201,10 @@ form input.field {
 }
 
 #upload #fileError {
-    display: none;
+    display: inline;
     color: #ff0c0c;
     padding-left: 10px;
+    float:left;
 }
 
 #upload #progress {

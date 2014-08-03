@@ -1,6 +1,12 @@
 #include "database.h"
 
+Database::Database()
+    : initialized(false)
+{
+}
+
 Database::Database(const std::string& filename)
+    : initialized(false)
 {
     std::ostringstream s;
     s << "sqlite3:db=" << filename;
@@ -12,7 +18,11 @@ Database::Database(const std::string& filename)
     validUserQ = db << "select id from users where user = ? and pass = ? limit 1";
     updateAccountQ = db << "update or ignore users set user = ?, pass = ? where id = ?";
     deleteAccountQ = db << "delete from users where id = ?";
-    initFileQ = db << "insert into forms(name, userId, key) values(?, ?, ?)";
+    initFormQ = db << "insert into forms(name, userId, key, date) values(?, ?, ?, ?)";
+    updateFormQ = db << "update or ignore forms set data = ? where id = ?";
+    deleteFormQ = db << "delete from forms where id = ? and userId = ?";
+    getOneQ = db << "select id, userId, key, name, data, date from forms where userId = ? and id = ? limit 1";
+    getAllQ = db << "select id, userId, key, name, data, date from forms where userId = ?";
 }
 
 void Database::initialize()
@@ -31,6 +41,7 @@ void Database::initialize()
               "userId integer not null,"
               "key    integer not null,"
               "name   text not null,"
+              "date   text not null,"
               "data   text"
           ")"
        << cppdb::exec;
@@ -46,10 +57,15 @@ void Database::initialize()
        << cppdb::exec;
 
     guard.commit();
+
+    initialized = true;
 }
 
 long long Database::addUser(const std::string& user, const std::string& pass)
 {
+    if (!initialized)
+        return 0;
+
     cppdb::transaction guard(db);
 
     addUserQ.bind(1, user);
@@ -66,6 +82,9 @@ long long Database::addUser(const std::string& user, const std::string& pass)
 
 long long Database::validUser(const std::string& user, const std::string& pass)
 {
+    if (!initialized)
+        return 0;
+
     cppdb::transaction guard(db);
 
     validUserQ.bind(1, user);
@@ -88,6 +107,9 @@ long long Database::validUser(const std::string& user, const std::string& pass)
 void Database::updateAccount(const std::string& user, const std::string& pass,
         long long id)
 {
+    if (!initialized)
+        return;
+
     cppdb::transaction guard(db);
 
     updateAccountQ.bind(1, user);
@@ -101,6 +123,9 @@ void Database::updateAccount(const std::string& user, const std::string& pass,
 
 void Database::deleteAccount(long long id)
 {
+    if (!initialized)
+        return;
+
     cppdb::transaction guard(db);
 
     deleteAccountQ.bind(1, id);
@@ -110,19 +135,98 @@ void Database::deleteAccount(long long id)
     guard.commit();
 }
 
-long long Database::initFile(const std::string& name, long long userId, long long key)
+long long Database::initForm(const std::string& name, long long userId,
+        long long key, const std::string& date)
 {
+    if (!initialized)
+        return 0;
+
     cppdb::transaction guard(db);
 
-    initFileQ.bind(1, name);
-    initFileQ.bind(2, userId);
-    initFileQ.bind(3, key);
-    initFileQ.exec();
+    initFormQ.bind(1, name);
+    initFormQ.bind(2, userId);
+    initFormQ.bind(3, key);
+    initFormQ.bind(4, date);
+    initFormQ.exec();
 
-    long long id = initFileQ.last_insert_id();
+    long long id = initFormQ.last_insert_id();
 
-    initFileQ.reset();
+    initFormQ.reset();
     guard.commit();
 
     return id;
+}
+
+void Database::updateForm(long long id, const std::string& data)
+{
+    if (!initialized)
+        return;
+
+    cppdb::transaction guard(db);
+
+    updateFormQ.bind(1, data);
+    updateFormQ.bind(2, id);
+    updateFormQ.exec();
+
+    updateFormQ.reset();
+    guard.commit();
+}
+
+void Database::deleteForm(long long userId, long long formId)
+{
+    if (!initialized)
+        return;
+
+    cppdb::transaction guard(db);
+
+    deleteFormQ.bind(1, formId);
+    deleteFormQ.bind(2, userId);
+    deleteFormQ.exec();
+
+    deleteFormQ.reset();
+    guard.commit();
+}
+
+std::vector<FormData> Database::getForms(long long userId, long long id)
+{
+    std::vector<FormData> forms;
+
+    if (!initialized)
+        return forms;
+
+    cppdb::transaction guard(db);
+    cppdb::result r;
+
+    // Only one
+    if (id != 0)
+    {
+        getOneQ.bind(1, userId);
+        getOneQ.bind(2, id);
+        r = getOneQ.query();
+    }
+    // All of them
+    else
+    {
+        getAllQ.bind(1, userId);
+        r = getAllQ.query();
+    }
+
+    FormData d;
+
+    while (r.next())
+    {
+        r.fetch(0, d.id);
+        r.fetch(1, d.userId);
+        r.fetch(2, d.key);
+        r.fetch(3, d.name);
+        r.fetch(4, d.data);
+        r.fetch(5, d.date);
+        forms.push_back(d);
+    }
+
+    getOneQ.reset();
+    getAllQ.reset();
+    guard.commit();
+
+    return forms;
 }

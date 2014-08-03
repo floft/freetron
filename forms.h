@@ -7,6 +7,7 @@
 
 #include <list>
 #include <mutex>
+#include <atomic>
 #include <string>
 #include <vector>
 #include <sstream>
@@ -47,6 +48,7 @@ struct Form
     std::string filename;
 
     // Forms processed
+    std::atomic_bool finished;
     long long done;
     std::mutex done_mutex;
 

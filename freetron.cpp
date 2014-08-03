@@ -18,24 +18,20 @@
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
-#include <IL/il.h>
-
-#include "options.h"
-#include "processor.h"
-
-#ifndef NOSITE
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <IL/il.h>
 #include <cppcms/service.h>
 #include <cppcms/mount_point.h>
 #include <cppcms/application.h>
 #include <cppcms/applications_pool.h>
 
+#include "options.h"
+#include "processor.h"
+#include "website/database.h"
 #include "website/rpc.h"
 #include "website/website.h"
-#include "website/database.h"
-#endif
 
 // This must be global since we're using extern in options.h. This is used all
 // over the place to enable outputting debug images.
@@ -205,10 +201,12 @@ int main(int argc, char* argv[])
     }
 
     ilInit();
-    Processor p(threads);
 
     if (!daemon)
     {
+        Database db;
+        Processor p(threads, false, db);
+
         // Process a single form and exit
         p.add(0, key, filename);
         p.wait();
@@ -216,7 +214,6 @@ int main(int argc, char* argv[])
     }
     else
     {
-#ifndef NOSITE
         try
         {
             // Go to the website directory
@@ -244,8 +241,11 @@ int main(int argc, char* argv[])
             if (stat("files", &info) != 0 || !info.st_mode&S_IFDIR)
                 throw std::runtime_error("couldn't find files/ subdirectory");
 
-            // Database
+            // Init database
             Database db(database);
+
+            // Init application
+            Processor p(threads, true, db);
 
             // Init website
             cppcms::service srv(config);
@@ -268,13 +268,8 @@ int main(int argc, char* argv[])
         catch (const std::exception& e)
         {
             std::cerr << "Error: " << e.what() << std::endl;
-            p.exit();
             return 1;
         }
-#else
-        p.exit();
-        std::cerr << "Error: Website disabled when compiled" << std::endl;
-#endif
     }
 
     return 0;

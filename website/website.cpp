@@ -1,16 +1,18 @@
-#include <cppcms/application.h>
-#include <cppcms/applications_pool.h>
-#include <cppcms/http_response.h>
-#include <cppcms/url_dispatcher.h>
-#include <cppcms/http_file.h>
-#include <algorithm>
+#include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <unistd.h>
+#include <algorithm>
+#include <cppcms/http_file.h>
+#include <cppcms/application.h>
+#include <cppcms/http_response.h>
+#include <cppcms/url_dispatcher.h>
+#include <cppcms/applications_pool.h>
 
 #include "website.h"
 #include "options.h"
 
-website::website(cppcms::service& srv, Database& db, Processor& p)
+website::website(cppcms::service& srv, Database& db, Processor& p, std::string root)
     : cppcms::application(srv), db(db), p(p)
 {
     dispatcher().assign("", &website::home, this);
@@ -28,7 +30,8 @@ website::website(cppcms::service& srv, Database& db, Processor& p)
     dispatcher().assign("/process/(\\d+)", &website::process, this, 1);
     mapper().assign("process", "/process/{1}");
 
-    //mapper().root("/website");
+    if (!root.empty())
+        mapper().root(root);
 }
 
 void website::init(content::master& c)
@@ -105,10 +108,8 @@ void website::upload(std::string num)
             if (file->name() == "file" && (file->mime() == "application/pdf" ||
                 ext == "pdf") && file->size() < maxFilesize)
             {
-                std::string name = file->filename();
-
                 // Add to database
-                long long id = db.initFile(name, userId, key);
+                long long id = db.initForm(file->filename(), userId, key, date.getDate());
 
                 // Save to disk
                 std::ostringstream s;
@@ -140,8 +141,6 @@ void website::process(std::string num)
     if (p.done(id))
     {
         response().out() << 100 << "\n";
-        response().out() << id << "\n";
-        response().out() << std::flush;
     }
     else
     {
@@ -149,14 +148,22 @@ void website::process(std::string num)
         response().out() << 0 << "\n";
         response().out() << std::flush;
 
+        // Sleep this long between loops
+        double sec = 0.2;
+
         while (percent != 100)
         {
             percent = p.statusWait(id);
             response().out() << percent << "\n";
             response().out() << std::flush;
+
+            usleep(sec*1000000);
         }
     }
 
+    // Return the ID again so we can easily grab the result
+    response().out() << id << "\n";
+    response().out() << std::flush;
     //response().out() << "failed" << "\n";
 }
 

@@ -25,8 +25,9 @@ public:
     void account_update(const std::string& user, const std::string& pass);
     void account_delete(int confirmation);
     void form_process();
-    void form_result();
-    void form_delete();
+    void form_getone(long long formId);
+    void form_getall();
+    void form_delete(long long formId);
     void form_rename();
 
 private:
@@ -35,6 +36,7 @@ private:
     bool loggedIn();
     bool loggedOut();
     void resetCode();
+    void getForms(cppcms::json::value& v, long long formId = 0);
 };
 
 #endif

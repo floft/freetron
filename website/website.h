@@ -7,17 +7,20 @@
 
 #include <cppcms/service.h>
 
+#include "date.h"
 #include "content.h"
 #include "database.h"
 #include "../processor.h"
 
 class website : public cppcms::application
 {
+    Date date;
     Database& db;
     Processor& p;
 
 public:
-    website(cppcms::service& srv, Database& db, Processor& p);
+    // Specify root if this is in a subdirectory, e.g. /website
+    website(cppcms::service& srv, Database& db, Processor& p, std::string root = "");
 
     // Create menu and set template settings
     void init(content::master& c);

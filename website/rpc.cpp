@@ -26,7 +26,8 @@ rpc::rpc(cppcms::service& srv, Database& db, Processor& p)
 
     // Forms
     bind("form_process", cppcms::rpc::json_method(&rpc::form_process, this), method_role);
-    bind("form_result", cppcms::rpc::json_method(&rpc::form_result, this), method_role);
+    bind("form_getone", cppcms::rpc::json_method(&rpc::form_getone, this), method_role);
+    bind("form_getall", cppcms::rpc::json_method(&rpc::form_getall, this), method_role);
     bind("form_delete", cppcms::rpc::json_method(&rpc::form_delete, this), method_role);
     bind("form_rename", cppcms::rpc::json_method(&rpc::form_rename, this), method_role);
 }
@@ -114,19 +115,58 @@ void rpc::form_process()
     return_result(false);
 }
 
-void rpc::form_result()
+void rpc::form_getone(long long formId)
 {
-    if (loggedIn())
-    {
-    }
+    cppcms::json::value v = cppcms::json::array();
 
-    return_result(false);
+    if (loggedIn())
+        getForms(v, formId);
+
+    return_result(v);
 }
 
-void rpc::form_delete()
+void rpc::form_getall()
+{
+    cppcms::json::value v = cppcms::json::array();
+
+    if (loggedIn())
+        getForms(v);
+
+    return_result(v);
+}
+
+void rpc::getForms(cppcms::json::value& v, long long formId)
+{
+    long long userId = session().get<long long>("id");
+
+    // If formId == 0, then it'll get all the forms
+    std::vector<FormData> forms = db.getForms(userId, formId);
+
+    // Optimization
+    cppcms::json::array& ar = v.array();
+    ar.reserve(forms.size());
+
+    for (const FormData& f : forms)
+    {
+        cppcms::json::object obj;
+        obj["id"] = f.id;
+        obj["key"] = f.key;
+        obj["name"] = f.name;
+        obj["data"] = f.data;
+        obj["date"] = f.date;
+        ar.push_back(obj);
+    }
+}
+
+void rpc::form_delete(long long formId)
 {
     if (loggedIn())
     {
+        long long userId = session().get<long long>("id");
+        db.deleteForm(userId, formId);
+
+        return_result(true);
+        return;
     }
 
     return_result(false);
