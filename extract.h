@@ -28,7 +28,6 @@
 
 #include "forms.h"
 #include "pixels.h"
-#include "threadqueuevoid.h"
 
 enum class PixelType
 {
@@ -45,8 +44,7 @@ enum class ColorSpace
     RGB     // PNM6
 };
 
-std::list<FormImage> extract(const std::string& filename,
-        ThreadQueueVoid<FormImage*>&, Form& form);
+std::list<FormImage> extract(const std::string& filename, Form& form);
 Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
     const ColorSpace colorspace, const std::string& filename);
 

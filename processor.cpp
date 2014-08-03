@@ -21,9 +21,8 @@ void extractImages(Form* form)
 
     try
     {
-        // Get the images from the PDF while at the same time adding them to
-        // the thread queue to process.
-        newImages = extract(form->filename, form->processor.parseT, *form);
+        // Get the images from the PDF
+        newImages = extract(form->filename, *form);
 
         // Set number of pages to however many images we got out of the PDF
         form->pages = newImages.size();
@@ -31,6 +30,7 @@ void extractImages(Form* form)
     catch (const std::runtime_error& error)
     {
         form->log(form->filename + ", " + error.what());
+        form->processor.finish(form->id);
         return;
     }
     catch (const PoDoFo::PdfError& error)
@@ -40,13 +40,24 @@ void extractImages(Form* form)
 
         // Don't write this to screen
         form->log(form->filename + ", " + error.what(), LogType::Error);
+        form->processor.finish(form->id);
         return;
     }
     catch (...)
     {
         form->log("Unhandled exception");
+        form->processor.finish(form->id);
         return;
     }
+
+    // If no images, we're done
+    if (newImages.size() == 0)
+        form->processor.finish(form->id);
+
+    // Add these extracted images to the queue after making sure there aren't
+    // any extraction errors
+    for (FormImage& i : newImages)
+        form->processor.parseT.queue(&i);
 
     // Move these new images to the actual list. Do this here instead
     // of directly appending them to the list so that we only need
@@ -244,10 +255,6 @@ void Processor::finish(long long id)
             return;
 
         long long done = form->getDone();
-
-        // Not done yet
-        if (done != form->pages)
-            return;
 
         // Wake up anybody still waiting for this setting finished to true
         // so they will all exit before we delete this form.

@@ -1,7 +1,6 @@
 #include "extract.h"
 
-std::list<FormImage> extract(const std::string& filename,
-    ThreadQueueVoid<FormImage*>& ts, Form& form)
+std::list<FormImage> extract(const std::string& filename, Form& form)
 {
     std::list<FormImage> images;
     ColorSpace colorspace;
@@ -69,7 +68,6 @@ std::list<FormImage> extract(const std::string& filename,
 
                 document.FreeObjectMemory(*it);
                 images.push_back(FormImage(form, std::move(pixels)));
-                ts.queue(&images.back());
             }
         }
 
@@ -155,6 +153,14 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
         PoDoFo::pdf_long len;
 
         object->GetStream()->GetFilteredCopy(&buffer, &len);
+
+        // If the buffer isn't the correct size for the image data, don't try
+        // reading the image from this invalid data
+        if ((colorspace == ColorSpace::Gray && len != width*height) || len != width*height*3)
+        {
+            std::free(buffer);
+            return pixels;
+        }
 
         char* stream = new char[len+s.size()];
         std::memcpy(stream, header, s.size());
