@@ -219,9 +219,15 @@ int Processor::statusWait(long long id)
     long long done = form.done;
 
     // Wait for update
-    form.waitCond.wait(lck, [this, &form, done] {
-        return form.done == form.pages || form.done != done || exiting;
-    });
+    while (true)
+    {
+        form.waitCond.wait(lck, [this, &form, done] {
+            return form.done == form.pages || form.done != done || exiting;
+        });
+
+        if (form.done == form.pages || form.done != done || exiting)
+            break;
+    }
 
     // Now we're definitely "done"
     if (exiting)
