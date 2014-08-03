@@ -77,9 +77,8 @@ void rpc::account_update(const std::string& user, const std::string& pass)
         User u(user, pass);
         long long id = session().get<long long>("id");
 
-        if (u.valid())
+        if (u.valid() && db.updateAccount(user, pass, id))
         {
-            db.updateAccount(user, pass, id);
             session().set<std::string>("user", user);
 
             return_result(true);
@@ -96,11 +95,13 @@ void rpc::account_delete(int confirmation)
     {
         long long id = session().get<long long>("id");
 
-        db.deleteAccount(id);
-        logout();
+        if (db.deleteAccount(id))
+        {
+            logout();
 
-        return_result(true);
-        return;
+            return_result(true);
+            return;
+        }
     }
 
     return_result(false);
@@ -163,10 +164,12 @@ void rpc::form_delete(long long formId)
     if (loggedIn())
     {
         long long userId = session().get<long long>("id");
-        db.deleteForm(userId, formId);
 
-        return_result(true);
-        return;
+        if (db.deleteForm(userId, formId))
+        {
+            return_result(true);
+            return;
+        }
     }
 
     return_result(false);

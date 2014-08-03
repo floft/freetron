@@ -18,6 +18,7 @@ Database::Database(const std::string& filename)
     validUserQ = db << "select id from users where user = ? and pass = ? limit 1";
     updateAccountQ = db << "update or ignore users set user = ?, pass = ? where id = ?";
     deleteAccountQ = db << "delete from users where id = ?";
+    deleteUserFormsQ = db << "delete from forms where userId = ?";
     initFormQ = db << "insert into forms(name, userId, key, date) values(?, ?, ?, ?)";
     updateFormQ = db << "update or ignore forms set data = ? where id = ?";
     deleteFormQ = db << "delete from forms where id = ? and userId = ?";
@@ -104,11 +105,11 @@ long long Database::validUser(const std::string& user, const std::string& pass)
     return id;
 }
 
-void Database::updateAccount(const std::string& user, const std::string& pass,
+bool Database::updateAccount(const std::string& user, const std::string& pass,
         long long id)
 {
     if (!initialized)
-        return;
+        return false;
 
     cppdb::transaction guard(db);
 
@@ -117,22 +118,34 @@ void Database::updateAccount(const std::string& user, const std::string& pass,
     updateAccountQ.bind(3, id);
     updateAccountQ.exec();
     updateAccountQ.reset();
+    unsigned long long affected = updateAccountQ.affected();
 
     guard.commit();
+
+    return affected > 0;
 }
 
-void Database::deleteAccount(long long id)
+bool Database::deleteAccount(long long id)
 {
     if (!initialized)
-        return;
+        return false;
 
     cppdb::transaction guard(db);
 
+    // Delete user account
     deleteAccountQ.bind(1, id);
     deleteAccountQ.exec();
     deleteAccountQ.reset();
+    unsigned long long affected = deleteAccountQ.affected();
+
+    // Delete any user forms
+    deleteUserFormsQ.bind(1, id);
+    deleteUserFormsQ.exec();
+    deleteUserFormsQ.reset();
 
     guard.commit();
+
+    return affected > 0;
 }
 
 long long Database::initForm(const std::string& name, long long userId,
@@ -157,34 +170,40 @@ long long Database::initForm(const std::string& name, long long userId,
     return id;
 }
 
-void Database::updateForm(long long id, const std::string& data)
+bool Database::updateForm(long long id, const std::string& data)
 {
     if (!initialized)
-        return;
+        return false;
 
     cppdb::transaction guard(db);
 
     updateFormQ.bind(1, data);
     updateFormQ.bind(2, id);
     updateFormQ.exec();
+    unsigned long long affected = updateFormQ.affected();
 
     updateFormQ.reset();
     guard.commit();
+
+    return affected > 0;
 }
 
-void Database::deleteForm(long long userId, long long formId)
+bool Database::deleteForm(long long userId, long long formId)
 {
     if (!initialized)
-        return;
+        return false;
 
     cppdb::transaction guard(db);
 
     deleteFormQ.bind(1, formId);
     deleteFormQ.bind(2, userId);
     deleteFormQ.exec();
+    unsigned long long affected = deleteFormQ.affected();
 
     deleteFormQ.reset();
     guard.commit();
+
+    return affected > 0;
 }
 
 std::vector<FormData> Database::getForms(long long userId, long long id)

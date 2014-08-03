@@ -31,6 +31,7 @@ class Database
     cppdb::statement validUserQ;
     cppdb::statement updateAccountQ;
     cppdb::statement deleteAccountQ;
+    cppdb::statement deleteUserFormsQ;
     cppdb::statement initFormQ;
     cppdb::statement updateFormQ;
     cppdb::statement deleteFormQ;
@@ -44,13 +45,13 @@ public:
     // Return 0 if no user
     long long addUser(const std::string& user, const std::string& pass);
     long long validUser(const std::string& user, const std::string& pass);
-    void updateAccount(const std::string& user, const std::string& pass,
+    bool updateAccount(const std::string& user, const std::string& pass,
         long long id);
-    void deleteAccount(long long id);
+    bool deleteAccount(long long id);
     long long initForm(const std::string& name, long long userId,
         long long key, const std::string& date);
-    void updateForm(long long id, const std::string& data);
-    void deleteForm(long long userId, long long formId);
+    bool updateForm(long long id, const std::string& data);
+    bool deleteForm(long long userId, long long formId);
 
     // Specify ID if you want a single form, otherwise get all of
     // a users's forms
