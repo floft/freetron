@@ -30,9 +30,8 @@ public:
     void account();
     void forms();
 
-    // Used when uploading a new form
+    // Used on the forms page to submit the uploaded file via Javascript
     void upload(std::string num);
-    void process(std::string num);
 
     // 404 Page
     virtual void main(std::string url);

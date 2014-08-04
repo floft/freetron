@@ -27,9 +27,6 @@ website::website(cppcms::service& srv, Database& db, Processor& p, std::string r
     dispatcher().assign("/upload/(\\d+)", &website::upload, this, 1);
     mapper().assign("upload", "/upload/{1}");
 
-    dispatcher().assign("/process/(\\d+)", &website::process, this, 1);
-    mapper().assign("process", "/process/{1}");
-
     if (!root.empty())
         mapper().root(root);
 }
@@ -95,7 +92,7 @@ void website::upload(std::string num)
     {
         for (booster::shared_ptr<cppcms::http::file> file : request().files())
         {
-            // Maybe we should move this
+            // TODO: put in config
             static const long long maxFilesize = 250*1024*1024; // 250 MB
 
             // Get lowercase last three letters, the extension, which should be "pdf"
@@ -126,45 +123,6 @@ void website::upload(std::string num)
     }
 
     response().out() << "failed";
-}
-
-void website::process(std::string num)
-{
-    response().io_mode(cppcms::http::response::nogzip);
-    response().set_plain_text_header();
-
-    if (!loggedIn())
-        return;
-
-    long long id = atoll(num.c_str());
-
-    if (p.done(id))
-    {
-        response().out() << 100 << "\n";
-    }
-    else
-    {
-        int percent = 0;
-        response().out() << 0 << "\n";
-        response().out() << std::flush;
-
-        // Sleep this long between loops
-        double sec = 0.2;
-
-        while (percent != 100)
-        {
-            percent = p.statusWait(id);
-            response().out() << percent << "\n";
-            response().out() << std::flush;
-
-            usleep(sec*1000000);
-        }
-    }
-
-    // Return the ID again so we can easily grab the result
-    response().out() << id << "\n";
-    response().out() << std::flush;
-    //response().out() << "failed" << "\n";
 }
 
 // 404 Page

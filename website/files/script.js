@@ -225,10 +225,9 @@ function fileSelected() {
             fileSize = (Math.round(file.size * 100 / 1024) / 100).toString() + 'KB';
 
         if (isPdf(file.type, file.name)) {
-            error.style.display = "none";
+            error.innerHTML = "";
         } else {
-            error.innerHTML = "Must be PDF";
-            error.style.display = "inline";
+            fileError("Must be PDF");
         }
 
         if ($('fileName'))
@@ -248,7 +247,13 @@ function uploadFile() {
     var button = $('uploadFileButton');
     var key = $('key').value;
 
-    if (file && isPdf(file.type, file.name) && validKey(key)) {
+    if (!file) {
+        fileError("Invalid file");
+    } else if (!validKey(key)) {
+        fileError("Key must be a number");
+    } else if (!isPdf(file.type, file.name)) {
+        fileError("Must be PDF");
+    } else {
         var fd;
 
         // If this doesn't work at some point, look at
@@ -257,8 +262,12 @@ function uploadFile() {
 
         if (typeof form.getFormData  === "function") {
             fd = form.getFormData();
-        } else {
+        } else if (typeof FormData === "function") {
             fd = new FormData(form);
+        } else {
+            // TODO: implement support
+            alert("browser not supported yet");
+            return false;
         }
 
         http("/upload/" + key,
@@ -268,8 +277,7 @@ function uploadFile() {
             fileError("Canceled");
         }, fd);
 
-        progress.style.display = "inline";
-        error.style.display = "none";
+        error.innerHTML = "";
         button.disabled = true;
         window.needToConfirm = true;
     }
@@ -279,12 +287,30 @@ function uploadFile() {
 
 // Create a request to see the processing status
 function monitorProcessing(id) {
-    http("/process/" + id,
-    processComplete, function(data) {
+    window.rpc.form_process.on_error = function(e) {
         fileError("Error processing file");
-    }, processProgress, function(evt) {
-        fileError("Processing canceled");
-    });
+    };
+    window.rpc.form_process.on_result = function(r) {
+        var progress = $('progress');
+        progress.innerHTML = "Processing: " + r["percent"] + '%';
+
+        if (r["percent"] == 100) {
+            $("upload").reset();
+            progress.innerHTML = "Done";
+
+            // Get result
+            formGetOne(id);
+
+            setTimeout(function() {
+                if (progress.innerHTML === "Done")
+                    clearProgress();
+            }, 3000);
+        } else {
+            // Wait for next status update
+            monitorProcessing(id);
+        }
+    };
+    window.rpc.form_process(id);
 }
 
 // Print status messages
@@ -299,20 +325,6 @@ function uploadProgress(evt) {
     }
 }
 
-function processProgress(evt) {
-    var progress = $('progress');
-    var result = evt.target.responseText;
-
-    if (evt.lengthComputable) {
-        var percentComplete = Math.round(evt.loaded * 100 / evt.total);
-        progress.innerHTML = "Processing: " + percentComplete.toString() + '%';
-    } else {
-        var lines = result.split("\n");
-        var percentComplete = lines[lines.length - 2];
-        progress.innerHTML = "Processing: " + percentComplete + '%';
-    }
-}
-
 // When we're done uploading start the monitoring request
 function uploadComplete(result) {
     var form = $('upload');
@@ -324,39 +336,14 @@ function uploadComplete(result) {
         progress.innerHTML = "Processing";
         monitorProcessing(id);
     } else {
-        var error = $('fileError');
-        progress.innerHTML = "";
-        error.innerHTML = "Error uploading file";
-        error.style.display = "inline";
+        fileError("Error uploading file");
     }
 }
 
-// Reset the form when it's done processing and request
-// the results
-function processComplete(result) {
-    var lines = result.split("\n");
-    var lastLine = lines[lines.length - 2];
-    var form = $('upload');
-    var progress = $('progress');
-
-    if (lastLine !== "failed") {
-        // Processing bar
-        form.reset();
-        progress.innerHTML = "Done";
-
-        var id = parseInt(lastLine, 10);
-        formGetOne(id);
-
-        setTimeout(function() {
-            if (progress.innerHTML === "Done")
-                progress.innerHTML = "";
-        }, 3000);
-    } else {
-        var error = $('fileError');
-        progress.innerHTML = "";
-        error.innerHTML = "Error processing file";
-        error.style.display = "inline";
-    }
+// Clear it with a space, so we don't have the table moving up and down the
+// page when we upload a form
+function clearProgress() {
+    progress.innerHTML = "&nbsp;";
 }
 
 // If any errors occured
@@ -364,9 +351,8 @@ function fileError(msg) {
     var error = $('fileError');
     var progress = $('progress');
     var button = $('uploadFileButton');
-    progress.innerHTML = "";
+    clearProgress();
     error.innerHTML = msg;
-    error.style.display = "inline";
     button.disabled = false;
     window.needToConfirm = false;
 }

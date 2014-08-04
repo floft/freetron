@@ -107,13 +107,19 @@ void rpc::account_delete(int confirmation)
     return_result(false);
 }
 
-void rpc::form_process()
+void rpc::form_process(long long formId)
 {
-    if (loggedIn())
-    {
-    }
+    cppcms::json::value v = cppcms::json::object();
+    cppcms::json::object& obj = v.object();
 
-    return_result(false);
+    // Send the ID again so we can easily create the next request
+    obj["id"] = formId;
+    obj["percent"] = 0;
+
+    if (loggedIn())
+        obj["percent"] = (p.done(formId))?100:p.statusWait(formId);
+
+    return_result(v);
 }
 
 void rpc::form_getone(long long formId)

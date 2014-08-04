@@ -24,7 +24,7 @@ public:
     void account_create(const std::string& user, const std::string& pass);
     void account_update(const std::string& user, const std::string& pass);
     void account_delete(int confirmation);
-    void form_process();
+    void form_process(long long formId);
     void form_getone(long long formId);
     void form_getall();
     void form_delete(long long formId);
