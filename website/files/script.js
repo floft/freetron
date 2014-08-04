@@ -214,9 +214,8 @@ function uploadFile() {
         } else if (typeof FormData === "function") {
             fd = new FormData(form);
         } else {
-            // TODO: implement support
-            alert("browser not supported yet");
-            return false;
+            // Doesn't support Javascript upload, so use POST upload
+            return true;
         }
 
         http("/upload/" + key,

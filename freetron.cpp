@@ -278,8 +278,6 @@ int main(int argc, char* argv[])
                 cppcms::mount_point("/rpc")
             );
 
-            // TODO: Look for any leftover forms in the upload directory
-
             // Run website and block
             srv.run();
         }

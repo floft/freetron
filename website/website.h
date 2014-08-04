@@ -5,6 +5,7 @@
 #ifndef H_WEBSITE
 #define H_WEBSITE
 
+#include <string>
 #include <cppcms/service.h>
 
 #include "date.h"
@@ -48,6 +49,7 @@ public:
 
     // Used on the forms page to submit the uploaded file via Javascript
     void upload(std::string num);
+    long long uploadFile(long long key);
 
     // 404 Page
     virtual void main(std::string url);

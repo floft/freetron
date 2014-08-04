@@ -72,9 +72,30 @@ void website::account()
 
 void website::forms()
 {
-    content::master c;
+    content::forms c;
     initTemplate(c);
     c.pageName = "Forms";
+    c.message = "&nbsp;";
+
+    if (loggedIn() && request().request_method() == "POST" && !request().post("key").empty())
+    {
+        long long key = -1;
+
+        try
+        {
+            key = std::stoll(request().post("key"));
+        }
+        catch (...) { }
+
+        if (key >= 0)
+        {
+            if (uploadFile(key) > 0)
+                c.message = "Processing, please reload this page in a few minutes.";
+            else
+                c.message = "Invalid form, not a PDF or too large.";
+        }
+    }
+
     render("forms", c);
 }
 
@@ -82,37 +103,22 @@ void website::upload(std::string num)
 {
     response().set_plain_text_header();
 
-    if (!loggedIn())
-        return;
-
-    long long key = atoll(num.c_str());
-    long long userId = session().get<long long>("id");
-
-    if (request().request_method() == "POST")
+    if (loggedIn())
     {
-        for (booster::shared_ptr<cppcms::http::file> file : request().files())
+        long long key = -1;
+
+        try
         {
-            // Get lowercase last three letters, the extension, which should be "pdf"
-            if (file->filename().length() <= 3)
-                continue;
+            key = std::stoll(num);
+        }
+        catch (...) { }
 
-            std::string ext = file->filename().substr(file->filename().length() - 3);
-            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        if (key >= 0 && request().request_method() == "POST")
+        {
+            long long id = uploadFile(key);
 
-            if (file->name() == "file" && (file->mime() == "application/pdf" ||
-                ext == "pdf") && file->size() < maxFilesize)
+            if (id > 0)
             {
-                // Add to database
-                long long id = db.initForm(file->filename(), userId, key, date.getDate());
-
-                // Save to disk
-                std::ostringstream s;
-                s << "./uploads/" << id << ".pdf";
-                file->save_to(s.str());
-
-                // Start processing
-                p.add(id, key, s.str());
-
                 response().out() << id;
                 return;
             }
@@ -120,6 +126,39 @@ void website::upload(std::string num)
     }
 
     response().out() << "failed";
+}
+
+long long website::uploadFile(long long key)
+{
+    long long userId = session().get<long long>("id");
+
+    for (booster::shared_ptr<cppcms::http::file> file : request().files())
+    {
+        // Get lowercase last three letters, the extension, which should be "pdf"
+        if (file->filename().length() <= 3)
+            continue;
+
+        std::string ext = file->filename().substr(file->filename().length() - 3);
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+        if (file->name() == "file" && (file->mime() == "application/pdf" ||
+            ext == "pdf") && file->size() < maxFilesize)
+        {
+            // Add to database
+            long long id = db.initForm(file->filename(), userId, key, date.getDate());
+
+            // Save to disk
+            std::ostringstream s;
+            s << "./uploads/" << id << ".pdf";
+            file->save_to(s.str());
+
+            // Start processing
+            p.add(id, key, s.str());
+            return id;
+        }
+    }
+
+    return -1;
 }
 
 // 404 Page

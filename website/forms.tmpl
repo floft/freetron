@@ -1,16 +1,16 @@
 <% skin theme %>
-<% view forms uses content::master extends master %>
+<% view forms uses content::forms extends master %>
 <% template title() %>Forms :: <% include master::title() %><% end %>
 <% template page_content() %>
 <h1>Forms</h1>
 <% if loggedIn %>
-<form id="upload" enctype="multipart/form-data" method="post" action="#">
+<form id="upload" enctype="multipart/form-data" method="post" action="<% url "/forms" %>">
 <input type="file" name="file" id="uploadFile" class="file" />
 <input type="text" name="key" placeholder="Key ID" id="key" />
 <input type="submit" id="uploadFileButton" value="Upload" />
 <br />
 <div id="fileError"></div>
-<div id="progress">&nbsp;</div>
+<div id="progress"><%= message | raw %></div>
 </form>
 
 <table id="forms">

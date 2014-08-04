@@ -59,6 +59,11 @@ namespace content
         std::string user;
         std::string page_content;
     };
+
+    struct forms : public master
+    {
+        std::string message;
+    };
 }
 
 #endif
