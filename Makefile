@@ -52,7 +52,8 @@ install: ${OUT}
 	mkdir -p ${DESTDIR}${PREFIX}/share/freetron/files
 	install -Dm755 website/files/*.min.* ${DESTDIR}${PREFIX}/share/freetron/files/
 	install -Dm755 website/files/*.pdf ${DESTDIR}${PREFIX}/share/freetron/files/
-	install -Dm755 website/config.js.example ${DESTDIR}${PREFIX}/share/freetron/config.js
+	install -Dm755 website/config.js ${DESTDIR}${PREFIX}/share/freetron/config.js 2>/dev/null || \
+		install -Dm755 website/config.js.example ${DESTDIR}${PREFIX}/share/freetron/config.js
 	@echo
 	@echo "To start website, run this to generate keys for config.js:"
 	@echo "  cppcms_make_key --hmac sha256 --cbc aes256"

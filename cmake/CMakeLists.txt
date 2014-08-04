@@ -79,8 +79,10 @@ install(FILES ${MINFILES}
     DESTINATION share/freetron/files)
 
 # Config
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js.example
-    ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js COPYONLY)
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js.example
+        ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js COPYONLY)
+endif()
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js
     DESTINATION share/freetron)
 
