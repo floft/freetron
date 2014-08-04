@@ -46,11 +46,21 @@ min:
 	sed -i '1s#^#// Distributed under the Boost Software License, Version 1.0. (See\n#' website/files/jsonrpc.min.js
 	sed -i '1s#^#// (c) 2011 Artyom Beilis (Tonkikh)\n#' website/files/jsonrpc.min.js
 
-install:
+install: ${OUT}
 	install -Dm755 ${OUT} ${DESTDIR}${PREFIX}/bin/freetron
+	mkdir -p ${DESTDIR}${PREFIX}/share/freetron/uploads
+	mkdir -p ${DESTDIR}${PREFIX}/share/freetron/files
+	install -Dm755 website/files/*.min.* ${DESTDIR}${PREFIX}/share/freetron/files/
+	install -Dm755 website/files/*.pdf ${DESTDIR}${PREFIX}/share/freetron/files/
+	install -Dm755 website/config.js.example ${DESTDIR}${PREFIX}/share/freetron/config.js
+	@echo
+	@echo "To start website, run this to generate keys for config.js:"
+	@echo "  cppcms_make_key --hmac sha256 --cbc aes256"
+	@echo "  ${DESTDIR}${PREFIX}/bin/freetron --daemon ${DESTDIR}${PREFIX}/share/freetron"
     
 uninstall:
 	${RM} -f ${DESTDIR}${PREFIX}/bin/freetron
+	${RM} -rf ${DESTDIR}${PREFIX}/share/freetron/
 
 clean:
 	${RM} ${OUT} ${OBJ} ${DEPENDS} ${SKIN} ${SKINOBJ} ${WEBOBJ}

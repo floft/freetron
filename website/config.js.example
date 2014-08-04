@@ -29,10 +29,10 @@
         "timeout" : 604800,
         "location" : "client",
         "client" : {
-            "cbc" : "aes",
-            "cbc_key" : "<the key>",
+            "cbc" : "aes256",
+            "cbc_key" : "<first key>",
             "hmac" : "sha256",
-            "hmac_key" : "<the key>"
+            "hmac_key" : "<second key>"
         }
     },
     "cache" : {

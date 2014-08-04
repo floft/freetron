@@ -29,6 +29,7 @@ CMakeCache.txt
 cmake_install.cmake
 cmake/Makefile
 cmake/CMakeFiles
+cmake/install_manifest.txt
 
 # Website files
 *.pdf

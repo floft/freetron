@@ -67,3 +67,28 @@ target_link_libraries(freetron "${PODOFO_LIBRARY}")
 target_link_libraries(freetron "${CPPDB_LIBRARY}")
 target_link_libraries(freetron "${CPPCMS_LIBRARY}")
 target_link_libraries(freetron "${BOOSTER_LIBRARY}")
+
+# Install
+install(TARGETS freetron
+    RUNTIME DESTINATION bin)
+
+# Website JS/CSS files
+file(GLOB MINFILES "${CMAKE_CURRENT_SOURCE_DIR}/../website/files/*.min.*")
+install(FILES ${MINFILES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../website/files/form.pdf
+    DESTINATION share/freetron/files)
+
+# Config
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js.example
+    ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js COPYONLY)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js
+    DESTINATION share/freetron)
+
+# Blank uploads/ directory
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../website/uploads)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../website/uploads
+    DESTINATION share/freetron)
+
+install(CODE "MESSAGE(\"To start website, run this to generate keys for config.js:\")")
+install(CODE "MESSAGE(\"  cppcms_make_key --hmac sha256 --cbc aes256\")")
+install(CODE "MESSAGE(\"  $ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/freetron --daemon $ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/freetron\")")

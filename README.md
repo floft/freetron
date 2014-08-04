@@ -27,8 +27,8 @@ OpenIL/DevIL (LGPL)
 libtiff (custom: http://www.libtiff.org/misc.html)  
 
 ###Compiling###
-**make:** ``make``  
-**cmake:** ``cd cmake; cmake .; make``
+**make:** ``make; make install``  
+**cmake:** ``cd cmake; cmake .; make; make install``
 
 I have tested g++ and clang++ on Linux. For Mac you'll find most of the
 dependencies in Macports, Fink, Homebrew, or whatever you use, but you'll
@@ -36,9 +36,10 @@ probably have to build CppCMS and CppDB. On Windows you'll have to build
 basically all of these.
 
 ###Configuring Website###
-Rename *website/config.js.example* to *website/config.js*. Run
-``cppcms_make_key --hmac sha256 --cbc aes`` and copy the keys into the
-*website/config.js* file. Change the port.
+If not installing, rename *website/config.js.example* to *website/config.js*.
+Run ``cppcms_make_key --hmac sha256 --cbc aes256`` and copy the keys into the
+*website/config.js* file. Change the port. If installing, the file will be
+*/usr/local/share/freetron/config.js*.
 
 ###Running###
 Website interface: ``./freetron --daemon website/``  
