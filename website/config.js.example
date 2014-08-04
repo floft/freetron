@@ -16,6 +16,7 @@
     },
     "file_server": {
         "enable" : true,
+        "allow_deflate" : true,
         "alias" : [
             {
                 "url" : "/files",

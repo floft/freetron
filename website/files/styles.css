@@ -22,7 +22,6 @@ div.header {
     border-style: solid;
     border-color: black;
     border-width: 0 0 3px 0;
-    /*background-color: #558f69;*/
     margin: 0;
     padding: 0;
     background-color: #27679e;
@@ -30,7 +29,6 @@ div.header {
 }
 
 #footer_color {
-    /*display: none;*/
     clear: left;
     width: 100%;
     height: 10px;
@@ -46,8 +44,6 @@ div.header {
 
 div.menu {
     width: 145px;
-    /*float: left;
-    margin-left: -100%;*/
     position: fixed;
     font-family: 'Droid Serif', Georgia, sans-serif;
 }
@@ -62,6 +58,7 @@ div.menu li {
     position: relative;
     margin-top: 2px;
     font-variant: small-caps;
+    font-size: 16px;
 }
 
 div.menu li.selected {
@@ -69,7 +66,6 @@ div.menu li.selected {
     color: white;
     margin: 0 0.8em 0 0;
     padding: 6px 4px 6px 10px;
-    font-size: 1em;
 }
 
 div.menu li.selected:after {
@@ -81,8 +77,9 @@ div.menu li.selected:after {
     left: 100%;
     background: transparent;
     /* Idea from http://open.gl, calc(1/2*text + padding + margin) */
-    border-top:    calc(.5em + 6px + 1px) solid transparent;
-    border-bottom: calc(.5em + 6px + 1px) solid transparent;
+    /* calc(16/2px + 6px + 1px)*/
+    border-top: 15px solid transparent;
+    border-bottom: 15px solid transparent;
     border-left: 1.0em solid #2c4d4a;
 }
 
@@ -103,9 +100,6 @@ div.content {
     width: 650px;
     min-height: 150px;
     margin-left: 165px;
-    /*border-style: solid;
-    border-color: black;
-    border-width: 0 0 0 1px;*/
     padding: 0px 10px 20px 10px;
     text-shadow: 0.05em 0.05em 0.15em #ddd;
 }

@@ -36,6 +36,16 @@ ${SKIN}: website/master.tmpl ${SKINSRC}
 
 depends: ${DEPENDS}
 
+min:
+	rm -f website/files/*.min.*
+	yuglify website/files/*.js
+	yuglify website/files/*.css
+	sed -i '1s#^#// (c) Chris Veness 2002-2014\n#' website/files/sha256.min.js
+	sed -i '1s#^#// http://www.boost.org/LICENSE_1_0.txt)\n#' website/files/jsonrpc.min.js
+	sed -i '1s#^#// accompanying file LICENSE_1_0.txt or copy at\n#' website/files/jsonrpc.min.js
+	sed -i '1s#^#// Distributed under the Boost Software License, Version 1.0. (See\n#' website/files/jsonrpc.min.js
+	sed -i '1s#^#// (c) 2011 Artyom Beilis (Tonkikh)\n#' website/files/jsonrpc.min.js
+
 install:
 	install -Dm755 ${OUT} ${DESTDIR}${PREFIX}/bin/freetron
     
@@ -47,4 +57,4 @@ clean:
 	${RM} -r cmake/CMakeFiles cmake/CMakeCache.txt cmake/cmake_install.cmake cmake/Makefile cmake/freetron
 
 -include ${DEPENDS}
-.PHONY: all debug depends install uninstall clean
+.PHONY: all debug depends install uninstall clean min
