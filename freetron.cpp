@@ -43,7 +43,6 @@ enum class Args
     Help,
     Threads,
     Debug,
-    Quiet,
     ID,
     DB,
     Daemon,
@@ -53,19 +52,18 @@ enum class Args
 
 void help()
 {
-    std::cerr << "Usage:" << std::endl
-              << "  freetron [options] --daemon path/to/files" << std::endl
-              << "  freetron [options] -i KeyID in.pdf" << std::endl
+    std::cerr << "Usage" << std::endl
+              << "  freetron [options] --daemon website/" << std::endl
+              << "  freetron [options] -i KeyID form.pdf" << std::endl
               << std::endl
-              << "  Options" << std::endl
-              << "    -i, --id         ID of form to use as the key (if not daemon)" << std::endl
-              << "    -q, --quiet      don't print error messages (not implemented)" << std::endl
-              << "    -d, --debug      output debug images" << std::endl
-              << "    -t, --threads #  max number of threads to create" << std::endl
-              << "    --daemon web/    run the website, don't exit till Ctrl+C" << std::endl
-              << "    --config c.js    alternate config (no path)" << std::endl
-              << "    --db sqlite.db   alternate database (no path)" << std::endl
-              << "    --max 250        max upload filesize in megabytes" << std::endl;
+              << "Options" << std::endl
+              << "  -i, --id           ID of form to use as the key (if not daemon)" << std::endl
+              << "  -d, --debug        output debug images" << std::endl
+              << "  -t, --threads #    max number of threads to create" << std::endl
+              << "  --daemon website/  run the website, don't exit till Ctrl+C" << std::endl
+              << "  --config conf.js   alternate config (no path)" << std::endl
+              << "  --db sqlite.db     alternate database (no path)" << std::endl
+              << "  --max 250          max upload filesize in megabytes" << std::endl;
 }
 
 void invalid()
@@ -82,7 +80,6 @@ int main(int argc, char* argv[])
     std::string siteconfig = "config.js";
     std::string database = "sqlite.db";
     bool daemon = false;
-    bool quiet = false;
     int threads = 0; // 0 == number of cores
     long long key = DefaultID;
     long long maxFilesize = 250*1024*1024;
@@ -94,8 +91,6 @@ int main(int argc, char* argv[])
         { "--threads", Args::Threads },
         { "-d",        Args::Debug },
         { "--debug",   Args::Debug },
-        { "-q",        Args::Quiet },
-        { "--quiet",   Args::Quiet },
 
         // Daemon specific
         { "-i",        Args::ID },
@@ -159,9 +154,6 @@ int main(int argc, char* argv[])
                 break;
             case Args::Debug:
                 DEBUG = true;
-                break;
-            case Args::Quiet:
-                quiet = true;
                 break;
             case Args::Daemon:
                 ++i;

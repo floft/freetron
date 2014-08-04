@@ -17,7 +17,14 @@ SOURCES += \
     ../cores.cpp \
     ../boxes.cpp \
     ../box.cpp \
-    ../blobs.cpp
+    ../blobs.cpp \
+    ../forms.cpp \
+    ../processor.cpp \
+    ../website/content.cpp \
+    ../website/database.cpp \
+    ../website/date.cpp \
+    ../website/rpc.cpp \
+    ../website/website.cpp
 
 HEADERS += \
     ../threadqueue.h \
@@ -35,7 +42,16 @@ HEADERS += \
     ../cores.h \
     ../boxes.h \
     ../box.h \
-    ../blobs.h
+    ../blobs.h \
+    ../threadqueuevoid.h \
+    ../forms.h \
+    ../processor.h \
+    ../website/content.h \
+    ../website/database.h \
+    ../website/date.h \
+    ../website/options.h \
+    ../website/rpc.h \
+    ../website/website.h
 
 OTHER_FILES +=
 

@@ -1,30 +1,22 @@
 freetron
 ========
 A professor encouraged me to write a software implementation of a scantron
-machine. It's licensed under the [ISC
-license](http://floft.net/uploads/isc-license.txt). The goal was to scan a PDF
-of the key and all the students' sheets, grade, email the students their grade
-and a copy of their sheet, and then display statistics about the exam. While
-the program doesn't quite do all that, it does grade scanned forms, the
-fundamental part. Feel free to try it out and improve it.
+machine. It's licensed under the [ISC](http://floft.net/uploads/isc-license.txt)
+or [MIT](http://floft.net/uploads/isc-license.txt) licenses. The goal was to scan
+a PDF of the key and all the students' sheets, grade, email the students their
+grade and a copy of their sheet, and then display statistics about the exam.
+While the program doesn't quite do all that, it does grade scanned forms
+and provide a website interface for convenience. Feel free to try it out and
+improve it.
 
-For an example of the type of form this works with, you can look at this one
-from [Apperson](https://ssl1.appersonsecure.com/pdfs/common/29240.PDF).
-
-Project Status
---------------
-Currently this multi-threaded program will accept most multi-page PDFs, find
-the black boxes, rotate the image, find the student ID number, find the filled
-in answers, and grade based on the form with the teacher's ID. What's left is
-all the fancy Web UI, database, email stuff, and extensive testing (although
-I've tested it with over 50 forms).
+At the moment this only supports one type of form available directly from
+[Apperson](https://ssl1.appersonsecure.com/pdfs/common/29240.PDF) or in
+*website/files/form.pdf*.
 
 Using
 -----
-As of now there's no GUI, so you can look at the example to see how to run it
-from the command line. You need to install the following dependencies and
-compile it with either make or cmake. You can also use the provided Qt Creator
-project file if you prefer an IDE.
+You can either use this as a command-line utility or run it as a daemon
+providing a website interface.
 
 ###Dependencies###
 *a C++11 compiler*  
@@ -34,16 +26,23 @@ PoDoFo (LGPL)
 OpenIL/DevIL (LGPL)  
 libtiff (custom: http://www.libtiff.org/misc.html)  
 
-I have tested g++ and clang++ on Linux. I haven't tested it on Windows yet
-since I'd have to compile PoDoFo.  All the dependencies above are in Macports,
-so compiling it on Mac should be fairly straightforward.
-
 ###Compiling###
 **make:** ``make``  
 **cmake:** ``cd cmake; cmake .; make``
 
-Note that cmake will probably look prettier, giving more helpful error
-messages.
+I have tested g++ and clang++ on Linux. For Mac you'll find most of the
+dependencies in Macports, Fink, Homebrew, or whatever you use, but you'll
+probably have to build CppCMS and CppDB. On Windows you'll have to build
+basically all of these.
+
+###Configuring Website###
+Rename *website/config.js.example* to *website/config.js*. Run
+``cppcms_make_key --hmac sha256 --cbc aes`` and copy the keys into the
+*website/config.js* file. Change the port.
+
+###Running###
+Website interface: ``./freetron --daemon website/``  
+Command line interface: ``./freetron -i KeyID form.pdf``
 
 Example
 -------
