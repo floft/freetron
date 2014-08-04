@@ -16,6 +16,7 @@ Database::Database(const std::string& filename)
 
     addUserQ = db << "insert or ignore into users(user, pass) values(?, ?)";
     validUserQ = db << "select id from users where user = ? and pass = ? limit 1";
+    idExistsQ = db << "select id from users where id = ? limit 1";
     updateAccountQ = db << "update or ignore users set user = ?, pass = ? where id = ?";
     deleteAccountQ = db << "delete from users where id = ?";
     deleteUserFormsQ = db << "delete from forms where userId = ?";
@@ -91,19 +92,33 @@ long long Database::validUser(const std::string& user, const std::string& pass)
     validUserQ.bind(1, user);
     validUserQ.bind(2, pass);
 
-    long long id;
     cppdb::result r = validUserQ.row();
-
-    if (r.empty())
-        id = 0;
-    else
-        id = r.get<long long>(0);
+    long long id = (r.empty())?0:r.get<long long>(0);
 
     validUserQ.reset();
     guard.commit();
 
     return id;
 }
+
+bool Database::idExists(long long id)
+{
+    if (!initialized)
+        return false;
+
+    cppdb::transaction guard(db);
+
+    idExistsQ.bind(1, id);
+
+    cppdb::result r = idExistsQ.row();
+    long long foundId = (r.empty())?0:r.get<long long>(0);
+
+    idExistsQ.reset();
+    guard.commit();
+
+    return foundId > 0;
+}
+
 
 bool Database::updateAccount(const std::string& user, const std::string& pass,
         long long id)

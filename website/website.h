@@ -12,18 +12,34 @@
 #include "database.h"
 #include "../processor.h"
 
+// We can only pass in two arguments to an CppCMS application
+struct WebsiteData
+{
+    Database& db;
+    Processor& p;
+    long long maxFilesize;
+    std::string root;
+
+    WebsiteData(Database& db, Processor& p,
+        long long maxFilesize, std::string root = "")
+        : db(db), p(p), maxFilesize(maxFilesize), root(root)
+    {
+    }
+};
+
 class website : public cppcms::application
 {
     Date date;
     Database& db;
     Processor& p;
+    long long maxFilesize;
 
 public:
     // Specify root if this is in a subdirectory, e.g. /website
-    website(cppcms::service& srv, Database& db, Processor& p, std::string root = "");
+    website(cppcms::service& srv, WebsiteData d);
 
     // Create menu and set template settings
-    void init(content::master& c);
+    void initTemplate(content::master& c);
 
     // Site pages
     void home();

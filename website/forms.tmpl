@@ -1,5 +1,5 @@
 <% skin theme %>
-<% view forms uses content::forms extends master %>
+<% view forms uses content::master extends master %>
 <% template title() %>Forms :: <% include master::title() %><% end %>
 <% template page_content() %>
 <h1>Forms</h1>
@@ -11,10 +11,6 @@
 <br />
 <div id="fileError"></div>
 <div id="progress">&nbsp;</div>
-
-<!--<div id="fileName"></div>
-<div id="fileSize"></div>
-<div id="fileType"></div>-->
 </form>
 
 <table id="forms">
@@ -22,14 +18,6 @@
 Uploaded PDF files sorted from newest to oldest
 </td></tr>
 </table>
-
-<% foreach message in news_list %>
-    <ul>
-    <% item %>
-        <li><%= message %></li>
-    <% end %>
-    </ul>
-<% end foreach %>
 <% else %>
 <p>Please <a href="<% url "/account" %>">login</a>.</p>
 <% end %>

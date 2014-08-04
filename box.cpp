@@ -34,14 +34,14 @@ Box::Box(Pixels& img, const Blobs& blobs, const Coord& point)
         log("box can't be created from default label");
         return;
     }
-    
+
     const Outline shape(blobs, point, MAX_ITERATIONS);
 
     // Not a valid box if it was beyond max length
     if (!shape.good())
         return;
 
-    const std::vector<Coord> outline = shape.points();
+    const std::vector<Coord>& outline = shape.points();
 
     // Find the four corners by finding the four farthest points from each other.
     // Note that we'll use the square versions of these, since this is a box

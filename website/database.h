@@ -29,6 +29,7 @@ class Database
     // Queries
     cppdb::statement addUserQ;
     cppdb::statement validUserQ;
+    cppdb::statement idExistsQ;
     cppdb::statement updateAccountQ;
     cppdb::statement deleteAccountQ;
     cppdb::statement deleteUserFormsQ;
@@ -52,6 +53,7 @@ public:
         long long key, const std::string& date);
     bool updateForm(long long id, const std::string& data);
     bool deleteForm(long long userId, long long formId);
+    bool idExists(long long id);
 
     // Specify ID if you want a single form, otherwise get all of
     // a users's forms

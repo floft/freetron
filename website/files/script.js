@@ -2,23 +2,6 @@
  * Account page
  */
 
-function getPos(elem) {
-    var x = 0;
-    var y = 0;
-
-    while (true) {
-        x += elem.offsetLeft;
-        y += elem.offsetTop;
-
-        if (elem.offsetParent === null)
-            break;
-
-        elem = elem.offsetParent;
-    }
-
-    return [x, y];
-}
-
 function validUser(username) {
 	if (username.length < 4 || username.length > 30)
 		return false;
@@ -38,10 +21,6 @@ function password(pass) {
 
 function forgotMouseOver() {
     var box  = $("forgotmsg");
-    /*var link = $("forgotlink");
-    var pos = getPos(link);
-    box.style.left = pos[0] + "px";
-    box.style.top = (pos[1]+20) + "px";*/
     box.style.display = "block";
 }
 
@@ -50,28 +29,12 @@ function forgotMouseOut() {
     box.style.display = "none";
 }
 
-function forgotOnclick() {
-    var link = $("forgotlink");
-    var box  = $("forgotmsg");
-
-    if (box.style.display === "" || box.style.display === "none") {
-        box.style.left = link.offsetLeft;
-        box.style.top = link.offsetTop;
-        box.style.display = "block";
-    } else {
-        box.style.display = "none";
-    }
-
-    return false;
-}
-
 function deleteAccount() {
     var result = confirm("Are you sure you want to delete your account? All of "+
             "your data will be permanently removed.");
 
     if (result) {
         var confirmationCode = parseInt($("confirm").value, 10);
-        window.rpc.account_delete.on_error = function(e) { };
         window.rpc.account_delete.on_result = function(r) { if (r) goHome(); };
         window.rpc.account_delete(confirmationCode);
     }
@@ -217,24 +180,10 @@ function fileSelected() {
     var file = $('uploadFile').files[0];
 
     if (file) {
-        var fileSize = 0;
-
-        if (file.size > 1024 * 1024)
-            fileSize = (Math.round(file.size * 100 / (1024 * 1024)) / 100).toString() + 'MB';
-        else
-            fileSize = (Math.round(file.size * 100 / 1024) / 100).toString() + 'KB';
-
         if (isPdf(file.type, file.name)) {
             error.innerHTML = "";
         } else {
             fileError("Must be PDF");
-        }
-
-        if ($('fileName'))
-        {
-            $('fileName').innerHTML = 'Name: ' + file.name;
-            $('fileSize').innerHTML = 'Size: ' + fileSize;
-            $('fileType').innerHTML = 'Type: ' + file.type;
         }
     }
 }
@@ -458,23 +407,6 @@ function createEntry(id, name, date, formData) {
 /*
  * All pages
  */
-function vertScroll() {
-    return document.body.scrollHeight > document.body.clientHeight;
-
-    if (window.innerHeight)
-        return document.body.offsetHeight > window.innerHeight;
-    else
-        return document.documentElement.scrollHeight > document.documentElement.offsetHeight ||
-        document.body.scrollHeight > document.body.offsetHeight;
-}
-
-function resize() {
-    var show = vertScroll();
-    var elem = $("footer_color");
-
-    elem.style.display = (show)?"block":"none";
-}
-
 function confirmExit() {
 	if (window.needToConfirm)
         return "Are you sure you want to leave this page? You will lose data if you do."
@@ -550,11 +482,6 @@ var $ = function(id) {
 }
 
 window.onload = function() {
-    // Show/hide the footer color bar at bottom only if there is a vertical
-    // scroll bar, otherwise it looks odd
-    //window.onresize = resize;
-    //resize();
-
     // Save on exit if needed
     window.needToConfirm = false;
     window.onbeforeunload = confirmExit;
@@ -585,7 +512,6 @@ window.onload = function() {
         forgot.onmouseover = forgotMouseOver;
         forgot.onmouseout = forgotMouseOut;
         forgot.onclick = function() { return false; }
-        //forgot.onclick = forgotOnclick;
 
         var account = $("account");
         account.onsubmit = accountSubmit;

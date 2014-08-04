@@ -15,7 +15,7 @@ TMPLCC    ?= cppcms_tmpl_cc
 PREFIX    ?= /usr/local
 MANPREFIX ?= ${PREFIX}/share/man
 
-all: CXXFLAGS += -O2 -Os
+all: CXXFLAGS += -O3
 all: ${OUT}
 
 debug: CXXFLAGS += -g -Wall -Wextra -Wpedantic

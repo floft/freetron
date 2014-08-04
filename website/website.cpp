@@ -12,8 +12,9 @@
 #include "website.h"
 #include "options.h"
 
-website::website(cppcms::service& srv, Database& db, Processor& p, std::string root)
-    : cppcms::application(srv), db(db), p(p)
+website::website(cppcms::service& srv, WebsiteData d)
+    : cppcms::application(srv), db(d.db), p(d.p),
+    maxFilesize(d.maxFilesize)
 {
     dispatcher().assign("", &website::home, this);
     mapper().assign("");
@@ -27,11 +28,11 @@ website::website(cppcms::service& srv, Database& db, Processor& p, std::string r
     dispatcher().assign("/upload/(\\d+)", &website::upload, this, 1);
     mapper().assign("upload", "/upload/{1}");
 
-    if (!root.empty())
-        mapper().root(root);
+    if (!d.root.empty())
+        mapper().root(d.root);
 }
 
-void website::init(content::master& c)
+void website::initTemplate(content::master& c)
 {
     c.title = "Freetron";
     c.loggedIn = loggedIn();
@@ -43,7 +44,7 @@ void website::init(content::master& c)
 void website::home()
 {
     content::master c;
-    init(c);
+    initTemplate(c);
     c.pageName = "Home";
     render("home", c);
 }
@@ -51,7 +52,7 @@ void website::home()
 void website::account()
 {
     content::account c;
-    init(c);
+    initTemplate(c);
     c.user = "";
     c.confirm = 0;
     c.pageName = "Account";
@@ -71,10 +72,9 @@ void website::account()
 
 void website::forms()
 {
-    content::forms c;
-    init(c);
+    content::master c;
+    initTemplate(c);
     c.pageName = "Forms";
-    //c.news_list.push_back("This is a test message");
     render("forms", c);
 }
 
@@ -92,9 +92,6 @@ void website::upload(std::string num)
     {
         for (booster::shared_ptr<cppcms::http::file> file : request().files())
         {
-            // TODO: put in config
-            static const long long maxFilesize = 250*1024*1024; // 250 MB
-
             // Get lowercase last three letters, the extension, which should be "pdf"
             if (file->filename().length() <= 3)
                 continue;
@@ -132,15 +129,17 @@ void website::main(std::string url)
     {
         response().status(cppcms::http::response::not_found);
         content::master c;
-        init(c);
+        initTemplate(c);
         c.pageName = "404 Not Found";
         render("notfound", c);
     }
 }
 
+// The session says we're logged in and the account still exists
 bool website::loggedIn()
 {
-    if (session().is_set("loggedIn") && session().get<bool>("loggedIn"))
+    if (session().is_set("loggedIn") && session().get<bool>("loggedIn") &&
+        db.idExists(session().get<long long>("id")))
         return true;
 
     return false;

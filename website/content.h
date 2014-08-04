@@ -45,26 +45,6 @@ public:
 
 namespace content
 {
-    struct login_form : public cppcms::form
-    {
-        cppcms::widgets::text user;
-        cppcms::widgets::password pass;
-        cppcms::widgets::submit submit;
-
-        login_form();
-        virtual bool validate();
-    };
-
-    struct newaccount_form : public login_form
-    {
-        newaccount_form();
-    };
-
-    struct updateaccount_form : public login_form
-    {
-        updateaccount_form();
-    };
-
     struct master : public cppcms::base_content
     {
         std::string title;
@@ -78,17 +58,7 @@ namespace content
         int confirm;
         std::string user;
         std::string page_content;
-
-        /*login_form login;
-        newaccount_form newaccount;
-        updateaccount_form updateaccount;*/
-    };
-
-    struct forms : public master
-    {
-        std::list<std::string> news_list;
     };
 }
 
 #endif
-// vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4

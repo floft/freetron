@@ -1,12 +1,13 @@
 #include "processor.h"
 
 Processor::Processor(int threads, bool website, Database& db)
-    : extractT(extractImages, threads),
-      parseT(parseImage, threads),
-      defaultForm(*this),
+    : defaultForm(*this),
       exiting(false),
-      website(website),
-      db(db)
+      waiting(false),
+      extractT(extractImages, threads),
+      parseT(parseImage, threads),
+      db(db),
+      website(website)
 {
 }
 
@@ -51,7 +52,7 @@ void extractImages(Form* form)
     }
 
     // If no images, we're done
-    if (newImages.size() == 0)
+    if (newImages.empty())
         form->processor.finish(form->id);
 
     // Add these extracted images to the queue after making sure there aren't
@@ -259,8 +260,6 @@ void Processor::finish(long long id)
         // Not found
         if (form == forms.end())
             return;
-
-        long long done = form->getDone();
 
         // Wake up anybody still waiting for this setting finished to true
         // so they will all exit before we delete this form.

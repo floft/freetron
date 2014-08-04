@@ -47,7 +47,8 @@ enum class Args
     ID,
     DB,
     Daemon,
-    SiteConfig
+    SiteConfig,
+    Max
 };
 
 void help()
@@ -63,7 +64,8 @@ void help()
               << "    -t, --threads #  max number of threads to create" << std::endl
               << "    --daemon web/    run the website, don't exit till Ctrl+C" << std::endl
               << "    --config c.js    alternate config (no path)" << std::endl
-              << "    --db sqlite.db   alternate database (no path)" << std::endl;
+              << "    --db sqlite.db   alternate database (no path)" << std::endl
+              << "    --max 250        max upload filesize in megabytes" << std::endl;
 }
 
 void invalid()
@@ -83,6 +85,7 @@ int main(int argc, char* argv[])
     bool quiet = false;
     int threads = 0; // 0 == number of cores
     long long key = DefaultID;
+    long long maxFilesize = 250*1024*1024;
 
     std::map<std::string, Args> options = {{
         { "-h",        Args::Help },
@@ -101,7 +104,8 @@ int main(int argc, char* argv[])
         // Website specific
         { "--daemon",  Args::Daemon },
         { "--config",  Args::SiteConfig },
-        { "--db",      Args::DB }
+        { "--db",      Args::DB },
+        { "--max",     Args::Max }
     }};
 
     for (int i = 1; i < argc; ++i)
@@ -184,6 +188,27 @@ int main(int argc, char* argv[])
 
                 database = argv[i];
                 break;
+            case Args::Max:
+                ++i;
+
+                if (i == argc)
+                    invalid();
+
+                try
+                {
+                    maxFilesize = std::stoll(argv[i]);
+                }
+                catch (const std::invalid_argument&)
+                {
+                    std::cerr << "Error: invalid max filesize" << std::endl;
+                    return 1;
+                }
+                catch (const std::out_of_range&)
+                {
+                    std::cerr << "Error: max filesize too large" << std::endl;
+                    return 1;
+                }
+                break;
             default:
                 if (!filename.empty())
                     invalid();
@@ -235,10 +260,10 @@ int main(int argc, char* argv[])
             // Check that uploads/ and files/ subdirectories exist
             struct stat info;
 
-            if (stat("uploads", &info) != 0 || !info.st_mode&S_IFDIR)
+            if (stat("uploads", &info) != 0 || !(info.st_mode&S_IFDIR))
                 throw std::runtime_error("couldn't find uploads/ subdirectory");
 
-            if (stat("files", &info) != 0 || !info.st_mode&S_IFDIR)
+            if (stat("files", &info) != 0 || !(info.st_mode&S_IFDIR))
                 throw std::runtime_error("couldn't find files/ subdirectory");
 
             // Init database
@@ -251,7 +276,8 @@ int main(int argc, char* argv[])
             cppcms::service srv(config);
 
             srv.applications_pool().mount(
-                cppcms::applications_factory<website,Database&,Processor&>(db, p),
+                cppcms::applications_factory<website,WebsiteData>(
+                    WebsiteData(db, p, maxFilesize)),
                 cppcms::mount_point("/website")
             );
 

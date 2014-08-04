@@ -34,7 +34,10 @@ rpc::rpc(cppcms::service& srv, Database& db, Processor& p)
 
 void rpc::account_login(const std::string& user, const std::string& pass)
 {
-    if (loggedOut() && !user.empty() && !pass.empty() && session().is_set("prelogin"))
+    if (loggedIn())
+        logout();
+
+    if (!user.empty() && !pass.empty() && session().is_set("prelogin"))
     {
         User u(user, pass);
 
@@ -192,7 +195,8 @@ void rpc::form_rename()
 
 bool rpc::loggedIn()
 {
-    if (session().is_set("loggedIn") && session().get<bool>("loggedIn"))
+    if (session().is_set("loggedIn") && session().get<bool>("loggedIn") &&
+        db.idExists(session().get<long long>("id")))
         return true;
 
     return false;

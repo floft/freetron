@@ -224,6 +224,7 @@ form input.field {
     position: absolute;
     background: #fff;
     text-align: justify;
+    z-index: 1;
 }
 
 #forgotlink {

@@ -35,7 +35,7 @@ struct FormImage
     std::vector<Answer> answers;
 
     FormImage(Form& form, Pixels&& image)
-        : form(form), image(image), id(-1), thread_id(-1)
+        : image(image), form(form), id(-1), thread_id(-1)
     { }
 };
 
@@ -67,7 +67,7 @@ struct Form
     Processor& processor;
 
     Form(Processor& processor)
-        : id(-1), pages(-1), processor(processor)
+        : id(-1), key(0), pages(-1), done(0), processor(processor)
     { }
 
     Form(Form&&);
