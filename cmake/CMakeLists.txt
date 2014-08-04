@@ -10,11 +10,16 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}")
 find_package(TIFF)
 find_package(DevIL)
 find_package(Podofo)
+find_package(CppDB)
+find_package(CppCMS)
+find_program(EXE_TMPL_CC cppcms_tmpl_cc)
 include_directories("${TIFF_INCLUDE_DIR}")
 include_directories("${IL_INCLUDE_DIR}")
 include_directories("${PODOFO_INCLUDE_DIR}")
+include_directories("${CPPDB_INCLUDE_DIR}")
+include_directories("${CPPCMS_INCLUDE_DIR}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -funroll-loops -O2 -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -funroll-loops -O3 -std=c++11")
 
 # Eventually detect this from the options.h file? Or, maybe, modify the
 # options.h file here (definitely not until this is actually tested on a few
@@ -35,14 +40,30 @@ if(UNIX)
     set(CMAKE_LDFLAGS "${CMAKE_LDFLAGS} -pthreads")
 endif()
 
-# Yes, I know this is "horrible." So, I have to rerun `cmake .' if I add a
-# file... who cares.
+# CppCMS views
+file(GLOB TEMPLATES "${CMAKE_CURRENT_SOURCE_DIR}/../website/*.tmpl")
+list(REMOVE_ITEM TEMPLATES "${CMAKE_CURRENT_SOURCE_DIR}/../website/master.tmpl")
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/../website/skin.cpp"
+    COMMAND ${EXE_TMPL_CC}
+        ${CMAKE_CURRENT_BINARY_DIR}/../website/master.tmpl
+        ${TEMPLATES}
+        -o "${CMAKE_CURRENT_BINARY_DIR}/../website/skin.cpp"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${TEMPLATES})
+
+# C++ files
 file(GLOB src "${CMAKE_CURRENT_SOURCE_DIR}/../*.cpp")
 list(REMOVE_ITEM src "${CMAKE_CURRENT_SOURCE_DIR}../freetron.cpp")
-add_executable(freetron ${src} "${CMAKE_CURRENT_SOURCE_DIR}/../freetron.cpp")
+list(APPEND src "${CMAKE_CURRENT_SOURCE_DIR}/../website/skin.cpp")
+file(GLOB websrc "${CMAKE_CURRENT_SOURCE_DIR}/../website/*.cpp")
+add_executable(freetron ${src} ${websrc} "${CMAKE_CURRENT_SOURCE_DIR}/../freetron.cpp")
 
 string(REGEX REPLACE "tiff" "tiffxx" TIFFXX_LIBRARY ${TIFF_LIBRARY})
 target_link_libraries(freetron "${TIFF_LIBRARY}")
 target_link_libraries(freetron "${TIFFXX_LIBRARY}")
 target_link_libraries(freetron "${IL_LIBRARIES}")
 target_link_libraries(freetron "${PODOFO_LIBRARY}")
+target_link_libraries(freetron "${CPPDB_LIBRARY}")
+target_link_libraries(freetron "${CPPCMS_LIBRARY}")
+target_link_libraries(freetron "${BOOSTER_LIBRARY}")

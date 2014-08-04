@@ -1,0 +1,5 @@
+find_path(CPPCMS_INCLUDE_DIR cppcms/application.h PATHS /usr/include /usr/local/include)
+find_library(CPPCMS_LIBRARY NAMES cppcms PATHS /usr/lib64 /usr/lib /usr/local/lib)
+find_library(BOOSTER_LIBRARY NAMES booster PATHS /usr/lib64 /usr/lib /usr/local/lib)
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(CPPCMS  DEFAULT_MSG  CPPCMS_LIBRARY  BOOSTER_LIBRARY  CPPCMS_INCLUDE_DIR)
