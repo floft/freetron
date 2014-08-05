@@ -76,7 +76,7 @@ install(TARGETS freetron
 file(GLOB MINFILES "${CMAKE_CURRENT_SOURCE_DIR}/../website/files/*.min.*")
 install(FILES ${MINFILES}
     ${CMAKE_CURRENT_SOURCE_DIR}/../website/files/form.pdf
-    DESTINATION share/freetron/files)
+    DESTINATION /srv/freetron/files)
 
 # Config
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js)
@@ -84,13 +84,13 @@ if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js)
         ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js COPYONLY)
 endif()
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js
-    DESTINATION share/freetron)
+    DESTINATION /srv/freetron)
 
 # Blank uploads/ directory
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../website/uploads)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../website/uploads
-    DESTINATION share/freetron)
+    DESTINATION /srv/freetron)
 
-install(CODE "MESSAGE(\"To start website, run this to generate keys for config.js:\")")
+install(CODE "MESSAGE(\"To start website, run this to generate keys for /srv/freetron/config.js:\")")
 install(CODE "MESSAGE(\"  cppcms_make_key --hmac sha256 --cbc aes256\")")
-install(CODE "MESSAGE(\"  $ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/freetron --daemon $ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/freetron\")")
+install(CODE "MESSAGE(\"  ${CMAKE_INSTALL_PREFIX}/bin/freetron --daemon /srv/freetron\")")

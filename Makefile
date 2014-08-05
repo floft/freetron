@@ -48,20 +48,21 @@ min:
 
 install: ${OUT}
 	install -Dm755 ${OUT} ${DESTDIR}${PREFIX}/bin/freetron
-	mkdir -p ${DESTDIR}${PREFIX}/share/freetron/uploads
-	mkdir -p ${DESTDIR}${PREFIX}/share/freetron/files
-	install -Dm755 website/files/*.min.* ${DESTDIR}${PREFIX}/share/freetron/files/
-	install -Dm755 website/files/*.pdf ${DESTDIR}${PREFIX}/share/freetron/files/
-	install -Dm755 website/config.js ${DESTDIR}${PREFIX}/share/freetron/config.js 2>/dev/null || \
-		install -Dm755 website/config.js.example ${DESTDIR}${PREFIX}/share/freetron/config.js
+	mkdir -p ${DESTDIR}/srv/freetron/uploads
+	mkdir -p ${DESTDIR}/srv/freetron/files
+	install -Dm755 website/files/*.min.* ${DESTDIR}/srv/freetron/files/
+	install -Dm755 website/files/*.pdf ${DESTDIR}/srv/freetron/files/
+	install -Dm755 website/config.js ${DESTDIR}/srv/freetron/config.js 2>/dev/null || \
+		install -Dm755 website/config.js.example ${DESTDIR}/srv/freetron/config.js
 	@echo
 	@echo "To start website, run this to generate keys for config.js:"
 	@echo "  cppcms_make_key --hmac sha256 --cbc aes256"
-	@echo "  ${DESTDIR}${PREFIX}/bin/freetron --daemon ${DESTDIR}${PREFIX}/share/freetron"
+	@echo "  ${DESTDIR}${PREFIX}/bin/freetron --daemon ${DESTDIR}/srv/freetron"
     
 uninstall:
 	${RM} -f ${DESTDIR}${PREFIX}/bin/freetron
-	${RM} -rf ${DESTDIR}${PREFIX}/share/freetron/
+	@echo
+	@echo "Not deleted: ${DESTDIR}/srv/freetron"
 
 clean:
 	${RM} ${OUT} ${OBJ} ${DEPENDS} ${SKIN} ${SKINOBJ} ${WEBOBJ}
