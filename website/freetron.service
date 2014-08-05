@@ -1,0 +1,8 @@
+[Unit]
+Description=Freetron website daemon
+
+[Service]
+ExecStart=/usr/bin/freetron --daemon /srv/freetron
+
+[Install]
+WantedBy=multi-user.target

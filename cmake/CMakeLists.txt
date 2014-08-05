@@ -104,6 +104,8 @@ install(FILES
     ${MINFILES}
     "${WEBSITE}/files/form.pdf"
     DESTINATION /srv/freetron/files)
+install(FILES "${WEBSITE}/freetron.service"
+    DESTINATION lib/systemd/system)
 install(DIRECTORY "${WEBSITE}/uploads"
     DESTINATION /srv/freetron)
 

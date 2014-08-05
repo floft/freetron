@@ -51,12 +51,14 @@ install: ${OUT}
 	install -Dm755 ${OUT} ${DESTDIR}${PREFIX}/bin/freetron
 	mkdir -p ${DESTDIR}/srv/freetron/uploads
 	mkdir -p ${DESTDIR}/srv/freetron/files
+	mkdir -p ${DESTDIR}${PREFIX}/lib/systemd/system
 	[ -f website/hmac.txt ] || \
 	${MAKEKEY} --hmac sha256 --cbc aes256 --hmac-file website/hmac.txt --hmac-cbc website/cbc.txt >/dev/null
 	install -Dm755 website/*.txt ${DESTDIR}/srv/freetron/
 	install -Dm755 website/files/*.min.* ${DESTDIR}/srv/freetron/files/
 	install -Dm755 website/files/*.pdf ${DESTDIR}/srv/freetron/files/
 	install -Dm755 website/config.js ${DESTDIR}/srv/freetron/config.js
+	install -Dm644 website/freetron.service ${DESTDIR}${PREFIX}/lib/systemd/system/
 	@echo
 	@echo "To start website, run:"
 	@echo "  ${DESTDIR}${PREFIX}/bin/freetron --daemon ${DESTDIR}/srv/freetron"
