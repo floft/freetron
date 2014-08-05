@@ -13,6 +13,7 @@ find_package(Podofo)
 find_package(CppDB)
 find_package(CppCMS)
 find_program(EXE_TMPL_CC cppcms_tmpl_cc)
+find_program(EXE_MAKE_KEY cppcms_make_key)
 include_directories("${TIFF_INCLUDE_DIR}")
 include_directories("${IL_INCLUDE_DIR}")
 include_directories("${PODOFO_INCLUDE_DIR}")
@@ -41,22 +42,23 @@ if(UNIX)
 endif()
 
 # CppCMS views
+set(WEBSITE "${CMAKE_CURRENT_SOURCE_DIR}/../website")
 file(GLOB TEMPLATES "${CMAKE_CURRENT_SOURCE_DIR}/../website/*.tmpl")
-list(REMOVE_ITEM TEMPLATES "${CMAKE_CURRENT_SOURCE_DIR}/../website/master.tmpl")
+list(REMOVE_ITEM TEMPLATES "${WEBSITE}/master.tmpl")
 add_custom_command(
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/../website/skin.cpp"
+    OUTPUT "${WEBSITE}/skin.cpp"
     COMMAND ${EXE_TMPL_CC}
-        ${CMAKE_CURRENT_BINARY_DIR}/../website/master.tmpl
+        "${WEBSITE}/master.tmpl"
         ${TEMPLATES}
-        -o "${CMAKE_CURRENT_BINARY_DIR}/../website/skin.cpp"
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        -o "${WEBSITE}/skin.cpp"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     DEPENDS ${TEMPLATES})
 
 # C++ files
 file(GLOB src "${CMAKE_CURRENT_SOURCE_DIR}/../*.cpp")
-list(REMOVE_ITEM src "${CMAKE_CURRENT_SOURCE_DIR}../freetron.cpp")
-list(APPEND src "${CMAKE_CURRENT_SOURCE_DIR}/../website/skin.cpp")
-file(GLOB websrc "${CMAKE_CURRENT_SOURCE_DIR}/../website/*.cpp")
+list(REMOVE_ITEM src "${CMAKE_CURRENT_SOURCE_DIR}/../freetron.cpp")
+list(APPEND src "${WEBSITE}/skin.cpp")
+file(GLOB websrc "${WEBSITE}/*.cpp")
 add_executable(freetron ${src} ${websrc} "${CMAKE_CURRENT_SOURCE_DIR}/../freetron.cpp")
 
 string(REGEX REPLACE "tiff" "tiffxx" TIFFXX_LIBRARY ${TIFF_LIBRARY})
@@ -68,29 +70,42 @@ target_link_libraries(freetron "${CPPDB_LIBRARY}")
 target_link_libraries(freetron "${CPPCMS_LIBRARY}")
 target_link_libraries(freetron "${BOOSTER_LIBRARY}")
 
-# Install
+# Install application
 install(TARGETS freetron
     RUNTIME DESTINATION bin)
 
-# Website JS/CSS files
-file(GLOB MINFILES "${CMAKE_CURRENT_SOURCE_DIR}/../website/files/*.min.*")
-install(FILES ${MINFILES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../website/files/form.pdf
-    DESTINATION /srv/freetron/files)
-
-# Config
-if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js.example
-        ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js COPYONLY)
+# Create keys if they don't exist
+if(NOT EXISTS "${WEBSITE}/hmac.txt")
+    add_custom_command(
+        OUTPUT "${WEBSITE}/hmac.txt"
+               "${WEBSITE}/cbc.txt"
+        COMMAND "${EXE_MAKE_KEY}" --hmac sha256 --cbc aes256
+        --hmac-file "${WEBSITE}/hmac.txt"
+        --hmac-cbc  "${WEBSITE}/cbc.txt"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 endif()
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../website/config.js
-    DESTINATION /srv/freetron)
+
+# Website files
+file(GLOB MINFILES "${WEBSITE}/files/*.min.*")
+add_custom_target(keys ALL DEPENDS
+    "${WEBSITE}/hmac.txt"
+    "${WEBSITE}/cbc.txt")
 
 # Blank uploads/ directory
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../website/uploads)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../website/uploads
+file(MAKE_DIRECTORY "${WEBSITE}/uploads")
+
+# Install website files
+install(FILES
+    "${WEBSITE}/hmac.txt"
+    "${WEBSITE}/cbc.txt"
+    "${WEBSITE}/config.js"
+    DESTINATION /srv/freetron)
+install(FILES
+    ${MINFILES}
+    "${WEBSITE}/files/form.pdf"
+    DESTINATION /srv/freetron/files)
+install(DIRECTORY "${WEBSITE}/uploads"
     DESTINATION /srv/freetron)
 
-install(CODE "MESSAGE(\"To start website, run this to generate keys for /srv/freetron/config.js:\")")
-install(CODE "MESSAGE(\"  cppcms_make_key --hmac sha256 --cbc aes256\")")
+install(CODE "MESSAGE(\"To start website, run:\")")
 install(CODE "MESSAGE(\"  ${CMAKE_INSTALL_PREFIX}/bin/freetron --daemon /srv/freetron\")")

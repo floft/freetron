@@ -35,4 +35,5 @@ cmake/install_manifest.txt
 *.pdf
 *.db
 website/skin.cpp
-website/config.js
+website/hmac.txt
+website/cbc.txt

@@ -35,11 +35,9 @@ dependencies in Macports, Fink, Homebrew, or whatever you use, but you'll
 probably have to build CppCMS and CppDB. On Windows you'll have to build
 basically all of these.
 
-###Configuring Website###
-If not installing, rename *website/config.js.example* to *website/config.js*.
-Run ``cppcms_make_key --hmac sha256 --cbc aes256`` and copy the keys into the
-*website/config.js* file. Change the port. If installing, the file will be
-*/usr/local/share/freetron/config.js*.
+**Note:** If you don't install using either make or cmake, you'll have to run
+``cppcms_make_key --hmac sha256 --cbc aes256 --hmac-file website/hmac.txt
+--hmac-cbc website/cbc.txt`` to generate the keys for the website.
 
 ###Running###
 Website interface: ``./freetron --daemon website/``  

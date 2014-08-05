@@ -30,9 +30,9 @@
         "location" : "client",
         "client" : {
             "cbc" : "aes256",
-            "cbc_key" : "<first key>",
+            "cbc_key_file" : "cbc.txt",
             "hmac" : "sha256",
-            "hmac_key" : "<second key>"
+            "hmac_key_file" : "hmac.txt"
         }
     },
     "cache" : {

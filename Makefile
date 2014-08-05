@@ -12,6 +12,7 @@ CXXFLAGS  += -ffast-math -funroll-loops -std=c++11
 LDFLAGS   += -lpodofo -lIL -ltiff -ltiffxx -pthread -lcppcms -lbooster -lcppdb
 
 TMPLCC    ?= cppcms_tmpl_cc
+MAKEKEY   ?= cppcms_make_key
 PREFIX    ?= /usr/local
 MANPREFIX ?= ${PREFIX}/share/man
 
@@ -50,13 +51,14 @@ install: ${OUT}
 	install -Dm755 ${OUT} ${DESTDIR}${PREFIX}/bin/freetron
 	mkdir -p ${DESTDIR}/srv/freetron/uploads
 	mkdir -p ${DESTDIR}/srv/freetron/files
+	[ -f website/hmac.txt ] || \
+	${MAKEKEY} --hmac sha256 --cbc aes256 --hmac-file website/hmac.txt --hmac-cbc website/cbc.txt >/dev/null
+	install -Dm755 website/*.txt ${DESTDIR}/srv/freetron/
 	install -Dm755 website/files/*.min.* ${DESTDIR}/srv/freetron/files/
 	install -Dm755 website/files/*.pdf ${DESTDIR}/srv/freetron/files/
-	install -Dm755 website/config.js ${DESTDIR}/srv/freetron/config.js 2>/dev/null || \
-		install -Dm755 website/config.js.example ${DESTDIR}/srv/freetron/config.js
+	install -Dm755 website/config.js ${DESTDIR}/srv/freetron/config.js
 	@echo
-	@echo "To start website, run this to generate keys for config.js:"
-	@echo "  cppcms_make_key --hmac sha256 --cbc aes256"
+	@echo "To start website, run:"
 	@echo "  ${DESTDIR}${PREFIX}/bin/freetron --daemon ${DESTDIR}/srv/freetron"
     
 uninstall:
@@ -66,7 +68,8 @@ uninstall:
 
 clean:
 	${RM} ${OUT} ${OBJ} ${DEPENDS} ${SKIN} ${SKINOBJ} ${WEBOBJ}
-	${RM} -r cmake/CMakeFiles cmake/CMakeCache.txt cmake/cmake_install.cmake cmake/Makefile cmake/freetron
+	${RM} -r cmake/CMakeFiles cmake/CMakeCache.txt cmake/cmake_install.cmake
+	${RM} -r cmake/Makefile cmake/freetron cmake/install_manifest.txt
 
 -include ${DEPENDS}
 .PHONY: all debug depends install uninstall clean min
