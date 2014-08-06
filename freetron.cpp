@@ -11,6 +11,7 @@
  */
 
 #include <list>
+#include <atomic>
 #include <vector>
 #include <string>
 #include <cstring>
@@ -19,6 +20,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <IL/il.h>
@@ -36,6 +38,21 @@
 // This must be global since we're using extern in options.h. This is used all
 // over the place to enable outputting debug images.
 bool DEBUG = false;
+
+// Deal with SIGHUP
+static std::atomic_bool signal_sighup;
+static cppcms::service* signal_srv;
+
+void signal_handler(int signal)
+{
+    if (signal == SIGHUP)
+    {
+        signal_sighup = true;
+
+        if (signal_srv)
+            signal_srv->shutdown();
+    }
+}
 
 enum class Args
 {
@@ -237,18 +254,6 @@ int main(int argc, char* argv[])
             if (chdir(path.c_str()) != 0)
                 throw std::runtime_error("couldn't set directory");
 
-            // Load config
-            std::ifstream configFile(siteconfig);
-
-            if (!configFile.is_open())
-                throw std::runtime_error("couldn't open config file");
-
-            int configError = 0;
-            cppcms::json::value config;
-
-            if (!config.load(configFile, true, &configError))
-                throw std::runtime_error("config error on line " + std::to_string(configError));
-
             // Check that uploads/ and files/ subdirectories exist
             struct stat info;
 
@@ -264,22 +269,54 @@ int main(int argc, char* argv[])
             // Init application
             Processor p(threads, true, db);
 
-            // Init website
-            cppcms::service srv(config);
+            // Loop on SIGHUP, but exit on SIGTERM or SIGINT (handled by CppCMS)
+            struct sigaction sa;
+            sa.sa_handler = &signal_handler;
+            signal_srv = NULL;
+            signal_sighup = false;
 
-            srv.applications_pool().mount(
-                cppcms::applications_factory<website,WebsiteData>(
-                    WebsiteData(db, p, maxFilesize)),
-                cppcms::mount_point("/website")
-            );
+            if (sigaction(SIGHUP, &sa, NULL) == -1)
+                std::cout << "Warning: not handling SIGHUP" << std::endl;
 
-            srv.applications_pool().mount(
-                cppcms::applications_factory<rpc,Database&,Processor&>(db, p),
-                cppcms::mount_point("/rpc")
-            );
+            while (true)
+            {
+                // Load config
+                std::ifstream configFile(siteconfig);
 
-            // Run website and block
-            srv.run();
+                if (!configFile.is_open())
+                    throw std::runtime_error("couldn't open config file");
+
+                int configError = 0;
+                cppcms::json::value config;
+
+                if (!config.load(configFile, true, &configError))
+                    throw std::runtime_error("config error on line " + std::to_string(configError));
+
+                // Init website
+                cppcms::service srv(config);
+                signal_srv = &srv;
+
+                srv.applications_pool().mount(
+                    cppcms::applications_factory<website,WebsiteData>(
+                        WebsiteData(db, p, maxFilesize)),
+                    cppcms::mount_point("/website")
+                );
+
+                srv.applications_pool().mount(
+                    cppcms::applications_factory<rpc,Database&,Processor&>(db, p),
+                    cppcms::mount_point("/rpc")
+                );
+
+                // Run website and block
+                srv.run();
+
+                // If we didn't get SIGHUP, exit
+                if (!signal_sighup)
+                    break;
+
+                signal_srv = NULL;
+                signal_sighup = false;
+            }
         }
         catch (const std::exception& e)
         {
