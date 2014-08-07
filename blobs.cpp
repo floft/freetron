@@ -1,3 +1,7 @@
+#include <array>
+#include <algorithm>
+
+#include "log.h"
 #include "blobs.h"
 
 const int Blobs::default_label = 0;
@@ -7,7 +11,7 @@ Blobs::Blobs(const Pixels& img)
     w = img.width();
     h = img.height();
     labels = std::vector<std::vector<int>>(h, std::vector<int>(w, default_label));
-    
+
     int next_label = default_label+1;
 
     // Go through finding black points and making them part of bordering objects if next to
@@ -42,7 +46,7 @@ Blobs::Blobs(const Pixels& img)
                         break;
                     }
                 }
-                
+
                 if (found)
                 {
                     // This is the latest time we've seen this label
@@ -61,7 +65,7 @@ Blobs::Blobs(const Pixels& img)
                     // Since we're not next to an object, this is [probably] a new object
                     labels[y][x] = next_label;
                     objs[next_label] = CoordPair(point, point);
-                    
+
                     ++next_label;
                 }
             }
@@ -94,10 +98,10 @@ void Blobs::switchLabel(const int old_label, const int new_label)
 
     if (old_first < new_first)
         new_first = old_first;
-    
+
     if (old_last > new_last)
         new_last = old_last;
-    
+
     // Delete old object
     objs.erase(old_label);
 }

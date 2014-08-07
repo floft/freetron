@@ -5,25 +5,18 @@
 #ifndef H_READ
 #define H_READ
 
-#include <map>
-#include <cmath>
 #include <vector>
-#include <string>
 
-#include "box.h"
-#include "math.h"
 #include "data.h"
 #include "blobs.h"
 #include "pixels.h"
-#include "outline.h"
-#include "options.h"
 
 // Set this to something that can't be detected on the form
 static const long long DefaultID = -1;
 static const int DefaultFilled = -1;
 
 // Data to keep about a bubble
-struct Bubble 
+struct Bubble
 {
     int radius;
     int label;

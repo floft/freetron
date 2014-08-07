@@ -8,17 +8,12 @@
 #define H_PIXELS
 
 #include <mutex>
-#include <cmath>
 #include <vector>
 #include <string>
-#include <iostream>
-#include <stdexcept>
 #include <IL/il.h>
 
-#include "math.h"
 #include "data.h"
 #include "options.h"
-#include "histogram.h"
 
 struct Mark
 {

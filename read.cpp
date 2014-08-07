@@ -1,4 +1,13 @@
+#include <map>
+#include <cmath>
+#include <string>
+
+#include "log.h"
+#include "box.h"
 #include "read.h"
+#include "math.h"
+#include "outline.h"
+#include "options.h"
 
 // Percentage of pixels in the bubble that are a certain label
 // 0 = no label, 1 = all label
@@ -39,7 +48,7 @@ double bubbleBlackness(const Pixels& img, const Blobs& blobs,
             }
         }
     }
-    
+
     if (total > 0)
         return 1.0*black/total;
     else
@@ -56,7 +65,7 @@ bool vertical(const std::vector<Coord>& boxes,
     for (size_type i = start_box; i < boxes.size() && i < end_box; ++i)
         if (boxes[i].x > boxes[i-1].x+MAX_ERROR || boxes[i].x < boxes[i-1].x-MAX_ERROR)
             return false;
-    
+
     return true;
 }
 
@@ -67,7 +76,7 @@ long long findID(Pixels& img, const Blobs& blobs,
     typedef std::vector<Coord>::size_type size_type;
 
     long long id = DefaultID;
-    
+
     // Get rid of compilation warnings in vertical()
     const size_type& start_box = ID_START;
     const size_type& end_box   = ID_END;
@@ -101,7 +110,7 @@ long long findID(Pixels& img, const Blobs& blobs,
         if (filled != DefaultFilled)
             digits.push_back(filled);
     }
-        
+
     // Convert to number
     typedef std::vector<int>::reverse_iterator iterator;
     id = 0;
@@ -124,7 +133,7 @@ std::vector<Answer> findAnswers(Pixels& img, const Blobs& blobs,
     // The amount to jump is half the distance between second two boxes
     // on the bottom row
     const double jump = 0.5*(boxes[BOT_START+1].x - boxes[BOT_START].x);
-    
+
     // We need to know about how big these bubbles are
     int box_height = data.width/ASPECT;
 
@@ -284,7 +293,7 @@ double findBlack(Pixels& img, const Blobs& blobs, const std::vector<Coord>& boxe
 
     for (size_type i = 0; i < color.size(); ++i)
         color[i] = bubbleBlackness(img, blobs, bubbles[i], radius);
-    
+
     std::sort(color.begin(), color.end());
 
     // Find the biggest jump to know what to set the black level to. We assume

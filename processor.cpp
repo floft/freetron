@@ -1,3 +1,22 @@
+#include <cstdio>
+#include <vector>
+#include <cstring>
+#include <sstream>
+#include <iomanip>
+#include <iostream>
+#include <stdexcept>
+#include <algorithm>
+#include <podofo/podofo.h>
+
+#include "box.h"
+#include "log.h"
+#include "math.h"
+#include "read.h"
+#include "data.h"
+#include "boxes.h"
+#include "rotate.h"
+#include "pixels.h"
+#include "extract.h"
 #include "processor.h"
 
 Processor::Processor(int threads, bool website, Database& db)
@@ -114,7 +133,7 @@ void parseImage(FormImage* formImage)
             blobs = Blobs(formImage->image);
         }
 
-        // Sort all boxes if with respect to y if we rotated counter-clockwise
+        // Sort all boxes with respect to y if we rotated counter-clockwise
         if (rotation > 0)
             std::sort(boxes.begin(), boxes.end());
 
@@ -158,8 +177,9 @@ void parseImage(FormImage* formImage)
         }
 
         std::ostringstream msg;
-        msg << "thread #" << thread_id << ", " << formImage->image.filename()
-            << " - " << error.what();
+        if (!formImage->form.processor.website)
+            msg << "thread #" << thread_id << ", " << formImage->image.filename() << " - ";
+        msg << error.what();
         formImage->form.log(msg.str());
     }
 

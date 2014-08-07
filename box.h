@@ -5,21 +5,8 @@
 #ifndef H_BOX
 #define H_BOX
 
-#include <map>
-#include <cmath>
-#include <array>
-#include <vector>
-#include <cstdbool>
-#include <iostream>
-#include <stdexcept>
-#include <algorithm>
-
-#include "log.h"
 #include "data.h"
 #include "blobs.h"
-#include "math.h"
-#include "outline.h"
-#include "options.h"
 #include "pixels.h"
 
 // Find square around coordinates keeping it within the image bounds

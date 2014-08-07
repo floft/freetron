@@ -6,6 +6,7 @@
 #define H_MAPUTILS
 
 #include <map>
+#include <algorithm>
 
 #include "data.h"
 
@@ -67,7 +68,7 @@ template<class Type, class Value> int mapCountValue(Type m, Value val)
     for (iter i = m.begin(); i != m.end(); ++i)
         if (i->second == val)
             ++number;
-    
+
     return number;
 }
 
@@ -76,10 +77,10 @@ template<class Type, class Value> int mapCountValue(Type m, Value val)
 //   for (const CoordPair& p : blobs) ...
 //
 // Based on: http://stackoverflow.com/a/7667618
-template<class Type> class MapValueIterator 
+template<class Type> class MapValueIterator
 {
     typedef typename Type::mapped_type Value;
-    
+
     typename Type::const_iterator iter;
 
 public:
@@ -96,7 +97,7 @@ public:
     {
         return iter->second;
     }
-    
+
     const Value* operator->() const
     {
         return &iter->second;
@@ -115,7 +116,7 @@ public:
 
         return *this;
     }
-    
+
     bool operator==(const MapValueIterator& i) const
     {
         return iter == i.iter;

@@ -10,13 +10,10 @@
  *   - Auto-adjusting HEIGHT_ERROR and MIN_BLACK
  */
 
-#include <list>
 #include <atomic>
-#include <vector>
 #include <string>
 #include <cstring>
-#include <sstream>
-#include <iomanip>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <unistd.h>
@@ -29,11 +26,12 @@
 #include <cppcms/application.h>
 #include <cppcms/applications_pool.h>
 
+#include "read.h"
 #include "options.h"
 #include "processor.h"
-#include "website/database.h"
 #include "website/rpc.h"
 #include "website/website.h"
+#include "website/database.h"
 
 // This must be global since we're using extern in options.h. This is used all
 // over the place to enable outputting debug images.
@@ -73,10 +71,15 @@ void help()
               << "  freetron [options] --daemon website/" << std::endl
               << "  freetron [options] -i KeyID form.pdf" << std::endl
               << std::endl
-              << "Options" << std::endl
-              << "  -i, --id           ID of form to use as the key (if not daemon)" << std::endl
+              << "General Options" << std::endl
+              << "  -h, --help         show this message" << std::endl
+              << "  -t, --threads 8    max number of threads to create" << std::endl
+              << std::endl
+              << "Command Line" << std::endl
+              << "  -i, --id  1234     ID of form to use as the key" << std::endl
               << "  -d, --debug        output debug images" << std::endl
-              << "  -t, --threads #    max number of threads to create" << std::endl
+              << std::endl
+              << "Website" << std::endl
               << "  --daemon website/  run the website, don't exit till Ctrl+C" << std::endl
               << "  --config conf.js   alternate config (no path)" << std::endl
               << "  --db sqlite.db     alternate database (no path)" << std::endl
@@ -106,12 +109,12 @@ int main(int argc, char* argv[])
         { "--help",    Args::Help },
         { "-t",        Args::Threads },
         { "--threads", Args::Threads },
-        { "-d",        Args::Debug },
-        { "--debug",   Args::Debug },
 
         // Daemon specific
         { "-i",        Args::ID },
         { "--id",      Args::ID },
+        { "-d",        Args::Debug },
+        { "--debug",   Args::Debug },
 
         // Website specific
         { "--daemon",  Args::Daemon },
@@ -248,6 +251,9 @@ int main(int argc, char* argv[])
     }
     else
     {
+        // Don't save images when using the website
+        DEBUG = false;
+
         try
         {
             // Go to the website directory

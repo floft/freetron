@@ -1,4 +1,10 @@
+#include <cmath>
+#include <iostream>
+#include <stdexcept>
+
+#include "math.h"
 #include "pixels.h"
+#include "histogram.h"
 
 // DevIL/OpenIL isn't multithreaded
 std::mutex Pixels::lock;

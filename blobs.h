@@ -10,11 +10,8 @@
 #define H_BLOBS
 
 #include <map>
-#include <array>
 #include <vector>
-#include <algorithm>
 
-#include "log.h"
 #include "data.h"
 #include "pixels.h"
 #include "maputils.h"

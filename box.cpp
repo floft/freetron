@@ -1,4 +1,17 @@
+#include <map>
+#include <cmath>
+#include <array>
+#include <vector>
+#include <cstdbool>
+#include <iostream>
+#include <stdexcept>
+#include <algorithm>
+
 #include "box.h"
+#include "log.h"
+#include "math.h"
+#include "outline.h"
+#include "options.h"
 
 // Find square around point
 Square::Square(const Pixels& img, const int x, const int y, const int r)

@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "forms.h"
 
 bool operator==(const Form& a, const Form& b)

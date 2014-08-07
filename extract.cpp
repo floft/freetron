@@ -1,3 +1,10 @@
+#include <sstream>
+#include <fstream>
+#include <cstring>
+#include <IL/il.h>
+#include <tiffio.h>
+#include <tiffio.hxx>
+
 #include "extract.h"
 
 std::list<FormImage> extract(const std::string& filename, Form& form)

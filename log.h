@@ -6,13 +6,8 @@
 #ifndef H_LOG
 #define H_LOG
 
-#include <ctime>
-#include <mutex>
 #include <string>
-#include <fstream>
 #include <iostream>
-
-#include "options.h"
 
 enum class LogType
 {

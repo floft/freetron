@@ -1,4 +1,9 @@
+#include <ctime>
+#include <mutex>
+#include <fstream>
+
 #include "log.h"
+#include "options.h"
 
 // std::localtime not thread safe
 static std::mutex localtime_lock;
@@ -14,7 +19,7 @@ void log(const std::string& msg, const LogType prefix, const bool err)
     {
         // std::localtime isn't thread safe
         std::unique_lock<std::mutex> lck(localtime_lock);
-        
+
         char timestamp[50] = "";
         time_t now = std::time(nullptr);
         std::strftime(timestamp, 50, "%c %Z", std::localtime(&now));

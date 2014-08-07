@@ -10,14 +10,9 @@
 
 #include <array>
 #include <vector>
-#include <cstdbool>
-#include <algorithm>
 
-#include "log.h"
 #include "data.h"
 #include "blobs.h"
-#include "options.h"
-#include "pixels.h"
 
 // Used to return both point to jump to (if we had to go back a ways
 // at a dead end) and the next direction to go
@@ -60,7 +55,7 @@ private:
     // if no available locations, moving back through our history till we can move
     // and returning that point and the index of the matrix to use to move.
     EdgePair findEdge(const Coord& p) const;
-    
+
     // Find next pixel to go to when walking edge, returns index of matrix
     // or -1 if all are black
     int findIndex(const Coord& p) const;

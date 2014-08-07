@@ -5,16 +5,11 @@
 #ifndef H_BOXES
 #define H_BOXES
 
-#include <cmath>
 #include <vector>
-#include <algorithm>
 
-#include "options.h"
-#include "pixels.h"
-#include "blobs.h"
 #include "data.h"
-#include "math.h"
-#include "box.h"
+#include "blobs.h"
+#include "pixels.h"
 
 // Find boxes in the image returns { Coord(midpoint_x, midpoint_y), ... }
 std::vector<Coord> findBoxes(Pixels& img, const Blobs& blobs, Data& data);

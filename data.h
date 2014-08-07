@@ -5,8 +5,8 @@
 #ifndef H_DATA
 #define H_DATA
 
-#include <iostream>
 #include <vector>
+#include <iostream>
 
 struct Coord
 {

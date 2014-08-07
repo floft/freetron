@@ -17,13 +17,7 @@
 
 #include <list>
 #include <string>
-#include <sstream>
-#include <fstream>
-#include <cstring>
 #include <iostream>
-#include <IL/il.h>
-#include <tiffio.h>
-#include <tiffio.hxx>
 #include <podofo/podofo.h>
 
 #include "forms.h"

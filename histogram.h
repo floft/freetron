@@ -8,9 +8,6 @@
 
 #include <vector>
 
-#include "math.h"
-#include "options.h"
-
 class Histogram
 {
     int total;

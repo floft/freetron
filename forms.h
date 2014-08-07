@@ -10,7 +10,6 @@
 #include <atomic>
 #include <string>
 #include <vector>
-#include <sstream>
 #include <condition_variable>
 
 #include "log.h"

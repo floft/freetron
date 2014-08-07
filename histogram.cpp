@@ -1,3 +1,7 @@
+#include <algorithm>
+
+#include "math.h"
+#include "options.h"
 #include "histogram.h"
 
 Histogram::Histogram(const std::vector<std::vector<unsigned char>>& img)

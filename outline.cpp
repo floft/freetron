@@ -1,3 +1,9 @@
+#include <cstdbool>
+#include <algorithm>
+
+#include "log.h"
+#include "pixels.h"
+#include "options.h"
 #include "outline.h"
 
 // The priority for which pixels to go to, search forward if no black yet
@@ -28,11 +34,11 @@ Outline::Outline(const Blobs& blobs, const Coord& point,
         log("can't outline object with default label");
         return;
     }
-    
+
     // Start one pixel above this first point (we wouldn't have been given this
     // point if the pixel above it was black)
     Coord position(point.x, point.y-1);
-    
+
     // A fail-safe
     int iterations = 0;
 
@@ -51,7 +57,7 @@ Outline::Outline(const Blobs& blobs, const Coord& point,
         // we had to retrace our steps a ways)
         position = edge.point+matrix[edge.index];
         path.push_back(position);
-        
+
         // Give up after we reach a certain size of object
         ++iterations;
 
@@ -67,7 +73,7 @@ Outline::Outline(const Blobs& blobs, const Coord& point,
 EdgePair Outline::findEdge(const Coord& p) const
 {
     typedef std::vector<Coord>::size_type size_type;
-    
+
     int index = -1;
 
     // Start at this point
@@ -88,7 +94,7 @@ EdgePair Outline::findEdge(const Coord& p) const
         // We ran out of options
         if (path_index == 0)
             break;
-        
+
         // Go back one pixel
         position = path[path_index];
         --path_index;
@@ -103,7 +109,7 @@ EdgePair Outline::findEdge(const Coord& p) const
 int Outline::findIndex(const Coord& p) const
 {
     typedef std::array<Coord, 8>::size_type size_type;
-    
+
     int result = -1;
 
     for (size_type i = 0; i < matrix.size(); ++i)

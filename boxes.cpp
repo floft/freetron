@@ -1,4 +1,10 @@
+#include <cmath>
+#include <algorithm>
+
+#include "box.h"
+#include "math.h"
 #include "boxes.h"
+#include "options.h"
 
 // Find all the boxes in the image
 std::vector<Coord> findBoxes(Pixels& img, const Blobs& blobs, Data& data)

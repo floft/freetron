@@ -7,28 +7,10 @@
 
 #include <list>
 #include <mutex>
-#include <string>
 #include <atomic>
-#include <cstdio>
-#include <vector>
-#include <cstring>
-#include <sstream>
-#include <iomanip>
-#include <iostream>
-#include <stdexcept>
-#include <algorithm>
-#include <podofo/podofo.h>
+#include <string>
 
-#include "box.h"
-#include "log.h"
-#include "math.h"
-#include "read.h"
-#include "data.h"
 #include "forms.h"
-#include "boxes.h"
-#include "rotate.h"
-#include "pixels.h"
-#include "extract.h"
 #include "threadqueuevoid.h"
 #include "website/database.h"
 
