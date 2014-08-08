@@ -10,7 +10,6 @@
 #include <atomic>
 #include <string>
 #include <vector>
-#include <condition_variable>
 
 #include "log.h"
 #include "data.h"
@@ -47,12 +46,8 @@ struct Form
     std::string filename;
 
     // Forms processed
-    std::atomic_bool finished;
     long long done;
     std::mutex done_mutex;
-
-    // Signal we have processed more forms
-    std::condition_variable waitCond;
 
     // For thread-safe log messages
     std::string output;

@@ -236,7 +236,10 @@ function uploadFile() {
 // Create a request to see the processing status
 function monitorProcessing(id) {
     window.rpc.form_process.on_error = function(e) {
-        fileError("Error processing file");
+        if (e.error && e.error.length > 0)
+            fileError("Error: " + e.error);
+        else
+            fileError("Error processing file");
     };
     window.rpc.form_process.on_result = function(r) {
         var progress = $('progress');
@@ -323,11 +326,14 @@ function deleteEntry(delElem) {
     if (result) {
         window.rpc.form_delete.on_result = function(r) {
             var row = delElem.parentNode.parentNode;
-            var index = row.rowIndex;
-            var nextRow = row.parentNode.rows[index + 1];
 
-            row.parentNode.removeChild(row);
-            nextRow.parentNode.removeChild(nextRow);
+            if (row.parentNode !== null) {
+                var index = row.rowIndex;
+                var nextRow = row.parentNode.rows[index + 1];
+
+                row.parentNode.removeChild(row);
+                nextRow.parentNode.removeChild(nextRow);
+            }
         };
         window.rpc.form_delete(id);
     }
@@ -335,6 +341,9 @@ function deleteEntry(delElem) {
 
 // Request all of this users forms
 function formGetAll() {
+    window.rpc.form_getall.on_error = function(r) {
+        fileError("Couldn't connect to server");
+    };
     window.rpc.form_getall.on_result = function(r) {
         var i;
         for (i = 0; i < r.length; ++i) {

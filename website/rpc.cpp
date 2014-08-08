@@ -1,18 +1,23 @@
+#include <vector>
+#include <cstdlib>
+#include <iostream>
 #include <cppcms/application.h>
-#include <cppcms/applications_pool.h>
+#include <cppcms/mount_point.h>
 #include <cppcms/http_response.h>
 #include <cppcms/url_dispatcher.h>
-#include <cppcms/mount_point.h>
-#include <iostream>
-#include <cstdlib>
-#include <ctime>
+#include <cppcms/applications_pool.h>
+#include <booster/system_error.h>
+#include <booster/intrusive_ptr.h>
+#include <boost/bind.hpp>
 
 #include "rpc.h"
 #include "options.h"
 #include "content.h"
 
 rpc::rpc(cppcms::service& srv, Database& db, Processor& p)
-    : cppcms::rpc::json_rpc_server(srv), db(db), p(p)
+    : cppcms::rpc::json_rpc_server(srv), db(db), p(p),
+      timer(srv.get_io_service()), exiting(false),
+      statusThread(StatusThread(*this, exiting))
 {
     // Random, used for form confirmations
     srand(time(NULL));
@@ -30,6 +35,20 @@ rpc::rpc(cppcms::service& srv, Database& db, Processor& p)
     bind("form_getall", cppcms::rpc::json_method(&rpc::form_getall, this), method_role);
     bind("form_delete", cppcms::rpc::json_method(&rpc::form_delete, this), method_role);
     bind("form_rename", cppcms::rpc::json_method(&rpc::form_rename, this), method_role);
+
+    // Timeouts for getting rid of long requests
+    on_timer(booster::system::error_code());
+}
+
+rpc::~rpc()
+{
+    timer.reset_io_service();
+
+    // We need to tell Processor to wake up all the statusWait() calls we're
+    // waiting on for status updates so we can exit that thread
+    exiting = true;
+    p.statusWakeAll();
+    statusThread.join();
 }
 
 void rpc::account_login(const std::string& user, const std::string& pass)
@@ -120,7 +139,28 @@ void rpc::form_process(long long formId)
     obj["percent"] = 0;
 
     if (loggedIn())
-        obj["percent"] = (p.done(formId))?100:p.statusWait(formId);
+    {
+        if (p.done(formId))
+        {
+            obj["percent"] = 100;
+        }
+        else
+        {
+            // If it's not done, then save this request and process it once we
+            // are notified that this form is done, or if a timeout occurs
+            std::unique_lock<std::mutex> lock(waiters_mutex);
+            booster::shared_ptr<cppcms::rpc::json_call> call = release_call();
+            waiters.push_back(ProcessRequest(formId, call));
+
+            // If the connection is closed before it's done, remove the request
+            call->context().async_on_peer_reset(
+                    boost::bind(
+                        &rpc::remove_context,
+                        booster::intrusive_ptr<rpc>(this),
+                        call));
+            return;
+        }
+    }
 
     return_result(v);
 }
@@ -162,7 +202,7 @@ void rpc::getForms(cppcms::json::value& v, long long formId)
         obj["id"] = f.id;
         obj["key"] = f.key;
         obj["name"] = f.name;
-        obj["data"] = f.data;
+        obj["data"] = (f.data.empty())?"Processing... please wait":f.data;
         obj["date"] = f.date;
         ar.push_back(obj);
     }
@@ -244,4 +284,84 @@ void rpc::logout()
 void rpc::resetCode()
 {
     session().set<int>("confirmation", rand());
+}
+
+void rpc::on_timer(const booster::system::error_code& e)
+{
+    // Cancel
+    if (e)
+        return;
+
+    // In seconds
+    int timeout = 15*60; // 15 min
+
+    // Remove really old connections
+    std::unique_lock<std::mutex> lock(waiters_mutex);
+
+    for (std::vector<ProcessRequest>::iterator i = waiters.begin();
+            i != waiters.end(); ++i)
+    {
+        if (time(NULL) - i->createTime > timeout)
+        {
+            i->call->return_error("Connection closed by server");
+            i = waiters.erase(i);
+
+            if (i == waiters.end())
+                break;
+        }
+    }
+
+    // Restart timer
+    timer.expires_from_now(booster::ptime::seconds(60));
+    timer.async_wait(boost::bind(&rpc::on_timer, booster::intrusive_ptr<rpc>(this), _1));
+}
+
+void rpc::remove_context(booster::shared_ptr<cppcms::rpc::json_call> call)
+{
+    std::unique_lock<std::mutex> lock(waiters_mutex);
+    std::vector<ProcessRequest>::iterator i = std::find_if(
+            waiters.begin(), waiters.end(), RequestCallPredicate(call));
+
+    if (i != waiters.end())
+        waiters.erase(i);
+}
+
+void rpc::broadcast(long long formId, int percentage)
+{
+    cppcms::json::value v = cppcms::json::object();
+    cppcms::json::object& obj = v.object();
+
+    // Send the ID again so we can easily create the next request
+    obj["id"] = formId;
+    obj["percent"] = percentage;
+
+    std::unique_lock<std::mutex> lock(waiters_mutex);
+
+    for (std::vector<ProcessRequest>::iterator i = waiters.begin();
+            i != waiters.end(); ++i)
+    {
+        if (i->formId == formId)
+        {
+            i->call->return_result(v);
+
+            // Remove this under the assumption that there is only one request
+            // per formId
+            waiters.erase(i);
+            break;
+        }
+    }
+}
+
+void StatusThread::operator()()
+{
+    while (!exiting)
+    {
+        std::vector<Status> results = parent.p.statusWait();
+
+        if (exiting)
+            break;
+
+        for (Status& s : results)
+            parent.broadcast(s.formId, s.percentage);
+    }
 }

@@ -281,11 +281,11 @@ int main(int argc, char* argv[])
             signal_srv = NULL;
             signal_sighup = false;
 
-            if (sigaction(SIGHUP, &sa, NULL) == -1)
-                std::cout << "Warning: not handling SIGHUP" << std::endl;
-
             while (true)
             {
+                if (sigaction(SIGHUP, &sa, NULL) == -1)
+                    std::cout << "Warning: not handling SIGHUP" << std::endl;
+
                 // Load config
                 std::ifstream configFile(siteconfig);
 
@@ -322,6 +322,7 @@ int main(int argc, char* argv[])
 
                 signal_srv = NULL;
                 signal_sighup = false;
+                std::cout << "Note: restarting website due to SIGHUP" << std::endl;
             }
         }
         catch (const std::exception& e)

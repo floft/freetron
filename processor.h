@@ -9,6 +9,7 @@
 #include <mutex>
 #include <atomic>
 #include <string>
+#include <condition_variable>
 
 #include "forms.h"
 #include "threadqueuevoid.h"
@@ -19,6 +20,18 @@ void extractImages(Form* form);
 
 // Called in a new thread for each image
 void parseImage(FormImage* formImage);
+
+// For sending status updates
+struct Status
+{
+    long long formId;
+    int percentage;
+
+    Status(long long formId, int percentage)
+        : formId(formId), percentage(percentage)
+    {
+    }
+};
 
 // Main class to manage processing the forms
 class Processor
@@ -46,6 +59,13 @@ class Processor
     // We do on the site, not for CLI usage
     bool website;
 
+    // Updated whenever an image is done being processed
+    std::mutex status_mutex;
+    int statusWaiting;
+    bool statusNewItem;
+    std::vector<Status> status;
+    std::condition_variable statusCond;
+
 public:
     Processor(int threads, bool website, Database& db);
     ~Processor();
@@ -55,12 +75,6 @@ public:
 
     // Return if it's done yet (i.e., the form no longer exists)
     bool done(long long id);
-
-    // If doesn't exist, return 100
-    // If not, wait for next page to complete, return new percentage
-    // When done, return 99 so that it'll return 100 when the form
-    //   has been deleted.
-    int statusWait(long long id);
 
     // Get the results and delete the form (only for use with daemon)
     std::string get(long long id);
@@ -75,6 +89,15 @@ public:
     // Exit all threads
     void exit();
 
+    // Block until more forms have been processed returning all of the status
+    // updates, which may include previous ones if another form finished being
+    // processed before all the previous status updates were grabbed
+    std::vector<Status> statusWait();
+
+    // Fake that there is a new status item, e.g. use it to wake up all blocked
+    // statusWait() calls so that you can restart the website
+    void statusWakeAll();
+
 private:
     // Get reference to either the form with this ID or the defaultForm
     // if this ID doesn't exist
@@ -88,6 +111,9 @@ private:
 
     // Needs to access finish()
     friend void parseImage(FormImage*);
+
+    // Another form is done
+    void statusAdd(const Status& newStatus);
 };
 
 #endif

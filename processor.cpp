@@ -26,7 +26,9 @@ Processor::Processor(int threads, bool website, Database& db)
       extractT(extractImages, threads),
       parseT(parseImage, threads),
       db(db),
-      website(website)
+      website(website),
+      statusWaiting(0),
+      statusNewItem(false)
 {
 }
 
@@ -186,6 +188,23 @@ void parseImage(FormImage* formImage)
     // Another page is complete
     formImage->form.incDone();
 
+    // If we're in website mode, add this form update to the queue so that
+    // connections can send another update if waiting on this form
+    if (formImage->form.processor.website)
+    {
+        // Get how close this form is to being done
+        int percentage = smartFloor(
+                100.0*formImage->form.getDone()/formImage->form.pages);
+
+        // Return 99 if it's "done," the last percent is adding it to
+        // the database, etc.
+        if (percentage == 100)
+            percentage = 99;
+
+        formImage->form.processor.statusAdd(
+                Status(formImage->form.id, percentage));
+    }
+
     // If done, save results
     if (formImage->form.getDone() == formImage->form.pages)
         formImage->form.processor.finish(formImage->form.id);
@@ -194,13 +213,24 @@ void parseImage(FormImage* formImage)
 void Processor::wait()
 {
     waiting = true;
-    extractT.wait();
-    parseT.wait();
+
+    // Just in case somebody tries wait() after exit()
+    if (!exiting)
+    {
+        extractT.wait();
+        parseT.wait();
+    }
 }
 
 void Processor::exit()
 {
+    // You can only call this once
+    if (exiting)
+        return;
+
+    // Tell all waiting threads to exit
     exiting = true;
+    statusWakeAll();
 
     // Only exit these threads if we haven't already waited for them to complete
     // (thus they already exited)
@@ -226,40 +256,7 @@ Form& Processor::findForm(long long id)
 bool Processor::done(long long id)
 {
     Form& form = findForm(id);
-    return form == defaultForm || form.finished;
-}
-
-int Processor::statusWait(long long id)
-{
-    Form& form = findForm(id);
-
-    if (form == defaultForm || form.finished || form.pages == 0)
-        return 100;
-
-    std::unique_lock<std::mutex> lck(form.done_mutex);
-    long long done = form.done;
-
-    // Wait for update
-    while (true)
-    {
-        form.waitCond.wait(lck, [this, &form, done] {
-            return form.done == form.pages || form.done != done || exiting;
-        });
-
-        if (form.done == form.pages || form.done != done || exiting)
-            break;
-    }
-
-    // Now we're definitely "done"
-    if (exiting)
-        return 100;
-
-    // Return new percentage
-    int percentage = smartFloor(100.0*form.done/form.pages);
-
-    // Return 99 if it's "done," the last percent is adding it to
-    // the database, etc.
-    return (percentage==100)?99:percentage;
+    return form == defaultForm;
 }
 
 void Processor::finish(long long id)
@@ -281,19 +278,9 @@ void Processor::finish(long long id)
         if (form == forms.end())
             return;
 
-        // Wake up anybody still waiting for this setting finished to true
-        // so they will all exit before we delete this form.
-        form->finished = true;
-        form->waitCond.notify_all();
-
         // Get output
         out = print(*form);
         filename = form->filename;
-
-        {
-            // Hopefully wait till the last website thread accesses the form
-            std::unique_lock<std::mutex> lck(form->done_mutex);
-        }
 
         // Delete from list
         forms.erase(form);
@@ -301,6 +288,9 @@ void Processor::finish(long long id)
 
     // Save to database
     db.updateForm(id, out);
+
+    // We're done, send final update
+    statusAdd(Status(id, 100));
 
     // Delete off disk last, if we get killed right before doing this,
     // we'll see this file still exists and reprocess this form on start
@@ -437,4 +427,50 @@ void Processor::add(long long id, long long key, const std::string& filename)
     std::unique_lock<std::mutex> lock(forms_mutex);
     forms.push_back(Form(id, key, filename, *this));
     extractT.queue(&forms.back());
+}
+
+std::vector<Status> Processor::statusWait()
+{
+    std::unique_lock<std::mutex> lck(status_mutex);
+    ++statusWaiting;
+
+    while (true)
+    {
+        statusCond.wait(lck, [this] { return statusNewItem || exiting; });
+
+        if (statusNewItem || exiting)
+            break;
+    }
+
+    --statusWaiting;
+
+    // Copy it so we can return this even if we clear it below
+    std::vector<Status> results = status;
+
+    // Everybody waiting grabbed the status updates already
+    if (statusWaiting == 0)
+    {
+        status.clear();
+        statusNewItem = false;
+    }
+
+    return results;
+}
+
+void Processor::statusAdd(const Status& newStatus)
+{
+    {
+        std::unique_lock<std::mutex> lock(status_mutex);
+        status.push_back(std::move(newStatus));
+        statusNewItem = true;
+    }
+
+    statusCond.notify_all();
+}
+
+void Processor::statusWakeAll()
+{
+    std::unique_lock<std::mutex> lck(status_mutex);
+    statusNewItem = true;
+    statusCond.notify_all();
 }

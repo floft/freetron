@@ -40,12 +40,8 @@ Form::Form(Form&& f)
 
 void Form::incDone()
 {
-    {
-        std::unique_lock<std::mutex> lock(done_mutex);
-        ++done;
-    }
-
-    waitCond.notify_all();
+    std::unique_lock<std::mutex> lock(done_mutex);
+    ++done;
 }
 
 long long Form::getDone()
