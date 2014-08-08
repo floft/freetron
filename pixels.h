@@ -75,6 +75,9 @@ public:
 
     // Rotate all points in a vector
     void rotateVector(std::vector<Coord>& v, const Coord& point, double rad) const;
+
+    // Was the image successfully loaded?
+    bool isLoaded() const { return loaded; }
 };
 
 // Used so frequently and so small, so make this inline

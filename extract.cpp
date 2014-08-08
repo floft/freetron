@@ -74,7 +74,9 @@ std::list<FormImage> extract(const std::string& filename, Form& form)
                 }
 
                 document.FreeObjectMemory(*it);
-                images.push_back(FormImage(form, std::move(pixels)));
+
+                if (pixels.isLoaded())
+                    images.push_back(FormImage(form, std::move(pixels)));
             }
         }
 
