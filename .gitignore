@@ -23,6 +23,7 @@ freetron
 *.log
 images
 test.sh
+perf.data*
 
 # Cmake
 CMakeCache.txt

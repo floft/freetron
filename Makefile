@@ -19,7 +19,7 @@ MANPREFIX ?= ${PREFIX}/share/man
 all: CXXFLAGS += -O3
 all: ${OUT}
 
-debug: CXXFLAGS += -g -Wall -Wextra -Wpedantic
+debug: CXXFLAGS += -O3 -g -Wall -Wextra -Wpedantic
 debug: ${OUT}
 
 ${OUT}: ${OBJ} ${WEBOBJ} ${SKINOBJ}

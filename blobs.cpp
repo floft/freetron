@@ -1,3 +1,4 @@
+#include <set>
 #include <array>
 #include <algorithm>
 
@@ -6,7 +7,25 @@
 
 const int Blobs::default_label = 0;
 
+Blobs::Blobs(Blobs&& other)
+    : w(other.w), h(other.h), set(std::move(other.set)),
+      objs(std::move(other.objs)), labels(std::move(other.labels))
+{
+}
+
+Blobs& Blobs::operator=(Blobs&& other)
+{
+    w = other.w;
+    h = other.h;
+    set = std::move(other.set);
+    objs = std::move(other.objs);
+    labels = std::move(other.labels);
+
+    return *this;
+}
+
 Blobs::Blobs(const Pixels& img)
+    : set(default_label)
 {
     w = img.width();
     h = img.height();
@@ -33,77 +52,93 @@ Blobs::Blobs(const Pixels& img)
                     Coord(x+1, y-1)  // Up right
                 }};
 
-                bool found = false;
+                // Conditions we care about:
+                //   One neighboring pixel is black
+                //   Multiple black, all the same label
+                //   Multiple black, not all the same labels
+                //
+                // We can determine this by counting the number of black pixels
+                // around us and knowing if two are different.
+                int count = 0;
+                bool different = false;
+                std::vector<int> equivalent_labels;
 
-                // If we're next to an object, we're part of that object
+                // We will have at most four since the current pixel takes on
+                // the label of one of these 4 surrounding pixels
+                equivalent_labels.reserve(4);
+
                 for (const Coord& p : points)
                 {
                     if (img.black(p))
                     {
-                        labels[y][x] = labels[p.y][p.x];
+                        if (count == 0)
+                        {
+                            labels[y][x] = labels[p.y][p.x];
+                        }
+                        // Detect when we have multiple black pixels around us
+                        // with different labels
+                        else if (labels[y][x] != labels[p.y][p.x])
+                        {
+                            different = true;
+                            equivalent_labels.push_back(labels[p.y][p.x]);
+                        }
 
-                        found = true;
-                        break;
+                        ++count;
                     }
                 }
 
-                if (found)
+                // No neighboring pixels black
+                if (count == 0)
                 {
-                    // This is the latest time we've seen this label
-                    objs[labels[y][x]].last = point;
+                    // New label for a potentially new object
+                    labels[y][x] = next_label;
+                    set.add(next_label);
 
-                    // Verify all surrounding points are same object
-                    for (const Coord& p : points)
-                    {
-                        // If they are not, make all of the previous object this object
-                        if (img.black(p) && labels[y][x] != labels[p.y][p.x])
-                            switchLabel(labels[p.y][p.x], labels[y][x]);
-                    }
+                    ++next_label;
+                }
+                // Multiple black with different labels
+                else if (count > 1 && different)
+                {
+                    // Save that these are all equivalent to the current one
+                    for (int label : equivalent_labels)
+                        set.join(labels[y][x], label);
+                }
+                // Otherwise: One neighbor black or multiple but all same label,
+                // and we already set the current pixel's label
+            }
+        }
+    }
+
+    // Go through again reducing the labeling equivalences
+    for (int y = 0; y < h; ++y)
+    {
+        for (int x = 0; x < w; ++x)
+        {
+            const Coord point(x, y);
+            int currentLabel = labels[y][x];
+
+            if (currentLabel != default_label)
+            {
+                int repLabel = set.find(currentLabel);
+
+                if (repLabel != set.notfound())
+                {
+                    labels[y][x] = repLabel;
+
+                    // If not found, add this object
+                    if (objs.find(repLabel) == objs.end())
+                        objs[repLabel] = CoordPair(point, point);
+                    // If it is found, this is the last place we've seen the object
+                    else
+                        objs[repLabel].last = point;
                 }
                 else
                 {
-                    // Since we're not next to an object, this is [probably] a new object
-                    labels[y][x] = next_label;
-                    objs[next_label] = CoordPair(point, point);
-
-                    ++next_label;
+                    log("couldn't find representative of label");
                 }
             }
         }
     }
-}
-
-// Change label o to label n by looping through the y values from the first to
-// last coordinates of the object
-void Blobs::switchLabel(const int old_label, const int new_label)
-{
-    const Coord& old_first = objs[old_label].first;
-    const Coord& old_last  = objs[old_label].last;
-
-    // Go between y values of first and last
-    for (int y = old_first.y; y <= old_last.y; ++y)
-    {
-        // This'll be so fast we don't need to check x coordinates
-        for (int x = 0; x < w; ++x)
-        {
-            // Update label
-            if (labels[y][x] == old_label)
-                labels[y][x] = new_label;
-        }
-    }
-
-    // Update object
-    Coord& new_first = objs[new_label].first;
-    Coord& new_last  = objs[new_label].last;
-
-    if (old_first < new_first)
-        new_first = old_first;
-
-    if (old_last > new_last)
-        new_last = old_last;
-
-    // Delete old object
-    objs.erase(old_label);
 }
 
 int Blobs::label(const Coord& p) const
@@ -117,27 +152,22 @@ int Blobs::label(const Coord& p) const
 
 std::vector<Coord> Blobs::in(const Coord& p1, const Coord& p2) const
 {
-    std::vector<int> used_labels;
+    std::set<int> used_labels;
     std::vector<Coord> subset;
 
     for (int y = p1.y; y < p2.y; ++y)
     {
         for (int x = p1.x; x < p2.x; ++x)
         {
-            if (labels[y][x] != default_label && std::find(used_labels.begin(),
-                used_labels.end(), labels[y][x]) == used_labels.end())
-            //if (labels[y][x] != default_label && !std::binary_search(used_labels.begin(),
-            //    used_labels.end(), labels[y][x]))
+            if (labels[y][x] != default_label &&
+                    used_labels.find(labels[y][x]) == used_labels.end())
             {
-                // This fancy thing because this function is constant and accessing
-                // with a map may create it if it doesn't exist... It does, but the
-                // compiler doesn't know that.
                 const std::map<int, CoordPair>::const_iterator obj = objs.find(labels[y][x]);
 
                 if (obj != objs.end())
                 {
                     subset.push_back(obj->second.first);
-                    used_labels.push_back(labels[y][x]);
+                    used_labels.insert(labels[y][x]);
                 }
                 else
                 {

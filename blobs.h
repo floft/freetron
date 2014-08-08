@@ -15,6 +15,7 @@
 #include "data.h"
 #include "pixels.h"
 #include "maputils.h"
+#include "disjointset.h"
 
 // Remember the first and last times we saw a label so we can search just part
 // of the image when updating a label.
@@ -38,6 +39,7 @@ public:
 private:
     int w = 0;
     int h = 0;
+    DisjointSet<int> set;
     std::map<int, CoordPair> objs;
     std::vector<std::vector<int>> labels;
 
@@ -45,6 +47,10 @@ public:
     Blobs(const Pixels& img);
     int label(const Coord& p) const;
     CoordPair object(int label) const;
+
+    // Allow moving
+    Blobs(Blobs&&);
+    Blobs& operator=(Blobs&& other);
 
     // Get all first points that have part of the object in the rectangle
     // around p1 and p2 (with p1 to the left and above p2).
