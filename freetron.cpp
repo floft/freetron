@@ -13,6 +13,7 @@
 #include <atomic>
 #include <string>
 #include <cstring>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -25,6 +26,7 @@
 #include <cppcms/mount_point.h>
 #include <cppcms/application.h>
 #include <cppcms/applications_pool.h>
+#include <booster/intrusive_ptr.h>
 
 #include "read.h"
 #include "options.h"
@@ -238,6 +240,7 @@ int main(int argc, char* argv[])
     }
 
     ilInit();
+    srand(time(NULL));
 
     if (!daemon)
     {
@@ -277,6 +280,8 @@ int main(int argc, char* argv[])
 
             // Loop on SIGHUP, but exit on SIGTERM or SIGINT (handled by CppCMS)
             struct sigaction sa;
+            sigemptyset(&sa.sa_mask);
+            sa.sa_flags = 0;
             sa.sa_handler = &signal_handler;
             signal_srv = NULL;
             signal_sighup = false;
@@ -308,10 +313,8 @@ int main(int argc, char* argv[])
                     cppcms::mount_point("/website")
                 );
 
-                srv.applications_pool().mount(
-                    cppcms::applications_factory<rpc,Database&,Processor&>(db, p),
-                    cppcms::mount_point("/rpc")
-                );
+                booster::intrusive_ptr<rpc> r = new rpc(srv, db, p);
+                srv.applications_pool().mount(r, cppcms::mount_point("/rpc"));
 
                 // Run website and block
                 srv.run();

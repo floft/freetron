@@ -19,9 +19,6 @@ rpc::rpc(cppcms::service& srv, Database& db, Processor& p)
       timer(srv.get_io_service()), exiting(false),
       statusThread(StatusThread(*this, exiting))
 {
-    // Random, used for form confirmations
-    srand(time(NULL));
-
     // Account
     bind("account_login", cppcms::rpc::json_method(&rpc::account_login, this), method_role);
     bind("account_logout", cppcms::rpc::json_method(&rpc::account_logout, this), method_role);
@@ -53,6 +50,8 @@ rpc::~rpc()
 
 void rpc::account_login(const std::string& user, const std::string& pass)
 {
+    session().load();
+
     if (loggedIn())
         logout();
 
@@ -72,12 +71,16 @@ void rpc::account_login(const std::string& user, const std::string& pass)
 
 void rpc::account_logout()
 {
+    session().load();
+
     logout();
     return_result(true);
 }
 
 void rpc::account_create(const std::string& user, const std::string& pass)
 {
+    session().load();
+
     if (loggedOut() && !user.empty() && !pass.empty())
     {
         User u(user, pass);
@@ -94,6 +97,8 @@ void rpc::account_create(const std::string& user, const std::string& pass)
 
 void rpc::account_update(const std::string& user, const std::string& pass)
 {
+    session().load();
+
     if (loggedIn() && !user.empty() && !pass.empty())
     {
         User u(user, pass);
@@ -113,6 +118,8 @@ void rpc::account_update(const std::string& user, const std::string& pass)
 
 void rpc::account_delete(int confirmation)
 {
+    session().load();
+
     if (loggedIn() && confirmation == session().get<int>("confirmation"))
     {
         long long id = session().get<long long>("id");
@@ -131,42 +138,61 @@ void rpc::account_delete(int confirmation)
 
 void rpc::form_process(long long formId)
 {
-    cppcms::json::value v = cppcms::json::object();
-    cppcms::json::object& obj = v.object();
-
-    // Send the ID again so we can easily create the next request
-    obj["id"] = formId;
-    obj["percent"] = 0;
+    session().load();
 
     if (loggedIn())
     {
         if (p.done(formId))
         {
+            cppcms::json::value v = cppcms::json::object();
+            cppcms::json::object& obj = v.object();
+
+            // Send the ID again so we can easily create the next request
+            obj["id"] = formId;
             obj["percent"] = 100;
+
+            return_result(v);
         }
         else
         {
             // If it's not done, then save this request and process it once we
             // are notified that this form is done, or if a timeout occurs
             std::unique_lock<std::mutex> lock(waiters_mutex);
-            booster::shared_ptr<cppcms::rpc::json_call> call = release_call();
-            waiters.push_back(ProcessRequest(formId, call));
 
-            // If the connection is closed before it's done, remove the request
-            call->context().async_on_peer_reset(
-                    boost::bind(
-                        &rpc::remove_context,
-                        booster::intrusive_ptr<rpc>(this),
-                        call));
-            return;
+            std::vector<ProcessRequest>::iterator i = std::find_if(
+                    waiters.begin(), waiters.end(), RequestIdPredicate(formId));
+
+            // Only save the request if it's the first one, otherwise somebody
+            // could create massive amounts of requests that hang around for up
+            // to the timeout using up server memory
+            if (i == waiters.end())
+            {
+                booster::shared_ptr<cppcms::rpc::json_call> call = release_call();
+                waiters.push_back(ProcessRequest(formId, call));
+
+                // If the connection is closed before it's done, remove the request
+                call->context().async_on_peer_reset(
+                        boost::bind(
+                            &rpc::remove_context,
+                            booster::intrusive_ptr<rpc>(this),
+                            call));
+            }
+            else
+            {
+                return_error("too many connections to this form");
+            }
         }
     }
-
-    return_result(v);
+    else
+    {
+        return_error("not logged in");
+    }
 }
 
 void rpc::form_getone(long long formId)
 {
+    session().load();
+
     cppcms::json::value v = cppcms::json::array();
 
     if (loggedIn())
@@ -177,6 +203,8 @@ void rpc::form_getone(long long formId)
 
 void rpc::form_getall()
 {
+    session().load();
+
     cppcms::json::value v = cppcms::json::array();
 
     if (loggedIn())
@@ -210,6 +238,8 @@ void rpc::getForms(cppcms::json::value& v, long long formId)
 
 void rpc::form_delete(long long formId)
 {
+    session().load();
+
     if (loggedIn())
     {
         long long userId = session().get<long long>("id");
@@ -226,6 +256,8 @@ void rpc::form_delete(long long formId)
 
 void rpc::form_rename()
 {
+    session().load();
+
     if (loggedIn())
     {
     }
@@ -293,7 +325,7 @@ void rpc::on_timer(const booster::system::error_code& e)
         return;
 
     // In seconds
-    int timeout = 15*60; // 15 min
+    int timeout = 300; // 5 min
 
     // Remove really old connections
     std::unique_lock<std::mutex> lock(waiters_mutex);
@@ -312,7 +344,7 @@ void rpc::on_timer(const booster::system::error_code& e)
     }
 
     // Restart timer
-    timer.expires_from_now(booster::ptime::seconds(60));
+    timer.expires_from_now(booster::ptime::seconds(30));
     timer.async_wait(boost::bind(&rpc::on_timer, booster::intrusive_ptr<rpc>(this), _1));
 }
 

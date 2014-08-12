@@ -63,4 +63,5 @@ div.content {
 
 table#forms tr.data td {
     width: auto;
+    min-width: 550px;
 }
