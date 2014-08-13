@@ -35,9 +35,12 @@ dependencies in Macports, Fink, Homebrew, or whatever you use, but you'll
 probably have to build CppCMS and CppDB. On Windows you'll have to build
 basically all of these.
 
-**Note:** If you don't install using either make or cmake, you'll have to run
-``cppcms_make_key --hmac sha256 --cbc aes256 --hmac-file website/hmac.txt
---hmac-cbc website/cbc.txt`` to generate the keys for the website.
+**Note:** Use cmake if you want the keys generated on install; otherwise,
+use make and then generate the keys and put them in */srv/freetron* or
+whatever website directory you choose:
+
+    cppcms_make_key --hmac sha256 --cbc aes256 \
+        --hmac-file website/hmac.txt --hmac-cbc website/cbc.txt
 
 ###Running###
 Website interface: ``./freetron --daemon website/``  

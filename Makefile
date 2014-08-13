@@ -12,7 +12,6 @@ CXXFLAGS  += -ffast-math -funroll-loops -std=c++11
 LDFLAGS   += -lpodofo -lIL -ltiff -ltiffxx -pthread -lcppcms -lbooster -lcppdb -lssl -lcrypto
 
 TMPLCC    ?= cppcms_tmpl_cc
-MAKEKEY   ?= cppcms_make_key
 PREFIX    ?= /usr/local
 MANPREFIX ?= ${PREFIX}/share/man
 
@@ -38,7 +37,7 @@ ${SKIN}: website/master.tmpl ${SKINSRC}
 depends: ${DEPENDS}
 
 min:
-	rm -f website/files/*.min.*
+	${RM} -f website/files/*.min.*
 	yuglify website/files/*.js
 	yuglify website/files/*.css
 	sed -i '1s#^#// (c) Chris Veness 2002-2014\n#' website/files/sha256.min.js
@@ -52,22 +51,15 @@ install: ${OUT}
 	mkdir -p -m 700 ${DESTDIR}/srv/freetron/uploads
 	mkdir -p ${DESTDIR}/srv/freetron/files
 	mkdir -p ${DESTDIR}${PREFIX}/lib/systemd/system
-	[ -f website/hmac.txt ] || \
-	${MAKEKEY} --hmac sha256 --cbc aes256 --hmac-file website/hmac.txt --hmac-cbc website/cbc.txt >/dev/null
-	[ -f website/sqlite.db ] || touch website/sqlite.db
-	install -Dm600 website/*.txt website/sqlite.db ${DESTDIR}/srv/freetron/
 	install -Dm644 website/files/*.min.* ${DESTDIR}/srv/freetron/files/
 	install -Dm644 website/files/*.pdf ${DESTDIR}/srv/freetron/files/
 	install -Dm644 website/config.js ${DESTDIR}/srv/freetron/config.js
 	install -Dm644 website/freetron.service ${DESTDIR}${PREFIX}/lib/systemd/system/
-	@echo
-	@echo "To start website, run:"
-	@echo "  ${DESTDIR}${PREFIX}/bin/freetron --daemon ${DESTDIR}/srv/freetron"
     
 uninstall:
 	${RM} -f ${DESTDIR}${PREFIX}/bin/freetron
-	@echo
-	@echo "Not deleted: ${DESTDIR}/srv/freetron"
+	${RM} -f ${DESTDIR}${PREFIX}/lib/systemd/system/freetron.service
+	${RM} -rf ${DESTDIR}/srv/freetron/files/
 
 clean:
 	${RM} ${OUT} ${OBJ} ${DEPENDS} ${SKIN} ${SKINOBJ} ${WEBOBJ}
