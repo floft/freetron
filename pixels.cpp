@@ -14,7 +14,7 @@ Pixels::Pixels()
 {
 }
 
-// type is either IL_JPG or IL_PNM in this case
+// type is either IL_JPG, IL_TIF, or IL_PNM in this case
 Pixels::Pixels(ILenum type, const char* lump, const int size, const std::string& fn)
     :w(0), h(0), loaded(false), fn(fn), gray_shade(GRAY_SHADE)
 {
@@ -81,6 +81,7 @@ Pixels::Pixels(ILenum type, const char* lump, const int size, const std::string&
         }
         else
         {
+            ilDeleteImages(1, &name);
             throw std::runtime_error("could not read image");
         }
 

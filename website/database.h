@@ -5,6 +5,7 @@
 #ifndef H_DATABASE
 #define H_DATABASE
 
+#include <mutex>
 #include <string>
 #include <vector>
 #include <sstream>
@@ -38,6 +39,9 @@ class Database
     cppdb::statement deleteFormQ;
     cppdb::statement getOneQ;
     cppdb::statement getAllQ;
+
+    // Only one transaction at a time
+    std::mutex lock;
 
 public:
     Database();

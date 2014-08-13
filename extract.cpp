@@ -1,3 +1,4 @@
+#include <memory>
 #include <sstream>
 #include <fstream>
 #include <cstring>
@@ -157,7 +158,6 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
            << "255\n";
         std::string s = os.str();
 
-        const char* header = s.c_str();
         char* buffer;
         PoDoFo::pdf_long len;
 
@@ -171,14 +171,12 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
             return pixels;
         }
 
-        char* stream = new char[len+s.size()];
-        std::memcpy(stream, header, s.size());
-        std::memcpy(stream+s.size(), buffer, len);
-
-        pixels = Pixels(IL_PNM, stream, len+s.size(), filename);
-
+        std::unique_ptr<char> stream(new char[len+s.size()]);
+        std::memcpy(stream.get(), s.c_str(), s.size());
+        std::memcpy(stream.get()+s.size(), buffer, len);
         std::free(buffer);
-        delete[] stream;
+
+        pixels = Pixels(IL_PNM, stream.get(), len+s.size(), filename);
     }
 
     return pixels;

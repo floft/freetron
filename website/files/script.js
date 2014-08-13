@@ -47,7 +47,7 @@ function accountSubmit() {
     var pass = $("pass");
     var badlogin = $("badlogin");
 
-    if (validUser(user.value)) {
+    if (validUser(user.value) && pass.value.length > 0) {
         badlogin.style.display = "none";
         var hash = password(pass.value);
 
@@ -228,6 +228,7 @@ function uploadFile() {
         error.innerHTML = "";
         button.disabled = true;
         window.needToConfirm = true;
+        progress.innerHTML = "Uploading";
     }
 
     return false;
@@ -271,8 +272,6 @@ function uploadProgress(evt) {
     if (evt.lengthComputable) {
         var percentComplete = Math.round(evt.loaded * 100 / evt.total);
         progress.innerHTML = "Uploading: " + percentComplete.toString() + '%';
-    } else {
-        progress.innerHTML = "Uploading";
     }
 }
 
@@ -345,6 +344,7 @@ function formGetAll() {
         fileError("Couldn't connect to server");
     };
     window.rpc.form_getall.on_result = function(r) {
+        clearProgress();
         var i;
         for (i = 0; i < r.length; ++i) {
             createEntry(r[i]["id"], r[i]["name"], r[i]["date"], r[i]["data"]);
@@ -545,6 +545,7 @@ window.onload = function() {
         var uploadForm = $("upload");
         uploadForm.onsubmit = uploadFile;
 
+        progress.innerHTML = "Loading...";
         formGetAll();
     }
 }

@@ -29,7 +29,7 @@ Database::Database(const std::string& filename)
 
 void Database::initialize()
 {
-    cppdb::transaction guard(db);
+    std::unique_lock<std::mutex> lck(lock);
 
     db << "create table if not exists users ("
               "id     integer primary key autoincrement not null,"
@@ -58,8 +58,6 @@ void Database::initialize()
     db << R"(insert or ignore into users(id, user, pass) values(0, " ", "$"))"
        << cppdb::exec;
 
-    guard.commit();
-
     initialized = true;
 }
 
@@ -68,7 +66,7 @@ long long Database::addUser(const std::string& user, const std::string& pass)
     if (!initialized)
         return 0;
 
-    cppdb::transaction guard(db);
+    std::unique_lock<std::mutex> lck(lock);
 
     addUserQ.bind(1, user);
     addUserQ.bind(2, pass);
@@ -77,7 +75,6 @@ long long Database::addUser(const std::string& user, const std::string& pass)
     long long id = addUserQ.last_insert_id();
 
     addUserQ.reset();
-    guard.commit();
 
     return id;
 }
@@ -87,7 +84,7 @@ long long Database::validUser(const std::string& user, const std::string& pass)
     if (!initialized)
         return 0;
 
-    cppdb::transaction guard(db);
+    std::unique_lock<std::mutex> lck(lock);
 
     validUserQ.bind(1, user);
     validUserQ.bind(2, pass);
@@ -96,7 +93,6 @@ long long Database::validUser(const std::string& user, const std::string& pass)
     long long id = (r.empty())?0:r.get<long long>(0);
 
     validUserQ.reset();
-    guard.commit();
 
     return id;
 }
@@ -106,7 +102,7 @@ bool Database::idExists(long long id)
     if (!initialized)
         return false;
 
-    cppdb::transaction guard(db);
+    std::unique_lock<std::mutex> lck(lock);
 
     idExistsQ.bind(1, id);
 
@@ -114,11 +110,9 @@ bool Database::idExists(long long id)
     long long foundId = (r.empty())?0:r.get<long long>(0);
 
     idExistsQ.reset();
-    guard.commit();
 
     return foundId > 0;
 }
-
 
 bool Database::updateAccount(const std::string& user, const std::string& pass,
         long long id)
@@ -126,7 +120,7 @@ bool Database::updateAccount(const std::string& user, const std::string& pass,
     if (!initialized)
         return false;
 
-    cppdb::transaction guard(db);
+    std::unique_lock<std::mutex> lck(lock);
 
     updateAccountQ.bind(1, user);
     updateAccountQ.bind(2, pass);
@@ -134,8 +128,6 @@ bool Database::updateAccount(const std::string& user, const std::string& pass,
     updateAccountQ.exec();
     updateAccountQ.reset();
     unsigned long long affected = updateAccountQ.affected();
-
-    guard.commit();
 
     return affected > 0;
 }
@@ -145,7 +137,7 @@ bool Database::deleteAccount(long long id)
     if (!initialized)
         return false;
 
-    cppdb::transaction guard(db);
+    std::unique_lock<std::mutex> lck(lock);
 
     // Delete user account
     deleteAccountQ.bind(1, id);
@@ -158,8 +150,6 @@ bool Database::deleteAccount(long long id)
     deleteUserFormsQ.exec();
     deleteUserFormsQ.reset();
 
-    guard.commit();
-
     return affected > 0;
 }
 
@@ -169,7 +159,7 @@ long long Database::initForm(const std::string& name, long long userId,
     if (!initialized)
         return 0;
 
-    cppdb::transaction guard(db);
+    std::unique_lock<std::mutex> lck(lock);
 
     initFormQ.bind(1, name);
     initFormQ.bind(2, userId);
@@ -180,7 +170,6 @@ long long Database::initForm(const std::string& name, long long userId,
     long long id = initFormQ.last_insert_id();
 
     initFormQ.reset();
-    guard.commit();
 
     return id;
 }
@@ -190,7 +179,7 @@ bool Database::updateForm(long long id, const std::string& data)
     if (!initialized)
         return false;
 
-    cppdb::transaction guard(db);
+    std::unique_lock<std::mutex> lck(lock);
 
     updateFormQ.bind(1, data);
     updateFormQ.bind(2, id);
@@ -198,7 +187,6 @@ bool Database::updateForm(long long id, const std::string& data)
     unsigned long long affected = updateFormQ.affected();
 
     updateFormQ.reset();
-    guard.commit();
 
     return affected > 0;
 }
@@ -208,7 +196,7 @@ bool Database::deleteForm(long long userId, long long formId)
     if (!initialized)
         return false;
 
-    cppdb::transaction guard(db);
+    std::unique_lock<std::mutex> lck(lock);
 
     deleteFormQ.bind(1, formId);
     deleteFormQ.bind(2, userId);
@@ -216,7 +204,6 @@ bool Database::deleteForm(long long userId, long long formId)
     unsigned long long affected = deleteFormQ.affected();
 
     deleteFormQ.reset();
-    guard.commit();
 
     return affected > 0;
 }
@@ -228,7 +215,7 @@ std::vector<FormData> Database::getForms(long long userId, long long id)
     if (!initialized)
         return forms;
 
-    cppdb::transaction guard(db);
+    std::unique_lock<std::mutex> lck(lock);
     cppdb::result r;
 
     // Only one
@@ -260,7 +247,6 @@ std::vector<FormData> Database::getForms(long long userId, long long id)
 
     getOneQ.reset();
     getAllQ.reset();
-    guard.commit();
 
     return forms;
 }
