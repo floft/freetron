@@ -1,5 +1,7 @@
 #include <vector>
+#include <sstream>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <cppcms/application.h>
 #include <cppcms/mount_point.h>
@@ -9,6 +11,7 @@
 #include <booster/system_error.h>
 #include <booster/intrusive_ptr.h>
 #include <boost/bind.hpp>
+#include <openssl/sha.h>
 
 #include "rpc.h"
 #include "options.h"
@@ -77,15 +80,16 @@ void rpc::account_logout()
     return_result(true);
 }
 
-void rpc::account_create(const std::string& user, const std::string& pass)
+void rpc::account_create(const std::string& user, const std::string& inputPass)
 {
     session().load();
 
-    if (loggedOut() && !user.empty() && !pass.empty())
+    if (loggedOut() && !user.empty() && !inputPass.empty())
     {
-        User u(user, pass);
+        User u(user, inputPass);
+        std::string hash = genPass(inputPass);
 
-        if (u.valid() && db.addUser(user, pass) > 0 && login(user, pass))
+        if (u.valid() && db.addUser(user, hash) > 0 && login(user, inputPass))
         {
             return_result(true);
             return;
@@ -95,16 +99,17 @@ void rpc::account_create(const std::string& user, const std::string& pass)
     return_result(false);
 }
 
-void rpc::account_update(const std::string& user, const std::string& pass)
+void rpc::account_update(const std::string& user, const std::string& inputPass)
 {
     session().load();
 
-    if (loggedIn() && !user.empty() && !pass.empty())
+    if (loggedIn() && !user.empty() && !inputPass.empty())
     {
-        User u(user, pass);
+        User u(user, inputPass);
+        std::string hash = genPass(inputPass);
         long long id = session().get<long long>("id");
 
-        if (u.valid() && db.updateAccount(user, pass, id))
+        if (u.valid() && db.updateAccount(user, hash, id))
         {
             session().set<std::string>("user", user);
 
@@ -279,12 +284,14 @@ bool rpc::loggedOut()
     return !loggedIn();
 }
 
-bool rpc::login(const std::string& user, const std::string& pass)
+bool rpc::login(const std::string& user, const std::string& inputPass)
 {
     // See if valid user
-    long long id = db.validUser(user, pass);
+    std::pair<long long, std::string> results = db.getPass(user);
+    const long long& id = results.first;
+    const std::string& correctPass = results.second;
 
-    if (id > 0)
+    if (id > 0 && passCorrect(correctPass, inputPass))
     {
         session().reset_session();
         session().erase("prelogin");
@@ -396,4 +403,83 @@ void StatusThread::operator()()
         for (Status& s : results)
             parent.broadcast(s.formId, s.percentage);
     }
+}
+
+// See: http://stackoverflow.com/q/13784434/2698494
+std::string rpc::sha256(const std::string& s) const
+{
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, s.c_str(), s.size());
+    SHA256_Final(hash, &sha256);
+
+    std::ostringstream ss;
+
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+
+    return ss.str();
+}
+
+std::string rpc::genSalt()
+{
+    int size = 32;
+    std::ostringstream ss;
+    std::vector<unsigned char> salt(size, 0);
+    urand.generate(&salt[0], size);
+
+    for (int i = 0; i < size; i++)
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)salt[i];
+
+    return ss.str();
+}
+
+// See: http://stackoverflow.com/a/236803/2698494
+std::vector<std::string> rpc::split(const std::string& s, char delim) const
+{
+    std::string item;
+    std::istringstream ss(s);
+    std::vector<std::string> out;
+
+    while (std::getline(ss, item, delim))
+        out.push_back(item);
+
+    return out;
+}
+
+// See: https://crackstation.net/hashing-security.htm#slowequals
+bool rpc::slowCmp(const std::string& a, const std::string& b) const
+{
+    const char* A = a.c_str();
+    const char* B = b.c_str();
+
+    // Lengths are the same
+    int diff = a.size() ^ b.size();
+
+    // Bytes are the same
+    for (unsigned int i = 0; i < a.size() && i < b.size(); ++i)
+        diff |= A[i] ^ B[i];
+
+    return diff == 0;
+}
+
+std::string rpc::genPass(const std::string& pass)
+{
+    std::string salt = genSalt();
+    return salt + ":" + sha256(salt + pass);
+}
+
+bool rpc::passCorrect(const std::string& correctPass,
+        const std::string& inputPass) const
+{
+    std::vector<std::string> parts = split(correctPass, ':');
+
+    if (parts.size() != 2)
+        return false;
+
+    const std::string& salt = parts[0];
+    const std::string& pass = parts[1];
+
+    return slowCmp(sha256(salt + inputPass), pass);
 }

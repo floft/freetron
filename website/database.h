@@ -29,7 +29,7 @@ class Database
 
     // Queries
     cppdb::statement addUserQ;
-    cppdb::statement validUserQ;
+    cppdb::statement getPassQ;
     cppdb::statement idExistsQ;
     cppdb::statement updateAccountQ;
     cppdb::statement deleteAccountQ;
@@ -49,7 +49,7 @@ public:
 
     // Return 0 if no user
     long long addUser(const std::string& user, const std::string& pass);
-    long long validUser(const std::string& user, const std::string& pass);
+    std::pair<long long, std::string> getPass(const std::string& user);
     bool updateAccount(const std::string& user, const std::string& pass,
         long long id);
     bool deleteAccount(long long id);

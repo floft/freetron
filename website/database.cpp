@@ -15,7 +15,7 @@ Database::Database(const std::string& filename)
     initialize();
 
     addUserQ = db << "insert or ignore into users(user, pass) values(?, ?)";
-    validUserQ = db << "select id from users where user = ? and pass = ? limit 1";
+    getPassQ = db << "select id, pass from users where user = ? limit 1";
     idExistsQ = db << "select id from users where id = ? limit 1";
     updateAccountQ = db << "update or ignore users set user = ?, pass = ? where id = ?";
     deleteAccountQ = db << "delete from users where id = ?";
@@ -34,7 +34,7 @@ void Database::initialize()
     db << "create table if not exists users ("
               "id     integer primary key autoincrement not null,"
               "user   text unique not null,"
-              "pass   text not null" // a hash
+              "pass   text not null"
           ")"
        << cppdb::exec;
 
@@ -79,22 +79,29 @@ long long Database::addUser(const std::string& user, const std::string& pass)
     return id;
 }
 
-long long Database::validUser(const std::string& user, const std::string& pass)
+std::pair<long long, std::string> Database::getPass(const std::string& user)
 {
     if (!initialized)
-        return 0;
+        return std::pair<long long, std::string>(0, "");
 
     std::unique_lock<std::mutex> lck(lock);
 
-    validUserQ.bind(1, user);
-    validUserQ.bind(2, pass);
+    getPassQ.bind(1, user);
 
-    cppdb::result r = validUserQ.row();
-    long long id = (r.empty())?0:r.get<long long>(0);
+    cppdb::result r = getPassQ.row();
 
-    validUserQ.reset();
+    long long id = 0;
+    std::string pass;
 
-    return id;
+    if (!r.empty())
+    {
+        id = r.get<long long>(0);
+        pass = r.get<std::string>(1);
+    }
+
+    getPassQ.reset();
+
+    return std::pair<long long, std::string>(id, pass);
 }
 
 bool Database::idExists(long long id)

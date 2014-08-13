@@ -11,6 +11,7 @@
 #include <atomic>
 #include <thread>
 #include <vector>
+#include <cppcms/urandom.h>
 #include <cppcms/service.h>
 #include <cppcms/rpc_json.h>
 #include <booster/aio/deadline_timer.h>
@@ -49,6 +50,9 @@ class rpc : public cppcms::rpc::json_rpc_server
     std::atomic_bool exiting;
     std::thread statusThread;
 
+    // For generating password salts
+    cppcms::urandom_device urand;
+
 public:
     rpc(cppcms::service& srv, Database& db, Processor& p);
     ~rpc();
@@ -78,6 +82,27 @@ private:
 
     // If this form is currently being waited on, then send the status update
     void broadcast(long long formId, int percentage);
+
+    // For passwords using OpenSSL
+    std::string sha256(const std::string& s) const;
+
+    // Generate the salt using CppCMS's urandom_device
+    std::string genSalt();
+
+    // Split on a delimiter, for finding the salt from the password
+    std::vector<std::string> split(const std::string& s, char delim) const;
+
+    // A constant-time string comparison, i.e. time to execute won't depend on
+    // which byte of the string is the first different byte
+    bool slowCmp(const std::string& a, const std::string& b) const;
+
+    // Generate a password, creating a new salt in the process
+    std::string genPass(const std::string& pass);
+
+    // Check the password by extracting the salt from correctPass and
+    // seeing if the hashes match
+    bool passCorrect(const std::string& correctPass,
+        const std::string& inputPass) const;
 
     friend class StatusThread;
 };

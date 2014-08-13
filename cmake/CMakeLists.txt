@@ -12,6 +12,8 @@ find_package(DevIL)
 find_package(Podofo)
 find_package(CppDB)
 find_package(CppCMS)
+find_package(OpenSSL)
+find_program(TOUCH touch)
 find_program(EXE_TMPL_CC cppcms_tmpl_cc)
 find_program(EXE_MAKE_KEY cppcms_make_key)
 include_directories("${TIFF_INCLUDE_DIR}")
@@ -19,6 +21,7 @@ include_directories("${IL_INCLUDE_DIR}")
 include_directories("${PODOFO_INCLUDE_DIR}")
 include_directories("${CPPDB_INCLUDE_DIR}")
 include_directories("${CPPCMS_INCLUDE_DIR}")
+include_directories("${OPENSSL_INCLUDE_DIR}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -funroll-loops -O3 -std=c++11")
 
@@ -69,6 +72,7 @@ target_link_libraries(freetron "${PODOFO_LIBRARY}")
 target_link_libraries(freetron "${CPPDB_LIBRARY}")
 target_link_libraries(freetron "${CPPCMS_LIBRARY}")
 target_link_libraries(freetron "${BOOSTER_LIBRARY}")
+target_link_libraries(freetron "${OPENSSL_LIBRARIES}")
 
 # Install application
 install(TARGETS freetron
@@ -85,19 +89,26 @@ if(NOT EXISTS "${WEBSITE}/hmac.txt")
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 endif()
 
+# Create database file if it doesn't exist
+if(NOT EXISTS "${WEBSITE}/sqlite.db")
+    add_custom_command(
+        OUTPUT "${WEBSITE}/sqlite.db"
+        COMMAND "${TOUCH}" "${WEBSITE}/sqlite.db"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+endif()
+
 # Website files
 file(GLOB MINFILES "${WEBSITE}/files/*.min.*")
 add_custom_target(keys ALL DEPENDS
     "${WEBSITE}/hmac.txt"
-    "${WEBSITE}/cbc.txt")
+    "${WEBSITE}/cbc.txt"
+    "${WEBSITE}/sqlite.db")
 
 # Blank uploads/ directory
 file(MAKE_DIRECTORY "${WEBSITE}/uploads")
 
 # Install website files
 install(FILES
-    "${WEBSITE}/hmac.txt"
-    "${WEBSITE}/cbc.txt"
     "${WEBSITE}/config.js"
     DESTINATION /srv/freetron)
 install(FILES
@@ -107,6 +118,14 @@ install(FILES
 install(FILES "${WEBSITE}/freetron.service"
     DESTINATION lib/systemd/system)
 install(DIRECTORY "${WEBSITE}/uploads"
+    DESTINATION /srv/freetron
+    DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ)
+# Install these as only readable by owner
+install(FILES
+    "${WEBSITE}/hmac.txt"
+    "${WEBSITE}/cbc.txt"
+    "${WEBSITE}/sqlite.db"
+    PERMISSIONS OWNER_WRITE OWNER_READ
     DESTINATION /srv/freetron)
 
 install(CODE "MESSAGE(\"To start website, run:\")")
