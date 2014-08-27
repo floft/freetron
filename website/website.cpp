@@ -10,7 +10,6 @@
 #include <cppcms/applications_pool.h>
 
 #include "website.h"
-#include "options.h"
 
 website::website(cppcms::service& srv, WebsiteData d)
     : cppcms::application(srv), db(d.db), p(d.p),

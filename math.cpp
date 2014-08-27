@@ -2,12 +2,12 @@
 
 Coord farthestFromPoint(const Coord& p, const std::vector<Coord>& points)
 {
-    double dist = 0;
+    int dist = 0;
     Coord farthest;
 
     for (const Coord& point : points)
     {
-        double cdist = distance(p, point);
+        int cdist = distance2(p, point);
 
         if (cdist > dist)
         {
@@ -21,12 +21,12 @@ Coord farthestFromPoint(const Coord& p, const std::vector<Coord>& points)
 
 Coord farthestFromPointSquare(const Coord& p, const std::vector<Coord>& points)
 {
-    double dist = 0;
+    int dist = 0;
     Coord farthest;
 
     for (const Coord& point : points)
     {
-        double cdist = std::abs(p.x-point.x)+std::abs(p.y-point.y);
+        int cdist = std::abs(p.x-point.x)+std::abs(p.y-point.y);
 
         if (cdist > dist)
         {

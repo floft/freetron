@@ -14,7 +14,6 @@
 #include <openssl/sha.h>
 
 #include "rpc.h"
-#include "options.h"
 #include "content.h"
 
 rpc::rpc(cppcms::service& srv, Database& db, Processor& p)

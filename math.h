@@ -16,6 +16,9 @@ static const double pi = 3.14159265358979323846264338327950;
 
 inline double distance(const double x1, const double y1, const double x2, const double y2);
 inline double distance(const Coord& p1, const Coord& p2);
+// Distance squared, i.e. don't take square root
+inline int distance2(const int x1, const int y1, const int x2, const int y2);
+inline int distance2(const Coord& p1, const Coord& p2);
 // Perpendicular distance between p3 and the line from p1 to p2
 inline double distance(const Coord& p1, const Coord& p2, const Coord& p3);
 inline double average(const std::vector<double>& v);
@@ -69,7 +72,7 @@ double stdDev(const Type& v)
 
     for (const double elem : v)
         inroot += std::pow(mean - elem, 2);
-    
+
     return std::sqrt(inroot/v.size());
 }
 
@@ -80,12 +83,23 @@ double stdDev(const Type& v)
 // Distance formula
 inline double distance(const double x1, const double y1, const double x2, const double y2)
 {
-    return std::sqrt(std::pow((x2-x1), 2) + std::pow((y2-y1), 2));
+    return std::sqrt(std::pow(x2-x1, 2) + std::pow(y2-y1, 2));
 }
 
 inline double distance(const Coord& p1, const Coord& p2)
 {
     return std::sqrt(std::pow((1.0*p2.x-p1.x), 2) + std::pow((1.0*p2.y-p1.y), 2));
+}
+
+// Distance formula without the square root
+inline int distance2(const int x1, const int y1, const int x2, const int y2)
+{
+    return std::pow(x2-x1, 2) + std::pow(y2-y1, 2);
+}
+
+inline int distance2(const Coord& p1, const Coord& p2)
+{
+    return std::pow(p2.x-p1.x, 2) + std::pow(p2.y-p1.y, 2);
 }
 
 // Perpendicular distance
@@ -110,7 +124,7 @@ inline double average(const std::vector<double>& v)
 {
     if (v.size() > 0)
         return std::accumulate(v.begin(), v.end(), 0.0)/v.size();
-    
+
     return 0;
 }
 
@@ -120,7 +134,7 @@ inline double average(const std::vector<double>& v,
 {
     if (v.size() > 0)
         return std::accumulate(start, end, 0.0)/v.size();
-    
+
     return 0;
 }
 
@@ -129,7 +143,7 @@ inline double max_value(const std::vector<double>& v)
 {
     if (v.size() > 0)
         return *std::max_element(v.begin(), v.end());
-    
+
     return 0;
 }
 
@@ -138,7 +152,7 @@ inline double min_value(const std::vector<double>& v)
 {
     if (v.size() > 0)
         return *std::min_element(v.begin(), v.end());
-    
+
     return 0;
 }
 
@@ -205,7 +219,7 @@ inline Coord findMidpoint(const Coord& a, const Coord& b)
 inline double min(double a, double b, double c)
 {
     double m = a;
-    
+
     if (m > b) m = b;
     if (m > c) m = c;
 

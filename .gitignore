@@ -24,6 +24,7 @@ freetron
 images
 test.sh
 perf.data*
+cscope.out
 
 # Cmake
 CMakeCache.txt
