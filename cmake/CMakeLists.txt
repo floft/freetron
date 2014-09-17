@@ -85,7 +85,7 @@ if(NOT EXISTS "${WEBSITE}/hmac.txt")
                "${WEBSITE}/cbc.txt"
         COMMAND "${EXE_MAKE_KEY}" --hmac sha256 --cbc aes256
         --hmac-file "${WEBSITE}/hmac.txt"
-        --hmac-cbc  "${WEBSITE}/cbc.txt"
+        --cbc-file  "${WEBSITE}/cbc.txt"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 endif()
 

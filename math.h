@@ -59,13 +59,12 @@ Coord findCenter(const std::vector<Coord>& points);
 //
 // Type should probably be std::vector<double>
 template<class Type>
-double stdDev(const Type& v)
+double stdev(const Type& v)
 {
     if (v.size() == 0)
         return 0;
 
-    double total = 0;
-    std::accumulate(v.begin(), v.end(), total);
+    double total = std::accumulate(v.begin(), v.end(), 0);
 
     double mean = total/v.size();
     double inroot = 0;

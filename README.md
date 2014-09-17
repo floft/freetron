@@ -40,7 +40,7 @@ use make and then generate the keys and put them in */srv/freetron* or
 whatever website directory you choose:
 
     cppcms_make_key --hmac sha256 --cbc aes256 \
-        --hmac-file website/hmac.txt --hmac-cbc website/cbc.txt
+        --hmac-file website/hmac.txt --cbc-file website/cbc.txt
 
 ###Running###
 Website interface: ``./freetron --daemon website/``  

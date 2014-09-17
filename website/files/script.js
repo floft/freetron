@@ -3,13 +3,13 @@
  */
 
 function validUser(username) {
-	if (username.length < 4 || username.length > 30)
-		return false;
+    if (username.length < 4 || username.length > 30)
+        return false;
 
-	if (!username.match(/^[A-Za-z0-9\-_\.]+$/))
-		return false;
+    if (!username.match(/^[A-Za-z0-9\-_\.]+$/))
+        return false;
 
-	return true;
+    return true;
 }
 
 function password(pass) {
@@ -165,13 +165,13 @@ function isPdf(type, name) {
 }
 
 function validKey(key) {
-	if (key.length < 1 || key.length > 10)
-		return false;
+    if (key.length < 1 || key.length > 10)
+        return false;
 
-	if (!key.match(/^[0-9]+$/))
-		return false;
+    if (!key.match(/^[0-9]+$/))
+        return false;
 
-	return true;
+    return true;
 }
 
 // Mostly from http://matlus.com/html5-file-upload-with-progress/
@@ -381,16 +381,16 @@ function createEntry(id, name, date, formData) {
     sId.className = "id";
     sId.innerHTML = id;
 
-	var sDel = document.createElement("span");
+    var sDel = document.createElement("span");
     sDel.className = "del";
     sDel.onclick = function() { deleteEntry(sDel) };
     sDel.innerHTML = "X";
 
-	var sName = document.createElement("span");
+    var sName = document.createElement("span");
     sName.className = "name";
     sName.innerHTML = name;
 
-	var sDate = document.createElement("span");
+    var sDate = document.createElement("span");
     sDate.className = "date";
     sDate.innerHTML = "&mdash; " + date;
 
@@ -416,7 +416,7 @@ function createEntry(id, name, date, formData) {
  * All pages
  */
 function confirmExit() {
-	if (window.needToConfirm)
+    if (window.needToConfirm)
         return "Are you sure you want to leave this page? You will lose data if you do."
 }
 
@@ -433,11 +433,11 @@ function logoutOnclick() {
 //      function(evt)  { /* canceled */ },
 //      optionalData);
 function http(url, complete, fail, progress, cancel, send) {
-	var con;
-	try       { con = new XMLHttpRequest(); }
-	catch (e) { try { con = new ActiveXObject("Msxml2.XMLHTTP"); }
-	catch (e) { try { con = new ActiveXObject("Microsoft.XMLHTTP"); }
-	catch (e) { return; } } }
+    var con;
+    try       { con = new XMLHttpRequest(); }
+    catch (e) { try { con = new ActiveXObject("Msxml2.XMLHTTP"); }
+    catch (e) { try { con = new ActiveXObject("Microsoft.XMLHTTP"); }
+    catch (e) { return; } } }
 
     if (typeof complete === "undefined")
         return; // Don't bother creating the request
@@ -477,8 +477,8 @@ function http(url, complete, fail, progress, cancel, send) {
         }
     }
 
-	con.open("POST", url, true);
-	con.send(send);
+    con.open("POST", url, true);
+    con.send(send);
 }
 
 function goHome() {
@@ -486,7 +486,7 @@ function goHome() {
 }
 
 var $ = function(id) {
-	return document.getElementById(id);
+    return document.getElementById(id);
 }
 
 window.onload = function() {
