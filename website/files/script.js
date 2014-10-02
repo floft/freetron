@@ -451,7 +451,10 @@ function http(url, complete, fail, progress, cancel, send) {
         send = null;
 
     if (typeof con.addEventListener === "function") {
-        con.addEventListener("progress", progress, false);
+        if (send !== null) // Upload progress if we're sending something
+            con.upload.addEventListener("progress", progress, false);
+        else // Otherwise, download progress
+            con.addEventListener("progress", progress, false);
         con.addEventListener("load", function(evt) {
             if (evt.target.status === 200) {
                 complete(evt.target.responseText);
