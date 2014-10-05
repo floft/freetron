@@ -40,7 +40,11 @@ enum class ColorSpace
 
 std::list<FormImage> extract(const std::string& filename, Form& form);
 Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
-    const ColorSpace colorspace, const std::string& filename);
+    const ColorSpace colorspace, const PoDoFo::pdf_int64 componentbits,
+    const std::string& filename, Form& form);
+long long correctLength(const int width, const int height,
+        const ColorSpace colorspace,
+        const PoDoFo::pdf_int64 componentbits);
 
 // Debugging
 std::ostream& operator<<(std::ostream& os, const PixelType& t);
