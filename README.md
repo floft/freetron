@@ -80,3 +80,55 @@ page of the example scanned form. Note that since OpenIL doesn't allow
 multi-threading, this greatly extends the run time.
 
 [![Freetron Debug Image](http://floft.net/uploads/freetron_debug.jpg)](http://floft.net/uploads/freetron\_debug.png)
+
+Navigating the Code
+-------------------
+If you want to extend or modify this program, this summary of what the
+different portions do may be useful.
+  
+**options** -- All parameters for the supported style of forms (e.g. bubble
+aspect ratio)  
+
+### Core functionality
+**extract** -- Extract the images from the PDF  
+**processor** -- Manage the extracting and processing threads, what to do with
+each image, etc.  Basically, if you want to extend this program, you would add
+additional code to the end of *parseImage*.  
+**read** -- Find filled bubbles for the answers, ID, etc. on the form.  
+**rotate** -- Determine the rotation from the list of black boxes on the left
+and bottom of the form.  
+
+### Image processing
+**blobs** -- Connected-component labeling of black objects in image  
+**histogram** -- Self explanatory  
+**box** -- Taking a starting pixel, determine if the object that point is a
+part of is actually one of those black boxes on the left and bottom.  
+**outline** -- Contour tracing. Given a starting point, get a vector of points
+on the boundary of that object.  
+**boxes** -- Find the blobs and determine if each is a box.  
+
+### Data structures
+**forms** -- Each form (on the command line you will have only one) stores all
+the information needed about it and the individual pages of that form.  
+**pixels** -- Data structure for storing pixel data  
+**data** -- Data structures for coordinates, answers, etc.  
+**disjointset** -- Used in the connected-component labeling.  
+
+### Utilities
+**log** -- Log messages will be put at end of output  
+**maputils** -- Iterators and whatnot  
+**math** -- All the distance, average, stdev, etc. functions  
+**threadqueue(void)** -- Run the processing in a number of threads.  
+**cores** -- Get the number of cores for determining the number of threads to
+use.  
+
+### Website
+The website uses CppCMS, so you may want to become acquainted with that to
+understand this code.
+
+**website** -- Main website application  
+**rpc** -- Get/set data for Javascript RPC  
+**database** -- Manage saving/reading database information using CppDB  
+**date** -- Access the date in a thread-safe way  
+**content**, **skin**, **\*.tmpl**, **\*.js**, **\*.css** -- For the page
+templates and website design  
