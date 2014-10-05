@@ -175,7 +175,8 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
     {
         std::ostringstream os;
 
-        // P4 is bitmap (1 bit), P5 is graymap (8 bit), P6 is pixmap (24 bit). See:
+        // P4 is bitmap (1 bit), P5 is graymap (8 bit), P6 is pixmap (24 bit or
+        // 8-bit/channel). See:
         // http://netpbm.sourceforge.net/doc/pbm.html
         // http://en.wikipedia.org/wiki/Portable_anymap#File_format_description
         if (colorspace == ColorSpace::Gray)
@@ -184,8 +185,11 @@ Pixels readPDFImage(PoDoFo::PdfObject* object, const PixelType type,
             os << "P6\n";
 
         os << width  << " "
-           << height << "\n"
-           << "255\n";
+           << height << "\n";
+
+        if (componentbits != 1)
+           os << "255\n";
+
         std::string s = os.str();
 
         char* buffer;
