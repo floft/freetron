@@ -83,6 +83,10 @@ public:
     std::string print(Form& form);
     std::string print(long long id);
 
+    // Display results in a CSV file
+    std::string csv(Form& form);
+    std::string csv(long long id);
+
     // Block till all forms processed
     void wait();
 

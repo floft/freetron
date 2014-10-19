@@ -51,6 +51,9 @@ public:
     void upload(std::string num);
     long long uploadFile(long long key);
 
+    // Download the CSV file
+    void csv(std::string num);
+
     // 404 Page
     virtual void main(std::string url);
 

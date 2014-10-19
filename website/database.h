@@ -39,6 +39,7 @@ class Database
     cppdb::statement deleteFormQ;
     cppdb::statement getOneQ;
     cppdb::statement getAllQ;
+    cppdb::statement getCsvQ;
 
     // Only one transaction at a time
     std::mutex lock;
@@ -55,9 +56,10 @@ public:
     bool deleteAccount(long long id);
     long long initForm(const std::string& name, long long userId,
         long long key, const std::string& date);
-    bool updateForm(long long id, const std::string& data);
+    bool updateForm(long long id, const std::string& data, const std::string& csv);
     bool deleteForm(long long userId, long long formId);
     bool idExists(long long id);
+    std::string getCsv(long long userId, long long id);
 
     // Specify ID if you want a single form, otherwise get all of
     // a users's forms

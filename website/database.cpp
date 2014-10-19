@@ -21,10 +21,11 @@ Database::Database(const std::string& filename)
     deleteAccountQ = db << "delete from users where id = ?";
     deleteUserFormsQ = db << "delete from forms where userId = ?";
     initFormQ = db << "insert into forms(name, userId, key, date) values(?, ?, ?, ?)";
-    updateFormQ = db << "update or ignore forms set data = ? where id = ?";
+    updateFormQ = db << "update or ignore forms set data = ?, csv = ? where id = ?";
     deleteFormQ = db << "delete from forms where id = ? and userId = ?";
     getOneQ = db << "select id, userId, key, name, data, date from forms where userId = ? and id = ? limit 1";
     getAllQ = db << "select id, userId, key, name, data, date from forms where userId = ?";
+    getCsvQ = db << "select csv from forms where userId = ? and id = ? limit 1";
 }
 
 void Database::initialize()
@@ -44,7 +45,8 @@ void Database::initialize()
               "key    integer not null,"
               "name   text not null,"
               "date   text not null,"
-              "data   text"
+              "data   text,"
+              "csv    text"
           ")"
        << cppdb::exec;
 
@@ -181,7 +183,7 @@ long long Database::initForm(const std::string& name, long long userId,
     return id;
 }
 
-bool Database::updateForm(long long id, const std::string& data)
+bool Database::updateForm(long long id, const std::string& data, const std::string& csv)
 {
     if (!initialized)
         return false;
@@ -189,7 +191,8 @@ bool Database::updateForm(long long id, const std::string& data)
     std::unique_lock<std::mutex> lck(lock);
 
     updateFormQ.bind(1, data);
-    updateFormQ.bind(2, id);
+    updateFormQ.bind(2, csv);
+    updateFormQ.bind(3, id);
     updateFormQ.exec();
     unsigned long long affected = updateFormQ.affected();
 
@@ -256,4 +259,26 @@ std::vector<FormData> Database::getForms(long long userId, long long id)
     getAllQ.reset();
 
     return forms;
+}
+
+std::string Database::getCsv(long long userId, long long id)
+{
+    std::string csv;
+
+    if (!initialized)
+        return csv;
+
+    std::unique_lock<std::mutex> lck(lock);
+
+    getCsvQ.bind(1, userId);
+    getCsvQ.bind(2, id);
+
+    cppdb::result r = getCsvQ.row();
+
+    if (!r.empty() && !r.is_null(0))
+        csv = r.get<std::string>(0);
+
+    getCsvQ.reset();
+
+    return csv;
 }

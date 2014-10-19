@@ -394,6 +394,11 @@ function createEntry(id, name, date, formData) {
     sDate.className = "date";
     sDate.innerHTML = "&mdash; " + date;
 
+    var aExport = document.createElement("a");
+    aExport.href = "/csv/" + id;
+    aExport.target = "_blank";
+    aExport.innerHTML = "Export";
+
     // Data row
     var data = table.insertRow(1);
     data.className = "data";
@@ -410,6 +415,7 @@ function createEntry(id, name, date, formData) {
     headCell.appendChild(sDel);
     headCell.appendChild(sName);
     headCell.appendChild(sDate);
+    headCell.appendChild(aExport);
 }
 
 /*

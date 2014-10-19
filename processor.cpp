@@ -266,7 +266,8 @@ void Processor::finish(long long id)
     if (!website)
         return;
 
-    std::string out;
+    std::string summary;
+    std::string exported;
     std::string filename;
 
     {
@@ -279,7 +280,8 @@ void Processor::finish(long long id)
             return;
 
         // Get output
-        out = print(*form);
+        summary = print(*form);
+        exported = csv(*form);
         filename = form->filename;
 
         // Delete from list
@@ -287,7 +289,7 @@ void Processor::finish(long long id)
     }
 
     // Save to database
-    db.updateForm(id, out);
+    db.updateForm(id, summary, exported);
 
     // We're done, send final update
     statusAdd(Status(id, 100));
@@ -380,7 +382,7 @@ std::string Processor::print(Form& form)
                 int same = 0;
 
                 // Only score the ones that the teacher didn't leave blank
-                for (size_type q = 0; q < i.answers.size(); ++q)
+                for (size_type q = 0; q < i.answers.size() && q < key.size(); ++q)
                 {
                     if (key[q] != Answer::Blank)
                     {
@@ -418,6 +420,106 @@ std::string Processor::print(Form& form)
 
     if (!form.output.empty())
         out << std::endl << form.output;
+
+    return out.str();
+}
+
+std::string Processor::csv(long long id)
+{
+    Form& form = findForm(id);
+    return csv(form);
+}
+
+std::string Processor::csv(Form& form)
+{
+    std::ostringstream out;
+
+    if (form == defaultForm)
+        return "";
+
+    // Print header
+    out << "ID, Score";
+
+    int total = 0;
+    std::vector<Answer> key;
+
+    for (const FormImage& i : form.formImages)
+    {
+        if (i.id == form.key)
+        {
+            for (unsigned int j = 0; j < i.answers.size(); ++j)
+            {
+                if (i.answers[j] != Answer::Blank)
+                {
+                    out << ", " << (j+1);
+                    ++total;
+                }
+            }
+
+            key = i.answers;
+            break;
+        }
+    }
+
+    out << std::endl;
+
+    // Print key
+    for (const FormImage& i : form.formImages)
+    {
+        if (i.id == form.key)
+        {
+            out << i.id << ", KEY";
+
+            for (const Answer b : i.answers)
+                if (b != Answer::Blank)
+                    out << ", " << b;
+
+            out << std::endl;
+
+            key = i.answers;
+            break;
+        }
+    }
+
+    typedef std::vector<Answer>::size_type size_type;
+
+    // Print student responses and scores
+    for (const FormImage& i : form.formImages)
+    {
+        if (i.id == DefaultID)
+        {
+            out << "Unknown, 0%" << std::endl;
+        }
+        else if (i.id != form.key)
+        {
+            // Calculate score
+            int same = 0;
+
+            // Only score the ones that the teacher didn't leave blank
+            for (size_type q = 0; q < i.answers.size() && q < key.size(); ++q)
+                if (key[q] != Answer::Blank && key[q] == i.answers[q])
+                    ++same;
+
+            double score = (total>0)?1.0*same/total:1;
+
+            // Print
+            out << i.id << ", " << score*100 << "%";
+
+            for (size_type q = 0; q < i.answers.size() && q < key.size(); ++q)
+            {
+                if (key[q] != Answer::Blank)
+                {
+                    // Don't use _ for blank here, just make the cell blank
+                    if (i.answers[q] == Answer::Blank)
+                        out << ", ";
+                    else
+                        out << ", " << i.answers[q];
+                }
+            }
+
+            out << std::endl;
+        }
+    }
 
     return out.str();
 }

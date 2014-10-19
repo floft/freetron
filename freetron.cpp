@@ -64,7 +64,8 @@ enum class Args
     DB,
     Daemon,
     SiteConfig,
-    Max
+    Max,
+    CSV
 };
 
 void help()
@@ -80,6 +81,7 @@ void help()
               << "Command Line" << std::endl
               << "  -i, --id  1234     ID of form to use as the key" << std::endl
               << "  -d, --debug        output debug images" << std::endl
+              << "  -c, --csv          output CSV file instead of summary" << std::endl
               << std::endl
               << "Website" << std::endl
               << "  --daemon website/  run the website, don't exit till Ctrl+C" << std::endl
@@ -101,6 +103,7 @@ int main(int argc, char* argv[])
     std::string filename;
     std::string siteconfig = "config.js";
     std::string database = "sqlite.db";
+    bool csv = false;
     bool daemon = false;
     int threads = 0; // 0 == number of cores
     long long key = DefaultID;
@@ -117,6 +120,8 @@ int main(int argc, char* argv[])
         { "--id",      Args::ID },
         { "-d",        Args::Debug },
         { "--debug",   Args::Debug },
+        { "-c",        Args::CSV },
+        { "--csv",     Args::CSV },
 
         // Website specific
         { "--daemon",  Args::Daemon },
@@ -176,6 +181,9 @@ int main(int argc, char* argv[])
                 break;
             case Args::Debug:
                 DEBUG = true;
+                break;
+            case Args::CSV:
+                csv = true;
                 break;
             case Args::Daemon:
                 ++i;
@@ -250,7 +258,11 @@ int main(int argc, char* argv[])
         // Process a single form and exit
         p.add(0, key, filename);
         p.wait();
-        std::cout << p.print(0);
+
+        if (csv)
+            std::cout << p.csv(0);
+        else
+            std::cout << p.print(0);
     }
     else
     {

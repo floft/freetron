@@ -289,6 +289,11 @@ table#forms tr.head span.date {
     color: #666;
 }
 
+table#forms tr.head a {
+    color: #666;
+    float: right;
+}
+
 table#forms tr.data {
     background: #fdfdfd;
 }

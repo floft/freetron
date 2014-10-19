@@ -27,6 +27,9 @@ website::website(cppcms::service& srv, WebsiteData d)
     dispatcher().assign("/upload/(\\d+)", &website::upload, this, 1);
     mapper().assign("upload", "/upload/{1}");
 
+    dispatcher().assign("/csv/(\\d+)", &website::csv, this, 1);
+    mapper().assign("csv", "/csv/{1}");
+
     if (!d.root.empty())
         mapper().root(d.root);
 }
@@ -125,6 +128,38 @@ void website::upload(std::string num)
     }
 
     response().out() << "failed";
+}
+
+void website::csv(std::string num)
+{
+    response().set_plain_text_header();
+
+    if (loggedIn())
+    {
+        long long formId = -1;
+
+        try
+        {
+            formId = std::stoll(num);
+        }
+        catch (...) { }
+
+        if (formId >= 0)
+        {
+            long long userId = session().get<long long>("id");
+            std::string csv = db.getCsv(userId, formId);
+
+            response().out() << csv;
+            return;
+        }
+        else
+        {
+            response().out() << "Error: invalid form id";
+            return;
+        }
+    }
+
+    response().out() << "Error: please login";
 }
 
 long long website::uploadFile(long long key)
