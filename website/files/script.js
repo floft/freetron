@@ -388,7 +388,7 @@ function createEntry(id, name, date, formData) {
 
     var sName = document.createElement("span");
     sName.className = "name";
-    sName.innerHTML = name;
+    sName.innerHTML = htmlEntities(name);
 
     var sDate = document.createElement("span");
     sDate.className = "date";
@@ -430,6 +430,13 @@ function logoutOnclick() {
     window.rpc.account_logout.on_error = function(e) { };
     window.rpc.account_logout.on_result = function(r) { if (r) goHome(); };
     window.rpc.account_logout();
+}
+
+function htmlEntities(s) {
+    return s.replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
 }
 
 //  http("example.php",
