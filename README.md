@@ -2,7 +2,7 @@ freetron
 ========
 A professor encouraged me to write a software implementation of a scantron
 machine. It's licensed under the [ISC](http://floft.net/uploads/isc-license.txt)
-or [MIT](http://floft.net/uploads/isc-license.txt) licenses. The goal was to scan
+or [MIT](http://floft.net/uploads/mit-license.txt) licenses. The goal was to scan
 a PDF of the key and all the students' sheets, grade, email the students their
 grade and a copy of their sheet, and then display statistics about the exam.
 While the program doesn't quite do all that, it does grade scanned forms
