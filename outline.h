@@ -8,6 +8,7 @@
 #ifndef H_OUTLINE
 #define H_OUTLINE
 
+#include <set>
 #include <array>
 #include <vector>
 
@@ -35,6 +36,7 @@ class Outline
 
     // Save the outline of this object
     std::vector<Coord> path;
+    std::set<Coord> sortedpath; // Faster for contains a point check
 
     // Did we find the outline?
     bool found = false;

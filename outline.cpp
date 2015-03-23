@@ -57,6 +57,7 @@ Outline::Outline(const Blobs& blobs, const Coord& point,
         // we had to retrace our steps a ways)
         position = edge.point+matrix[edge.index];
         path.push_back(position);
+        sortedpath.insert(position);
 
         // Give up after we reach a certain size of object
         ++iterations;
@@ -121,7 +122,7 @@ int Outline::findIndex(const Coord& p) const
         const Coord previous = p+matrix[back];
 
         if (blobs.label(current) == label && blobs.label(previous) != label &&
-            std::find(path.rbegin(), path.rend(), previous) == path.rend())
+            sortedpath.find(previous) == sortedpath.end())
         {
             result = back;
             break;
