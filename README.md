@@ -1,8 +1,8 @@
 freetron
 ========
 A professor encouraged me to write a software implementation of a scantron
-machine. It's licensed under the [ISC](http://floft.net/uploads/isc-license.txt)
-or [MIT](http://floft.net/uploads/mit-license.txt) licenses. The goal was to scan
+machine. It's licensed under the [ISC](http://floft.net/files/isc-license.txt)
+or [MIT](http://floft.net/files/mit-license.txt) licenses. The goal was to scan
 a PDF of the key and all the students' sheets, grade, email the students their
 grade and a copy of their sheet, and then display statistics about the exam.
 While the program doesn't quite do all that, it does grade scanned forms
@@ -49,8 +49,8 @@ Command line interface: ``./freetron -i KeyID form.pdf``
 Example
 -------
 Download a [computer-generated
-form](http://floft.net/uploads/freetron_example.pdf) or a [scanned
-form](http://floft.net/uploads/freetron_example2.pdf) created from the Apperson
+form](https://github.com/floft/freetron/raw/master/examples/freetron_example.pdf) or a [scanned
+form](https://github.com/floft/freetron/raw/master/examples/freetron_example2.pdf) created from the Apperson
 form mentioned above. Below is the output of these two example forms. The first
 takes about 1 second and the second about 3 seconds on my computer.
 
@@ -79,7 +79,7 @@ to find any problematic bubbles or boxes. Below is the output from the third
 page of the example scanned form. Note that since OpenIL doesn't allow
 multi-threading, this greatly extends the run time.
 
-[![Freetron Debug Image](http://floft.net/uploads/freetron_debug.jpg)](http://floft.net/uploads/freetron\_debug.png)
+[![Freetron Debug Image](https://raw.githubusercontent.com/floft/freetron/master/examples/freetron_debug.jpg)](https://raw.githubusercontent.com/floft/freetron/master/examples/freetron\_debug.png)
 
 Navigating the Code
 -------------------
