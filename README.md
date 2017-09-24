@@ -18,7 +18,7 @@ Using
 You can either use this as a command-line utility or run it as a daemon
 providing a website interface.
 
-###Dependencies###
+### Dependencies
 *a C++11 compiler*  
 CppDB (Boost or MIT)  
 CppCMS (LGPL)  
@@ -26,7 +26,9 @@ PoDoFo (LGPL)
 OpenIL/DevIL (LGPL)  
 libtiff (custom: http://www.libtiff.org/misc.html)  
 
-###Compiling###
+**Note:** PoDoFo must be compiled with C++11 not C++98 otherwise it won't extract images. You can modify the CMakeLists.txt file. For Arch, look at my PKGBUILD for [podofo-cpp11](https://github.com/floft/PKGBUILDs/blob/master/podofo-cpp11/PKGBUILD) and for [freetron](https://github.com/floft/PKGBUILDs/blob/master/freetron/PKGBUILD).
+
+### Compiling
 **make:** ``make; make install``  
 **cmake:** ``cd cmake; cmake .; make; make install``
 
@@ -42,7 +44,7 @@ whatever website directory you choose:
     cppcms_make_key --hmac sha256 --cbc aes256 \
         --hmac-file website/hmac.txt --cbc-file website/cbc.txt
 
-###Running###
+### Running
 Website interface: ``./freetron --daemon website/``  
 Command line interface: ``./freetron -i KeyID form.pdf``
 

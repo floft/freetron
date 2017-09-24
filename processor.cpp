@@ -57,7 +57,7 @@ void extractImages(Form* form)
     }
     catch (const PoDoFo::PdfError& error)
     {
-        //error.PrintErrorMsg();
+        error.PrintErrorMsg();
         //return error.GetError();
 
         // Don't write this to screen

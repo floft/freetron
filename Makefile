@@ -15,10 +15,10 @@ TMPLCC    ?= cppcms_tmpl_cc
 PREFIX    ?= /usr/local
 MANPREFIX ?= ${PREFIX}/share/man
 
-all: CXXFLAGS += -O3
+all: CXXFLAGS += -O2
 all: ${OUT}
 
-debug: CXXFLAGS += -O3 -g -Wall -Wextra -Wpedantic
+debug: CXXFLAGS += -O2 -g -Wall -Wextra -Wpedantic
 debug: ${OUT}
 
 ${OUT}: ${OBJ} ${WEBOBJ} ${SKINOBJ}
