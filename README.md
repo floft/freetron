@@ -83,6 +83,9 @@ multi-threading, this greatly extends the run time.
 
 [![Freetron Debug Image](https://raw.githubusercontent.com/floft/freetron/master/examples/freetron_debug.jpg)](https://raw.githubusercontent.com/floft/freetron/master/examples/freetron\_debug.png)
 
+If you run the examples in the website, you get:
+[![Freetron Website](https://raw.githubusercontent.com/floft/freetron/master/examples/website.jpg)](https://raw.githubusercontent.com/floft/freetron/master/examples/website.png)
+
 Navigating the Code
 -------------------
 If you want to extend or modify this program, this summary of what the
