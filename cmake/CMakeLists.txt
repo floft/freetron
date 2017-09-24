@@ -23,7 +23,7 @@ include_directories("${CPPDB_INCLUDE_DIR}")
 include_directories("${CPPCMS_INCLUDE_DIR}")
 include_directories("${OPENSSL_INCLUDE_DIR}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -funroll-loops -O3 -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -funroll-loops -O2 -std=c++11")
 
 # Eventually detect this from the options.h file? Or, maybe, modify the
 # options.h file here (definitely not until this is actually tested on a few
